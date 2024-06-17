@@ -10,12 +10,10 @@
     "spawn:aos-ant": "node tools/spawn-aos-ant.js",
     "test": "node --test --test-concurrency 1 **/*.test.js"
   },
-  "dependencies": {
+  "devDependencies": {
+    "prettier": "^3.3.2",
     "@permaweb/ao-loader": "^0.0.35",
     "@permaweb/aoconnect": "^0.0.55",
     "arweave": "^1.15.1"
-  },
-  "devDependencies": {
-    "prettier": "^3.3.2"
   }
 }

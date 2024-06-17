@@ -18,7 +18,10 @@ async function createAntAosLoader() {
     null,
     {
       ...DEFAULT_HANDLE_OPTIONS,
-      Tags: [{ name: 'Action', value: 'Eval' }],
+      Tags: [
+        { name: 'Action', value: 'Eval' },
+        { name: 'Module', value: ''.padEnd(43, '1') },
+      ],
       Data: BUNDLED_AOS_ANT_LUA,
     },
     AO_LOADER_HANDLER_ENV,
@@ -28,3 +31,7 @@ async function createAntAosLoader() {
     memory: evalRes.Memory,
   };
 }
+
+module.exports = {
+  createAntAosLoader,
+};

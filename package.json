@@ -1,13 +1,13 @@
 {
   "scripts": {
-    "build:module": "cd src && ao build && cd .. && yarn load:module",
-    "publish:module": "cd src && ao publish process.wasm -w ../tools/key.json --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
-    "load:module": "node tools/load-module.js",
-    "spawn:module": "node tools/spawn-module.js",
-    "build:aos-ant": "node tools/bundle-aos-ant.js",
-    "publish:aos-ant": "node tools/bundle-aos-ant.js && node tools/publish-aos-ant.js",
-    "load:aos-ant": "node tools/bundle-aos-ant.js && node tools/load-aos-ant.js",
-    "spawn:aos-ant": "node tools/spawn-aos-ant.js",
+    "module:build": "cd src && ao build && cd .. && yarn module:load",
+    "module:publish": "cd src && ao publish process.wasm -w ../tools/key.json --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
+    "module:load": "node tools/load-module.js",
+    "module:spawn": "node tools/spawn-module.js",
+    "aos-ant:build": "node tools/bundle-aos-ant.js",
+    "aos-ant:publish": "node tools/bundle-aos-ant.js && node tools/publish-aos-ant.js",
+    "aos-ant:load": "node tools/bundle-aos-ant.js && node tools/load-aos-ant.js",
+    "aos-ant:spawn": "node tools/spawn-aos-ant.js",
     "test": "node --test --test-concurrency 1 **/*.test.js"
   },
   "devDependencies": {

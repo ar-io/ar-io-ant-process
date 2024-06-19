@@ -67,4 +67,35 @@ describe('aos Records', async () => {
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });
+
+  it('Should remove the record of an ANT', async () => {
+    const setRecordResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        { name: 'Sub-Domain', value: 'timmy' },
+        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+        { name: 'TTL-Seconds', value: 3600 },
+      ],
+    });
+
+    const removeRecordResult = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Remove-Record' },
+          { name: 'Sub-Domain', value: 'timmy' },
+        ],
+      },
+      setRecordResult.Memory,
+    );
+
+    const recordsResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Get-Records' }],
+      },
+      removeRecordResult.Memory,
+    );
+
+    const record = JSON.parse(recordsResult.Messages[0].Data)['timmy'];
+    assert(!record);
+  });
 });

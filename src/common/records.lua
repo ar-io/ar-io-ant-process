@@ -17,15 +17,16 @@ function records.setRecord(name, transactionId, ttlSeconds)
 		ttlSeconds = ttlSeconds,
 	}
 
-	return "Record set"
+	return json.encode({
+		transactionId = transactionId,
+		ttlSeconds = ttlSeconds,
+	})
 end
 
 function records.removeRecord(name)
 	local nameValidity, nameValidityError = pcall(utils.validateUndername, name)
 	assert(nameValidity ~= false, nameValidityError)
 	Records[name] = nil
-
-	return "Record removed"
 end
 
 function records.getRecord(name)

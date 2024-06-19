@@ -297,6 +297,7 @@ function ant.init()
 		camel(ActionMap.InitializeState),
 		utils.hasMatchingTag("Action", ActionMap.InitializeState),
 		function(msg)
+			assert(msg.From == Owner, "Only the owner can initialize the state")
 			local initStatus, result = pcall(initialize.initializeANTState, msg.Data)
 
 			if not initStatus then

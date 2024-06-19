@@ -88,14 +88,16 @@ async function main() {
     const tags = args
       ? Object.entries(args).map(([key, value]) => ({ name: key, value }))
       : [];
-    const result = await ao.dryrun({
-      process: processId,
-      tags: [...tags, { name: 'Action', value: method }],
-      data,
-      signer,
-      Owner: address,
-      From: address,
-    });
+    const result = await ao
+      .dryrun({
+        process: processId,
+        tags: [...tags, { name: 'Action', value: method }],
+        data,
+        signer,
+        Owner: address,
+        From: address,
+      })
+      .catch((e) => e);
 
     console.dir({ method, result }, { depth: null });
   }

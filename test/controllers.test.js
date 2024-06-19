@@ -53,5 +53,16 @@ describe('AOS-ANT Controllers', async () => {
     });
 
     assert(result.Messages[0].Data === 'Controller removed');
+
+    const addControllerResult = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Controller' },
+          { name: 'Controller', value: STUB_ADDRESS },
+        ],
+      },
+      result.Memory,
+    );
+    assert.equal(addControllerResult.Messages[0].Data, 'Controller added');
   });
 });

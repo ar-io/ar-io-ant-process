@@ -7,7 +7,7 @@ const {
   STUB_ADDRESS,
 } = require('../tools/constants');
 
-describe('AOS-ANT Balances', async () => {
+describe('aos Balances', async () => {
   const { handle: originalHandle, memory: startMemory } =
     await createAntAosLoader();
 

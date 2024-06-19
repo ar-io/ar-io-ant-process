@@ -31,7 +31,7 @@ const AOS_WASM = fs.readFileSync(
 );
 
 const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
-  path.join(__dirname, '../dist/aos-ant-bundled.lua'),
+  path.join(__dirname, '../dist/aos-bundled.lua'),
   'utf-8',
 );
 

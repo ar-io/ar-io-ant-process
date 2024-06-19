@@ -38,7 +38,7 @@ busted .
 This bundles the ant-aos code and outputs it to `dist` folder. This can then be used to send to the `Eval` method on AOS to load the ANT source code.
 
 ```bash
-yarn aos-ant:build
+yarn aos:build
 ```
 
 #### Publish
@@ -46,15 +46,15 @@ yarn aos-ant:build
 Ensure that in the `tools` directory you place you Arweave JWK as `key.json`
 
 ```bash
-yarn aos-ant:publish
+yarn aos:publish
 ```
 
 #### Load
 
-This will load an AOS module into the loader, followed by the bundled aos-ant Lua file to verify that it is a valid build.
+This will load an AOS module into the loader, followed by the bundled aos Lua file to verify that it is a valid build.
 
 ```bash
-yarn aos-ant:load
+yarn aos:load
 ```
 
 #### Spawn
@@ -62,7 +62,7 @@ yarn aos-ant:load
 this will spawn an aos process and load the bundled lua code into it.
 
 ```bash
-yarn aos-ant:spawn
+yarn aos:spawn
 ```
 
 This will deploy the bundled lua file to arweave as an L1 transaction, so your wallet will need AR to pay the gas.

@@ -9,7 +9,7 @@ const {
 } = require('../tools/constants');
 
 /**
- * Loads the AOS-ANT wasm binary and returns the handle function with program memory
+ * Loads the aos wasm binary and returns the handle function with program memory
  * @returns {Promise<{handle: Function, memory: WebAssembly.Memory}>}
  */
 async function createAntAosLoader() {

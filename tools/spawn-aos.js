@@ -17,7 +17,7 @@ const scheduler = '_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA';
 
 async function main() {
   const luaCode = fs.readFileSync(
-    path.join(__dirname, '../dist/aos-ant-bundled.lua'),
+    path.join(__dirname, '../dist/aos-bundled.lua'),
     'utf-8',
   );
 

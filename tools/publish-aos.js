@@ -9,7 +9,7 @@ const arweave = Arweave.init({
 });
 async function main() {
   const bundledLua = fs.readFileSync(
-    path.join(__dirname, '../dist/aos-ant-bundled.lua'),
+    path.join(__dirname, '../dist/aos-bundled.lua'),
     'utf-8',
   );
   const wallet = fs.readFileSync(path.join(__dirname, 'key.json'), 'utf-8');
@@ -19,7 +19,7 @@ async function main() {
   console.log(`Publish AOS ANT Lua with address ${address}`);
 
   const tx = await arweave.createTransaction({ data: bundledLua }, jwk);
-  tx.addTag('App-Name', 'AOS-ANT-LUA');
+  tx.addTag('App-Name', 'aos-LUA');
   tx.addTag('App-Version', '0.0.1');
   tx.addTag('Content-Type', 'text/x-lua');
   tx.addTag('Author', 'Permanent Data Solutions');

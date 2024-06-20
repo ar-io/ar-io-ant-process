@@ -275,6 +275,15 @@ function ant.init()
 	end)
 
 	Handlers.add(camel(ActionMap.SetName), utils.hasMatchingTag("Action", ActionMap.SetName), function(msg)
+		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
+		if assertHasPermission == false then
+			return ao.send({
+				Target = msg.From,
+				Data = permissionErr,
+				Error = "Set-Name-Error",
+				["Message-Id"] = msg.Id,
+			})
+		end
 		local nameStatus, nameRes = pcall(balances.setName, msg.Tags.Name)
 		if not nameStatus then
 			ao.send({ Target = msg.From, Data = nameRes, Error = "Set-Name-Error", ["Message-Id"] = msg.Id })
@@ -284,6 +293,15 @@ function ant.init()
 	end)
 
 	Handlers.add(camel(ActionMap.SetTicker), utils.hasMatchingTag("Action", ActionMap.SetTicker), function(msg)
+		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
+		if assertHasPermission == false then
+			return ao.send({
+				Target = msg.From,
+				Data = permissionErr,
+				Error = "Set-Ticker-Error",
+				["Message-Id"] = msg.Id,
+			})
+		end
 		local tickerStatus, tickerRes = pcall(balances.setTicker, msg.Tags.Ticker)
 		if not tickerStatus then
 			ao.send({ Target = msg.From, Data = tickerRes, Error = "Set-Ticker-Error", ["Message-Id"] = msg.Id })
@@ -304,7 +322,7 @@ function ant.init()
 				ao.send({ Target = msg.From, Data = result, Error = "Initialize-State-Error", ["Message-Id"] = msg.Id })
 				return
 			else
-				ao.send({ Target = msg.From, Data = json.encode(result) })
+				ao.send({ Target = msg.From, Data = result })
 			end
 		end
 	)

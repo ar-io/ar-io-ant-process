@@ -81,7 +81,7 @@ async function main() {
     ['Get-Records', {}],
     ['Get-Record', { 'Sub-Domain': '@' }],
     ['Initialize-State', {}, initState],
-    ['Transfer', { Recipient: 'ZjmB2vEUlHlJ7-rgJkYP09N5IzLPhJyStVrK5u9dDEo' }],
+    ['Transfer', { Recipient: 'N4h8M9A9hasa3tF47qQyNvcKjm4APBKuFs7vqUVm-SI' }],
   ];
 
   for (const [method, args, data] of testCases) {
@@ -89,7 +89,7 @@ async function main() {
       ? Object.entries(args).map(([key, value]) => ({ name: key, value }))
       : [];
     const result = await ao
-      .dryrun({
+      .message({
         process: processId,
         tags: [...tags, { name: 'Action', value: method }],
         data,

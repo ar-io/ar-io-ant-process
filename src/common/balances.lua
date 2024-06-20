@@ -12,7 +12,7 @@ function balances.transfer(to)
 	Balances = { [to] = 1 }
 	Owner = to
 	Controllers = {}
-	return "Transfer successful"
+	return json.encode({ [to] = 1 })
 end
 
 function balances.balance(address)
@@ -28,13 +28,13 @@ end
 function balances.setName(name)
 	assert(type(name) == "string", "Name must be a string")
 	Name = name
-	return "Name set to " .. name
+	return json.encode({ name = Name })
 end
 
 function balances.setTicker(ticker)
 	assert(type(ticker) == "string", "Ticker must be a string")
 	Ticker = ticker
-	return "Ticker set to " .. ticker
+	return json.encode({ ticker = Ticker })
 end
 
 return balances

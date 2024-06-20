@@ -31,13 +31,13 @@ function initialize.initializeANTState(state)
 	Records = records
 	Initialized = true
 
-	return {
+	return json.encode({
 		name = Name,
 		ticker = Ticker,
 		balances = Balances,
 		controllers = Controllers,
 		records = Records,
-	}
+	})
 end
 
 local function findObject(array, key, value)

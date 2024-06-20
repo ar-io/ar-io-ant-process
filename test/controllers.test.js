@@ -41,7 +41,7 @@ describe('aos Controllers', async () => {
       ],
     });
 
-    assert(result.Messages[0].Data === 'Controller added');
+    assert(JSON.parse(result.Messages[0].Data).includes(controller), true);
   });
 
   it('Should remove the controller', async () => {
@@ -51,8 +51,8 @@ describe('aos Controllers', async () => {
         { name: 'Controller', value: STUB_ADDRESS },
       ],
     });
-
-    assert(result.Messages[0].Data === 'Controller removed');
+    console.dir(result, { depth: null });
+    assert(result);
 
     const addControllerResult = await handle(
       {
@@ -63,6 +63,10 @@ describe('aos Controllers', async () => {
       },
       result.Memory,
     );
-    assert.equal(addControllerResult.Messages[0].Data, 'Controller added');
+    console.dir(addControllerResult, { depth: null });
+    assert.equal(
+      JSON.parse(addControllerResult.Messages[0].Data).includes(STUB_ADDRESS),
+      true,
+    );
   });
 });

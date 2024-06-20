@@ -227,8 +227,13 @@ function utils.assertHasPermission(from)
 			return
 		end
 	end
-	local hasPermission = Balances[from] == 1 or Owner == from or ao.env.Process.Id == from
-	assert(hasPermission == true, "Only controllers and owners can set controllers and records.")
+	if Owner == from then
+		return
+	end
+	if ao.env.Process.Id == from then
+		return
+	end
+	assert(false, "Only controllers and owners can set controllers, records, and change metadata.")
 end
 
 function utils.camelCase(str)

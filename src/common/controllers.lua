@@ -11,7 +11,7 @@ function controllers.setController(controller)
 	end
 
 	table.insert(Controllers, controller)
-	return "Controller added"
+	return json.encode(Controllers)
 end
 
 function controllers.removeController(controller)
@@ -27,7 +27,6 @@ function controllers.removeController(controller)
 	end
 
 	assert(controllerExists ~= nil, "Controller does not exist")
-	return "Controller removed"
 end
 
 function controllers.getControllers()

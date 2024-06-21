@@ -1,0 +1,17 @@
+key.json
+node_modules
+.luarocks
+**/coverage/*
+!.gitkeep
+/luarocks
+/lua
+/lua_modules
+/.luarocks
+wallet.json
+.DS_Store
+luacov-html
+.luacov
+*.gz
+luacov.stats.out
+process.wasm
+dist

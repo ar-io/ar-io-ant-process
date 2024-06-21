@@ -267,45 +267,11 @@ function ant.init()
 			return
 		end
 
-		local recordNotice = {
-			Target = msg.From,
-			Action = 'Record-Notice',
-			Name = msg.Tags["Sub-Domain"],
-			Data = nameRes
-		}
-
-		-- Add forwarded tags to the credit and debit notice messages
-		for tagName, tagValue in pairs(msg) do
-			-- Tags beginning with "X-" are forwarded
-			if string.sub(tagName, 1, 2) == "X-" then
-			recordNotice[tagName] = tagValue
-			end
-		end
-
-		-- Send Record-Notice
-		ao.send(recordNotice)
+		ao.send({ Target = msg.From, Data = nameRes })
 	end)
 
 	Handlers.add(camel(ActionMap.GetRecords), utils.hasMatchingTag("Action", ActionMap.GetRecords), function(msg)
-		local records = records.getRecords()
-
-		-- Credit-Notice message template, that is sent to the Recipient of the transfer
-		local recordsNotice = {
-			Target = msg.From,
-			Action = 'Records-Notice',
-			Data = json.encode(records)
-		}
-
-		-- Add forwarded tags to the records notice messages
-		for tagName, tagValue in pairs(msg) do
-			-- Tags beginning with "X-" are forwarded
-			if string.sub(tagName, 1, 2) == "X-" then
-			recordsNotice[tagName] = tagValue
-			end
-		end
-
-		-- Send Records-Notice
-		ao.send(recordsNotice)
+		ao.send({ Target = msg.From, Data = records.getRecords() })
 	end)
 
 	Handlers.add(camel(ActionMap.SetName), utils.hasMatchingTag("Action", ActionMap.SetName), function(msg)

@@ -22,7 +22,6 @@ jobs:
         run: luarocks install ar-io-ao-0.1-1.rockspec
 
       - name: Run Busted Tests
-        working-directory: ant
         run: busted .
 
       - name: Upload coverage reports to Codecov

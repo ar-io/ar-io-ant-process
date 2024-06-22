@@ -57,6 +57,7 @@ const DEFAULT_HANDLE_OPTIONS = {
   Module: 'ANT',
   Target: ''.padEnd(43, '1'),
   From: STUB_ADDRESS,
+  Timestamp: Date.now(),
 };
 
 module.exports = {

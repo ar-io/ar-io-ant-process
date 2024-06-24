@@ -71,4 +71,19 @@ describe('aos Info', async () => {
     const info = JSON.parse(infoResult.Messages[0].Data);
     assert(info.Ticker === 'TEST');
   });
+
+  it('should get state', async () => {
+    const result = await handle({
+      Tags: [{ name: 'Action', value: 'State' }],
+    });
+
+    const state = JSON.parse(result.Messages[0].Data);
+    assert(state);
+    assert(state.balances);
+    assert(state.records);
+    assert(state.controllers);
+    assert(state.owner);
+    assert(state.ticker);
+    assert(state.name);
+  });
 });

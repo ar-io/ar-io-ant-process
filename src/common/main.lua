@@ -34,7 +34,7 @@ function ant.init()
 		--- initialization method for bootstrapping the contract from other platforms ---
 		InitializeState = "Initialize-State",
 		-- read
-		GetControllers = "Controllers",
+		Controllers = "Controllers",
 		Record = "Record",
 		Records = "Records",
 		State = "State",

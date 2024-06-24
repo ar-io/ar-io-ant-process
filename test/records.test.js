@@ -49,7 +49,7 @@ describe('aos Records', async () => {
   it('Should set the record of an ANT', async () => {
     const setRecordResult = await handle({
       Tags: [
-        { name: 'Action', value: 'Record' },
+        { name: 'Action', value: 'Set-Record' },
         { name: 'Sub-Domain', value: '@' },
         { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
         { name: 'TTL-Seconds', value: 3600 },

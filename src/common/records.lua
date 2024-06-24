@@ -12,6 +12,12 @@ function records.setRecord(name, transactionId, ttlSeconds)
 	local ttlSecondsValidity, ttlValidityError = pcall(utils.validateTTLSeconds, ttlSeconds)
 	assert(ttlSecondsValidity ~= false, ttlValidityError)
 
+	local recordsCount = #Records
+
+	if recordsCount >= 10000 then
+		error("Max records limit of 10,000 reached, please delete some records to make space")
+	end
+
 	Records[name] = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,

@@ -37,6 +37,7 @@ function ant.init()
 		GetControllers = "Get-Controllers",
 		GetRecord = "Get-Record",
 		GetRecords = "Get-Records",
+		State = "State",
 	}
 
 	local TokenSpecActionMap = {
@@ -365,6 +366,21 @@ function ant.init()
 			end
 		end
 	)
+	Handlers.add(camel(ActionMap.State), utils.hasMatchingTag("Action", ActionMap.State), function(msg)
+		local state = {
+			records = Records,
+			controllers = Controllers,
+			balances = Balances,
+			owner = Owner,
+			name = Name,
+			ticker = Ticker,
+			logo = Logo,
+			denomination = Denomination,
+			totalSupply = TotalSupply,
+			initialized = Initialized,
+		}
+		ao.send({ Target = msg.From, Data = json.encode(state) })
+	end)
 end
 
 return ant

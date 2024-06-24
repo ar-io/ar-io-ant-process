@@ -79,11 +79,11 @@ describe('aos Info', async () => {
 
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
-    assert(state.balances);
-    assert(state.records);
-    assert(state.controllers);
-    assert(state.owner);
-    assert(state.ticker);
-    assert(state.name);
+    assert(state.Balances);
+    assert(state.Records);
+    assert(state.Controllers);
+    assert(state.Owner);
+    assert(state.Ticker);
+    assert(state.Name);
   });
 });

@@ -376,16 +376,16 @@ function ant.init()
 	)
 	Handlers.add(camel(ActionMap.State), utils.hasMatchingTag("Action", ActionMap.State), function(msg)
 		local state = {
-			records = Records,
-			controllers = Controllers,
-			balances = Balances,
-			owner = Owner,
-			name = Name,
-			ticker = Ticker,
-			logo = Logo,
-			denomination = Denomination,
-			totalSupply = TotalSupply,
-			initialized = Initialized,
+			Records = Records,
+			Controllers = Controllers,
+			Balances = Balances,
+			Owner = Owner,
+			Name = Name,
+			Ticker = Ticker,
+			Logo = Logo,
+			Denomination = Denomination,
+			TotalSupply = TotalSupply,
+			Initialized = Initialized,
 		}
 		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
 	end)

@@ -63,6 +63,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
+    console.log(recordsResult.Messages[0].Data);
+
     const record = JSON.parse(recordsResult.Messages[0].Data)['@'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);

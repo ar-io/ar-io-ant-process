@@ -15,7 +15,7 @@ const AO_LOADER_HANDLER_ENV = {
 };
 
 const AO_LOADER_OPTIONS = {
-  format: 'wasm32-unknown-emscripten',
+  format: 'wasm64-unknown-emscripten-draft_2024_02_15',
   inputEncoding: 'JSON-1',
   outputEncoding: 'JSON-1',
   memoryLimit: '524288000', // in bytes
@@ -26,7 +26,7 @@ const AO_LOADER_OPTIONS = {
 const AOS_WASM = fs.readFileSync(
   path.join(
     __dirname,
-    'fixtures/aos-9afQ1PLf2mrshqCTZEzzJTR2gWaC9zNPnYgYEqg1Pt4.wasm',
+    'fixtures/aos-cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk.wasm',
   ),
 );
 

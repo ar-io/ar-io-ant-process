@@ -298,7 +298,7 @@ function ant.init()
 		local recordsNotice = {
 			Target = msg.From,
 			Action = "Records-Notice",
-			Data = json.encode(records),
+			Data = records,
 		}
 
 		-- Add forwarded tags to the records notice messages

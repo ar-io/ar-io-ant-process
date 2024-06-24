@@ -25,7 +25,7 @@ function ant.init()
 
 	local ActionMap = {
 		-- write
-		SetController = "Set-Controller",
+		AddController = "Add-Controller",
 		RemoveController = "Remove-Controller",
 		SetRecord = "Set-Record",
 		RemoveRecord = "Remove-Record",
@@ -34,9 +34,9 @@ function ant.init()
 		--- initialization method for bootstrapping the contract from other platforms ---
 		InitializeState = "Initialize-State",
 		-- read
-		GetControllers = "Get-Controllers",
-		GetRecord = "Get-Record",
-		GetRecords = "Get-Records",
+		GetControllers = "Controllers",
+		GetRecord = "Record",
+		GetRecords = "Records",
 		State = "State",
 	}
 
@@ -67,10 +67,9 @@ function ant.init()
 			if not inputStatus then
 				ao.send({
 					Target = msg.From,
-					Tags = { Error = "Transfer-Error" },
-					Error = tostring(inputResult),
+					Tags = { Action = "Invalid-Transfer-Notice", Error = "Transfer-Error" },
+					Data = tostring(inputResult),
 					["Message-Id"] = msg.Id,
-					Data = inputResult,
 				})
 				return
 			end
@@ -79,10 +78,9 @@ function ant.init()
 			if not transferStatus then
 				ao.send({
 					Target = msg.From,
-					Action = "Transfer-Error",
-					Error = tostring(transferResult),
+					Tags = { Action = "Invalid-Transfer-Notice", Error = "Transfer-Error" },
 					["Message-Id"] = msg.Id,
-					Data = transferResult,
+					Data = tostring(transferResult),
 				})
 				return
 			elseif not msg.Cast then
@@ -105,17 +103,17 @@ function ant.init()
 			if not balStatus then
 				ao.send({
 					Target = msg.From,
-					Tags = { Error = "Balance-Error" },
-					Error = tostring(balRes),
+					Tags = { Action = "Invalid-Balance-Notice", Error = "Balance-Error" },
 					["Message-Id"] = msg.Id,
-					Data = balRes,
+					Data = tostring(balRes),
 				})
 			else
 				ao.send({
 					Target = msg.From,
+					Action = "Balance-Notice",
 					Balance = balRes,
 					Ticker = Ticker,
-					Account = msg.Tags.Recipient or msg.From,
+					Address = msg.Tags.Recipient or msg.From,
 					Data = balRes,
 				})
 			end
@@ -128,6 +126,7 @@ function ant.init()
 		function(msg)
 			ao.send({
 				Target = msg.From,
+				Action = "Balances-Notice",
 				Data = balances.balances(),
 			})
 		end
@@ -141,7 +140,7 @@ function ant.init()
 
 			ao.send({
 				Target = msg.From,
-				Action = "Total-Supply",
+				Action = "Total-Supply-Notice",
 				Data = TotalSupply,
 				Ticker = Ticker,
 			})
@@ -159,6 +158,7 @@ function ant.init()
 		}
 		ao.send({
 			Target = msg.From,
+			Action = "Info-Notice",
 			Tags = info,
 			Data = json.encode(info),
 		})
@@ -166,12 +166,13 @@ function ant.init()
 
 	-- ActionMap (ANT Spec)
 
-	Handlers.add(camel(ActionMap.SetController), utils.hasMatchingTag("Action", ActionMap.SetController), function(msg)
+	Handlers.add(camel(ActionMap.AddController), utils.hasMatchingTag("Action", ActionMap.AddController), function(msg)
 		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
 		if assertHasPermission == false then
 			return ao.send({
 				Target = msg.From,
-				Error = "Set-Controller-Error",
+				Action = "Invalid-Add-Controller-Notice",
+				Error = "Add-Controller-Error",
 				["Message-Id"] = msg.Id,
 				Data = permissionErr,
 			})
@@ -180,13 +181,14 @@ function ant.init()
 		if not controllerStatus then
 			ao.send({
 				Target = msg.From,
-				Error = "Set-Controller-Error",
+				Action = "Invalid-Add-Controller-Notice",
+				Error = "Add-Controller-Error",
 				["Message-Id"] = msg.Id,
 				Data = controllerRes,
 			})
 			return
 		end
-		ao.send({ Target = msg.From, Data = controllerRes })
+		ao.send({ Target = msg.From, Action = "Add-Controller-Notice", Data = controllerRes })
 	end)
 
 	Handlers.add(
@@ -197,6 +199,7 @@ function ant.init()
 			if assertHasPermission == false then
 				return ao.send({
 					Target = msg.From,
+					Action = "Invalid-Remove-Controller-Notice",
 					Data = permissionErr,
 					Error = "Remove-Controller-Error",
 					["Message-Id"] = msg.Id,
@@ -206,6 +209,7 @@ function ant.init()
 			if not removeStatus then
 				ao.send({
 					Target = msg.From,
+					Action = "Invalid-Remove-Controller-Notice",
 					Data = removeRes,
 					Error = "Remove-Controller-Error",
 					["Message-Id"] = msg.Id,
@@ -213,15 +217,15 @@ function ant.init()
 				return
 			end
 
-			ao.send({ Target = msg.From, Data = removeRes })
+			ao.send({ Target = msg.From, Action = "Remove-Controller-Notice", Data = removeRes })
 		end
 	)
 
 	Handlers.add(
-		camel(ActionMap.GetControllers),
-		utils.hasMatchingTag("Action", ActionMap.GetControllers),
+		camel(ActionMap.Controllers),
+		utils.hasMatchingTag("Action", ActionMap.Controllers),
 		function(msg)
-			ao.send({ Target = msg.From, Data = controllers.getControllers() })
+			ao.send({ Target = msg.From, Action = "Controllers-Notice", Data = controllers.getControllers() })
 		end
 	)
 
@@ -230,6 +234,7 @@ function ant.init()
 		if assertHasPermission == false then
 			return ao.send({
 				Target = msg.From,
+				Action = "Invalid-Set-Record-Notice",
 				Data = permissionErr,
 				Error = "Set-Record-Error",
 				["Message-Id"] = msg.Id,
@@ -241,22 +246,23 @@ function ant.init()
 
 		local setRecordStatus, setRecordResult = pcall(records.setRecord, name, transactionId, ttlSeconds)
 		if not setRecordStatus then
-			ao.send({ Target = msg.From, Data = setRecordResult, Error = "Set-Record-Error", ["Message-Id"] = msg.Id })
+			ao.send({ Target = msg.From, Action = "Invalid-Set-Record-Notice", Data = setRecordResult, Error = "Set-Record-Error", ["Message-Id"] = msg.Id })
 			return
 		end
 
-		ao.send({ Target = msg.From, Data = setRecordResult })
+		ao.send({ Target = msg.From, Action = "Set-Record-Notice", Data = setRecordResult })
 	end)
 
 	Handlers.add(camel(ActionMap.RemoveRecord), utils.hasMatchingTag("Action", ActionMap.RemoveRecord), function(msg)
 		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
 		if assertHasPermission == false then
-			return ao.send({ Target = msg.From, Data = permissionErr })
+			return ao.send({ Target = msg.From, Action = "Invalid-Remove-Record-Notice", Data = permissionErr })
 		end
 		local removeRecordStatus, removeRecordResult = pcall(records.removeRecord, msg.Tags["Sub-Domain"])
 		if not removeRecordStatus then
 			ao.send({
 				Target = msg.From,
+				Action = "Invalid-Remove-Record-Notice",
 				Data = removeRecordResult,
 				Error = "Remove-Record-Error",
 				["Message-Id"] = msg.Id,
@@ -266,10 +272,10 @@ function ant.init()
 		end
 	end)
 
-	Handlers.add(camel(ActionMap.GetRecord), utils.hasMatchingTag("Action", ActionMap.GetRecord), function(msg)
+	Handlers.add(camel(ActionMap.Record), utils.hasMatchingTag("Action", ActionMap.Record), function(msg)
 		local nameStatus, nameRes = pcall(records.getRecord, msg.Tags["Sub-Domain"])
 		if not nameStatus then
-			ao.send({ Target = msg.From, Data = nameRes, Error = "Get-Record-Error", ["Message-Id"] = msg.Id })
+			ao.send({ Target = msg.From, Action = "Invalid-Record-Notice", Data = nameRes, Error = "Record-Error", ["Message-Id"] = msg.Id })
 			return
 		end
 
@@ -292,7 +298,7 @@ function ant.init()
 		ao.send(recordNotice)
 	end)
 
-	Handlers.add(camel(ActionMap.GetRecords), utils.hasMatchingTag("Action", ActionMap.GetRecords), function(msg)
+	Handlers.add(camel(ActionMap.Records), utils.hasMatchingTag("Action", ActionMap.Records), function(msg)
 		local records = records.getRecords()
 
 		-- Credit-Notice message template, that is sent to the Recipient of the transfer
@@ -319,6 +325,7 @@ function ant.init()
 		if assertHasPermission == false then
 			return ao.send({
 				Target = msg.From,
+				Action = "Invalid-Set-Name-Notice",
 				Data = permissionErr,
 				Error = "Set-Name-Error",
 				["Message-Id"] = msg.Id,
@@ -326,10 +333,10 @@ function ant.init()
 		end
 		local nameStatus, nameRes = pcall(balances.setName, msg.Tags.Name)
 		if not nameStatus then
-			ao.send({ Target = msg.From, Data = nameRes, Error = "Set-Name-Error", ["Message-Id"] = msg.Id })
+			ao.send({ Target = msg.From, Action = "Invalid-Set-Name-Notice", Data = nameRes, Error = "Set-Name-Error", ["Message-Id"] = msg.Id })
 			return
 		end
-		ao.send({ Target = msg.From, Data = nameRes })
+		ao.send({ Target = msg.From, Action = "Set-Name-Notice", Data = nameRes })
 	end)
 
 	Handlers.add(camel(ActionMap.SetTicker), utils.hasMatchingTag("Action", ActionMap.SetTicker), function(msg)
@@ -337,6 +344,7 @@ function ant.init()
 		if assertHasPermission == false then
 			return ao.send({
 				Target = msg.From,
+				Action = "Invalid-Set-Ticker-Notice",
 				Data = permissionErr,
 				Error = "Set-Ticker-Error",
 				["Message-Id"] = msg.Id,
@@ -344,11 +352,11 @@ function ant.init()
 		end
 		local tickerStatus, tickerRes = pcall(balances.setTicker, msg.Tags.Ticker)
 		if not tickerStatus then
-			ao.send({ Target = msg.From, Data = tickerRes, Error = "Set-Ticker-Error", ["Message-Id"] = msg.Id })
+			ao.send({ Target = msg.From, Action = "Invalid-Set-Ticker-Notice", Data = tickerRes, Error = "Set-Ticker-Error", ["Message-Id"] = msg.Id })
 			return
 		end
 
-		ao.send({ Target = msg.From, Data = tickerRes })
+		ao.send({ Target = msg.From, Action = "Set-Ticker-Notice", Data = tickerRes })
 	end)
 
 	Handlers.add(
@@ -359,10 +367,10 @@ function ant.init()
 			local initStatus, result = pcall(initialize.initializeANTState, msg.Data)
 
 			if not initStatus then
-				ao.send({ Target = msg.From, Data = result, Error = "Initialize-State-Error", ["Message-Id"] = msg.Id })
+				ao.send({ Target = msg.From, Action = "Invalid-Initialize-State-Notice", Data = result, Error = "Initialize-State-Error", ["Message-Id"] = msg.Id })
 				return
 			else
-				ao.send({ Target = msg.From, Data = result })
+				ao.send({ Target = msg.From, Action = "Initialize-State-Notice", Data = result })
 			end
 		end
 	)
@@ -379,7 +387,7 @@ function ant.init()
 			totalSupply = TotalSupply,
 			initialized = Initialized,
 		}
-		ao.send({ Target = msg.From, Data = json.encode(state) })
+		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
 	end)
 end
 

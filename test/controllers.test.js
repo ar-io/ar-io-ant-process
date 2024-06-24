@@ -24,7 +24,7 @@ describe('aos Controllers', async () => {
 
   it('Should get the controllers', async () => {
     const result = await handle({
-      Tags: [{ name: 'Action', value: 'Get-Controllers' }],
+      Tags: [{ name: 'Action', value: 'Controllers' }],
     });
 
     const controllers = JSON.parse(result.Messages[0].Data);
@@ -32,11 +32,11 @@ describe('aos Controllers', async () => {
     assert(controllers.includes(STUB_ADDRESS));
   });
 
-  it('Should set the controller', async () => {
+  it('Should add the controller', async () => {
     const controller = ''.padEnd(43, '2');
     const result = await handle({
       Tags: [
-        { name: 'Action', value: 'Set-Controller' },
+        { name: 'Action', value: 'Add-Controller' },
         { name: 'Controller', value: controller },
       ],
     });
@@ -57,7 +57,7 @@ describe('aos Controllers', async () => {
     const addControllerResult = await handle(
       {
         Tags: [
-          { name: 'Action', value: 'Set-Controller' },
+          { name: 'Action', value: 'Add-Controller' },
           { name: 'Controller', value: STUB_ADDRESS },
         ],
       },

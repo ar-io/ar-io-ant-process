@@ -24,7 +24,7 @@ describe('aos Records', async () => {
 
   it('Should get the records of the ant', async () => {
     const result = await handle({
-      Tags: [{ name: 'Action', value: 'Get-Records' }],
+      Tags: [{ name: 'Action', value: 'Records' }],
     });
 
     const records = JSON.parse(result.Messages[0].Data);
@@ -35,7 +35,7 @@ describe('aos Records', async () => {
   it('Should get a singular record of the ant', async () => {
     const result = await handle({
       Tags: [
-        { name: 'Action', value: 'Get-Record' },
+        { name: 'Action', value: 'Record' },
         { name: 'Sub-Domain', value: '@' },
       ],
     });
@@ -58,7 +58,7 @@ describe('aos Records', async () => {
 
     const recordsResult = await handle(
       {
-        Tags: [{ name: 'Action', value: 'Get-Records' }],
+        Tags: [{ name: 'Action', value: 'Records' }],
       },
       setRecordResult.Memory,
     );
@@ -90,7 +90,7 @@ describe('aos Records', async () => {
 
     const recordsResult = await handle(
       {
-        Tags: [{ name: 'Action', value: 'Get-Records' }],
+        Tags: [{ name: 'Action', value: 'Records' }],
       },
       removeRecordResult.Memory,
     );

@@ -35,8 +35,8 @@ function ant.init()
 		InitializeState = "Initialize-State",
 		-- read
 		GetControllers = "Controllers",
-		GetRecord = "Record",
-		GetRecords = "Records",
+		Record = "Record",
+		Records = "Records",
 		State = "State",
 	}
 

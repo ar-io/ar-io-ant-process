@@ -1,6 +1,6 @@
 name: Arweave Name Token
 
-on: [push, workflow_dispatch]
+on: [push, workflow_dispatch, pull_request]
 
 jobs:
   busted:

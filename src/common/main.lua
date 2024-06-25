@@ -413,6 +413,15 @@ function ant.init()
 			TotalSupply = TotalSupply,
 			Initialized = Initialized,
 		}
+
+		-- Add forwarded tags to the records notice messages
+		for tagName, tagValue in pairs(msg) do
+			-- Tags beginning with "X-" are forwarded
+			if string.sub(tagName, 1, 2) == "X-" then
+				state[tagName] = tagValue
+			end
+		end
+		
 		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
 	end)
 end

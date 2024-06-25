@@ -27,6 +27,7 @@ function controllers.removeController(controller)
 	end
 
 	assert(controllerExists ~= nil, "Controller does not exist")
+	return json.encode(Controllers)
 end
 
 function controllers.getControllers()

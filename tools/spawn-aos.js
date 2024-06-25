@@ -12,7 +12,7 @@ const arweave = Arweave.init({
 const ao = connect({
   GATEWAY_URL: 'https://arweave.net',
 });
-const moduleId = '9afQ1PLf2mrshqCTZEzzJTR2gWaC9zNPnYgYEqg1Pt4';
+const moduleId = 'cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk';
 const scheduler = '_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA';
 
 async function main() {
@@ -52,34 +52,6 @@ async function main() {
 
   const testCases = [
     ['Eval', {}, luaCode],
-    ['Info', {}],
-    ['Set-Controller', { Controller: ''.padEnd(43, '1') }],
-    ['Remove-Controller', { Controller: ''.padEnd(43, '1') }],
-    ['Set-Name', { Name: 'Test Name' }],
-    ['Set-Ticker', { Ticker: 'TEST' }],
-    [
-      'Set-Record',
-      {
-        'Transaction-Id': ''.padEnd(43, '1'),
-        'TTL-Seconds': '1000',
-        'Sub-Domain': '@',
-      },
-    ],
-    [
-      'Set-Record',
-      {
-        'Transaction-Id': ''.padEnd(43, '1'),
-        'TTL-Seconds': '1000',
-        'Sub-Domain': 'bob',
-      },
-    ],
-    ['Remove-Record', { 'Sub-Domain': 'bob' }],
-    ['Balance', {}],
-    ['Balance', { Recipient: address }],
-    ['Balances', {}],
-    ['Get-Controllers', {}],
-    ['Get-Records', {}],
-    ['Get-Record', { 'Sub-Domain': '@' }],
     ['Initialize-State', {}, initState],
     ['Transfer', { Recipient: 'N4h8M9A9hasa3tF47qQyNvcKjm4APBKuFs7vqUVm-SI' }],
   ];

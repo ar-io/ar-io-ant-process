@@ -257,7 +257,8 @@ function utils.notices.credit(msg)
 	local notice = {
 		Target = msg.From,
 		Action = "Credit-Notice",
-		Sender = msg.From,
+		Recipient = msg.Recipient,
+		Quantity = tostring(1),
 	}
 	for tagName, tagValue in pairs(msg) do
 		-- Tags beginning with "X-" are forwarded
@@ -273,7 +274,8 @@ function utils.notices.debit(msg)
 	local notice = {
 		Target = msg.From,
 		Action = "Debit-Notice",
-		Sender = msg.From,
+		Recipient = msg.Recipient,
+		Quantity = tostring(1),
 	}
 	-- Add forwarded tags to the credit and debit notice messages
 	for tagName, tagValue in pairs(msg) do

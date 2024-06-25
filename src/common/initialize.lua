@@ -9,6 +9,7 @@ function initialize.initializeANTState(state)
 	local records = encoded.records
 	local name = encoded.name
 	local ticker = encoded.ticker
+	local owner = encoded.owner
 	assert(type(name) == "string", "name must be a string")
 	assert(type(ticker) == "string", "ticker must be a string")
 	assert(type(balances) == "table", "balances must be a table")
@@ -17,6 +18,7 @@ function initialize.initializeANTState(state)
 	end
 	assert(type(controllers) == "table", "controllers must be a table")
 	assert(type(records) == "table", "records must be a table")
+	assert(type(owner) == "string", "owner must be a string")
 	for k, v in pairs(records) do
 		utils.validateUndername(k)
 		assert(type(v) == "table", "records values must be tables")
@@ -30,6 +32,7 @@ function initialize.initializeANTState(state)
 	Controllers = controllers
 	Records = records
 	Initialized = true
+	Owner = owner
 
 	return json.encode({
 		name = Name,
@@ -37,6 +40,8 @@ function initialize.initializeANTState(state)
 		balances = Balances,
 		controllers = Controllers,
 		records = Records,
+		owner = Owner,
+		initialized = Initialized,
 	})
 end
 

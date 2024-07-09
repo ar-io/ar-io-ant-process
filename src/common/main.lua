@@ -22,6 +22,7 @@ function ant.init()
 	Denomination = Denomination or 0
 	TotalSupply = TotalSupply or 1
 	Initialized = Initialized or false
+	SourceCodeTxId = SourceCodeTxId or nil
 
 	local ActionMap = {
 		-- write
@@ -38,6 +39,7 @@ function ant.init()
 		Record = "Record",
 		Records = "Records",
 		State = "State",
+		Evolve = "Evolve",
 	}
 
 	local TokenSpecActionMap = {
@@ -155,6 +157,7 @@ function ant.init()
 			Logo = Logo,
 			Denomination = tostring(Denomination),
 			Owner = Owner,
+			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 		ao.send({
 			Target = msg.From,
@@ -412,6 +415,7 @@ function ant.init()
 			Denomination = Denomination,
 			TotalSupply = TotalSupply,
 			Initialized = Initialized,
+			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 
 		-- Add forwarded tags to the records notice messages
@@ -421,8 +425,30 @@ function ant.init()
 				state[tagName] = tagValue
 			end
 		end
-		
+
 		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
+	end)
+
+	Handlers.prepend(camel(ActionMap.Evolve), function(msg)
+		local shouldCall = utils.hasMatchingTag("Action", "Eval")(msg)
+		if shouldCall == 1 or shouldCall == "continue" then
+			return "continue"
+		end
+		return shouldCall
+	end, function(msg)
+		local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
+		local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
+		if not srcCodeTxId or not srcCodeTxIdStatus then
+			ao.send({
+				Target = msg.From,
+				Action = "Invalid-Evolve-Notice",
+				Error = "Evolve-Error",
+				["Message-Id"] = msg.Id,
+				Data = "Source-Code-TX-ID is required",
+			})
+			return
+		end
+		SourceCodeTxId = srcCodeTxId
 	end)
 end
 

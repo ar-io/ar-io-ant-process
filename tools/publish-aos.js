@@ -2,6 +2,8 @@ const Arweave = require('arweave');
 const path = require('path');
 const fs = require('fs');
 
+const srcCodeTxIdPlaceholder = '__INSERT_SOURCE_CODE_ID__';
+
 const arweave = Arweave.init({
   host: 'arweave.net',
   port: 443,
@@ -16,13 +18,26 @@ async function main() {
   const jwk = JSON.parse(wallet);
   const address = await arweave.wallets.jwkToAddress(jwk);
 
+  console.log('publishing initial lua to get source code tx id');
+  const tx1 = await arweave.createTransaction({ data: bundledLua }, jwk);
+  tx1.addTag('App-Name', 'aos-LUA');
+  tx1.addTag('App-Version', '0.0.1');
+  tx1.addTag('Content-Type', 'text/x-lua');
+  tx1.addTag('Author', 'Permanent Data Solutions');
+  await arweave.transactions.sign(tx1, jwk);
+  await arweave.transactions.post(tx1);
+
+  // replace placeholder with actual tx id
+  const bundledLuaWithTxId = bundledLua.replace(srcCodeTxIdPlaceholder, tx1.id);
+
   console.log(`Publish AOS ANT Lua with address ${address}`);
 
-  const tx = await arweave.createTransaction({ data: bundledLua }, jwk);
+  const tx = await arweave.createTransaction({ data: bundledLuaWithTxId }, jwk);
   tx.addTag('App-Name', 'aos-LUA');
   tx.addTag('App-Version', '0.0.1');
   tx.addTag('Content-Type', 'text/x-lua');
   tx.addTag('Author', 'Permanent Data Solutions');
+  tx.addTag('Originial-Tx-Id', tx1.id);
   await arweave.transactions.sign(tx, jwk);
   await arweave.transactions.post(tx);
 

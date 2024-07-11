@@ -22,7 +22,8 @@ function ant.init()
 	Denomination = Denomination or 0
 	TotalSupply = TotalSupply or 1
 	Initialized = Initialized or false
-	SourceCodeTxId = SourceCodeTxId or nil
+	-- INSERT placeholder used by build script to inject the appropriate ID
+	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
 
 	local ActionMap = {
 		-- write

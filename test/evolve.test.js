@@ -44,4 +44,25 @@ describe('aos Evolve', async () => {
     assert(state);
     assert(state['Source-Code-TX-ID'] === srcCodeTxIdStub);
   });
+
+  it('should not evolve the ant', async () => {
+    const evolveResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Eval' },
+        // omit src code id
+      ],
+      Data: BUNDLED_AOS_ANT_LUA,
+    });
+
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      evolveResult.Memory,
+    );
+
+    const state = JSON.parse(result.Messages[0].Data);
+    assert(state);
+    assert(state['Source-Code-TX-ID'] === '__INSERT_SOURCE_CODE_ID__');
+  });
 });

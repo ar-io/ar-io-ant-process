@@ -430,16 +430,13 @@ function ant.init()
 		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
 	end)
 
-	Handlers.prepend(camel(ActionMap.Evolve), function(msg)
-		local shouldCall = utils.hasMatchingTag("Action", "Eval")(msg)
-		if shouldCall == 1 or shouldCall == "continue" then
-			return "continue"
-		end
-		return shouldCall
-	end, function(msg)
+	Handlers.prepend(camel(ActionMap.Evolve), utils.hasMatchingTag("Action", "Eval"), function(msg)
 		local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
+		if not srcCodeTxId then
+			return
+		end
 		local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
-		if not srcCodeTxId or not srcCodeTxIdStatus then
+		if srcCodeTxIdStatus and not srcCodeTxIdStatus then
 			ao.send({
 				Target = msg.From,
 				Action = "Invalid-Evolve-Notice",

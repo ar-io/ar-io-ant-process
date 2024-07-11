@@ -18,7 +18,6 @@ async function main() {
   const jwk = JSON.parse(wallet);
   const address = await arweave.wallets.jwkToAddress(jwk);
 
-  console.log('publishing initial lua to get source code tx id');
   const tx1 = await arweave.createTransaction({ data: bundledLua }, jwk);
   tx1.addTag('App-Name', 'aos-LUA');
   tx1.addTag('App-Version', '0.0.1');

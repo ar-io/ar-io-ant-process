@@ -37,6 +37,15 @@ async function main() {
   tx.addTag('Content-Type', 'text/x-lua');
   tx.addTag('Author', 'Permanent Data Solutions');
   tx.addTag('Originial-Tx-Id', tx1.id);
+  tx.addTag(
+    'Changelog',
+    `# Changelog
+
+### Added
+
+- Evolve capabilities and handlers.
+`,
+  );
   await arweave.transactions.sign(tx, jwk);
   await arweave.transactions.post(tx);
 

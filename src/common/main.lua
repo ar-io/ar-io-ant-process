@@ -22,6 +22,8 @@ function ant.init()
 	Denomination = Denomination or 0
 	TotalSupply = TotalSupply or 1
 	Initialized = Initialized or false
+	-- INSERT placeholder used by build script to inject the appropriate ID
+	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
 
 	local ActionMap = {
 		-- write
@@ -38,6 +40,7 @@ function ant.init()
 		Record = "Record",
 		Records = "Records",
 		State = "State",
+		Evolve = "Evolve",
 	}
 
 	local TokenSpecActionMap = {
@@ -155,6 +158,7 @@ function ant.init()
 			Logo = Logo,
 			Denomination = tostring(Denomination),
 			Owner = Owner,
+			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 		ao.send({
 			Target = msg.From,
@@ -412,6 +416,7 @@ function ant.init()
 			Denomination = Denomination,
 			TotalSupply = TotalSupply,
 			Initialized = Initialized,
+			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 
 		-- Add forwarded tags to the records notice messages
@@ -421,8 +426,27 @@ function ant.init()
 				state[tagName] = tagValue
 			end
 		end
-		
+
 		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
+	end)
+
+	Handlers.prepend(camel(ActionMap.Evolve), utils.hasMatchingTag("Action", "Eval"), function(msg)
+		local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
+		if not srcCodeTxId then
+			return
+		end
+		local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
+		if srcCodeTxIdStatus and not srcCodeTxIdStatus then
+			ao.send({
+				Target = msg.From,
+				Action = "Invalid-Evolve-Notice",
+				Error = "Evolve-Error",
+				["Message-Id"] = msg.Id,
+				Data = "Source-Code-TX-ID is required",
+			})
+			return
+		end
+		SourceCodeTxId = srcCodeTxId
 	end)
 end
 

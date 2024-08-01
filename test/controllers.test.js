@@ -51,7 +51,6 @@ describe('aos Controllers', async () => {
         { name: 'Controller', value: STUB_ADDRESS },
       ],
     });
-    console.dir(result, { depth: null });
     assert(result);
 
     const addControllerResult = await handle(
@@ -63,7 +62,6 @@ describe('aos Controllers', async () => {
       },
       result.Memory,
     );
-    console.dir(addControllerResult, { depth: null });
     assert.equal(
       JSON.parse(addControllerResult.Messages[0].Data).includes(STUB_ADDRESS),
       true,

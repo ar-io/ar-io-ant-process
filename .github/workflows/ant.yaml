@@ -1,9 +1,9 @@
 name: Arweave Name Token
 
-on: [push, workflow_dispatch, pull_request]
+on: [pull_request]
 
 jobs:
-  busted:
+  unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,11 +29,8 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  build:
+  integration:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        step: [build:aos, test]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2
@@ -42,4 +39,5 @@ jobs:
           cache: 'yarn'
 
       - run: yarn --frozen-lockfile
-      - run: yarn ${{ matrix.step }}
+      - run: yarn aos:build
+      - run: yarn test

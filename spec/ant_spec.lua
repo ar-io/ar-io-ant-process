@@ -30,6 +30,7 @@ local originalState = {
 	controllers = { fake_address },
 	records = { ["@"] = { transactionId = "test", ttlSeconds = 900 } },
 	balances = { [fake_address] = 1 },
+	owner = fake_address,
 }
 
 describe("Arweave Name Token", function()

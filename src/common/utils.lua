@@ -1,6 +1,7 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
 
 local constants = require(".common.constants")
+local json = require("json")
 local utils = { _version = "0.0.1" }
 
 local function isArray(table)
@@ -293,6 +294,36 @@ function utils.notices.sendNotices(notices)
 	for _, notice in ipairs(notices) do
 		ao.send(notice)
 	end
+end
+
+function utils.notices.notifyState(msg, target)
+	if not target then
+		print("No target specified for state notice")
+		return
+	end
+	local state = {
+		Records = Records,
+		Controllers = Controllers,
+		Balances = Balances,
+		Owner = Owner,
+		Name = Name,
+		Ticker = Ticker,
+		Logo = Logo,
+		Denomination = Denomination,
+		TotalSupply = TotalSupply,
+		Initialized = Initialized,
+		["Source-Code-TX-ID"] = SourceCodeTxId,
+	}
+
+	-- Add forwarded tags to the records notice messages
+	for tagName, tagValue in pairs(msg) do
+		-- Tags beginning with "X-" are forwarded
+		if string.sub(tagName, 1, 2) == "X-" then
+			state[tagName] = tagValue
+		end
+	end
+
+	ao.send({ Target = target, Action = "State-Notice", Data = json.encode(state) })
 end
 
 return utils

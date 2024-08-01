@@ -6,7 +6,10 @@ const AO_LOADER_HANDLER_ENV = {
   Process: {
     Id: ''.padEnd(43, '1'),
     Owner: STUB_ADDRESS,
-    Tags: [{ name: 'Authority', value: 'XXXXXX' }],
+    Tags: [
+      { name: 'Authority', value: 'XXXXXX' },
+      { name: 'ANT-Registry-Id', value: 'ant-registry-'.padEnd(43, '1') },
+    ],
   },
   Module: {
     Id: ''.padEnd(43, '1'),

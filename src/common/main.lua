@@ -24,6 +24,7 @@ function ant.init()
 	Initialized = Initialized or false
 	-- INSERT placeholder used by build script to inject the appropriate ID
 	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
+	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
 
 	local ActionMap = {
 		-- write
@@ -61,7 +62,6 @@ function ant.init()
 		function(msg)
 			local recipient = msg.Tags.Recipient
 			local function checkAssertions()
-				utils.validateArweaveId(recipient)
 				utils.validateOwner(msg.From)
 			end
 
@@ -89,12 +89,14 @@ function ant.init()
 			elseif not msg.Cast then
 				ao.send(utils.notices.debit(msg))
 				ao.send(utils.notices.credit(msg))
+				utils.notices.notifyState(msg, AntRegistryId)
 				return
 			end
 			ao.send({
 				Target = msg.From,
 				Data = transferResult,
 			})
+			utils.notices.notifyState(msg, AntRegistryId)
 		end
 	)
 
@@ -193,6 +195,7 @@ function ant.init()
 			return
 		end
 		ao.send({ Target = msg.From, Action = "Add-Controller-Notice", Data = controllerRes })
+		utils.notices.notifyState(msg, AntRegistryId)
 	end)
 
 	Handlers.add(
@@ -222,6 +225,7 @@ function ant.init()
 			end
 
 			ao.send({ Target = msg.From, Action = "Remove-Controller-Notice", Data = removeRes })
+			utils.notices.notifyState(msg, AntRegistryId)
 		end
 	)
 
@@ -405,29 +409,7 @@ function ant.init()
 		end
 	)
 	Handlers.add(camel(ActionMap.State), utils.hasMatchingTag("Action", ActionMap.State), function(msg)
-		local state = {
-			Records = Records,
-			Controllers = Controllers,
-			Balances = Balances,
-			Owner = Owner,
-			Name = Name,
-			Ticker = Ticker,
-			Logo = Logo,
-			Denomination = Denomination,
-			TotalSupply = TotalSupply,
-			Initialized = Initialized,
-			["Source-Code-TX-ID"] = SourceCodeTxId,
-		}
-
-		-- Add forwarded tags to the records notice messages
-		for tagName, tagValue in pairs(msg) do
-			-- Tags beginning with "X-" are forwarded
-			if string.sub(tagName, 1, 2) == "X-" then
-				state[tagName] = tagValue
-			end
-		end
-
-		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
+		utils.notices.notifyState(msg, msg.From)
 	end)
 
 	Handlers.prepend(camel(ActionMap.Evolve), utils.hasMatchingTag("Action", "Eval"), function(msg)

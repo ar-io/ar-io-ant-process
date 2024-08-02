@@ -274,7 +274,7 @@ function ant.init()
 				["Message-Id"] = msg.Id,
 			})
 		else
-			ao.send({ Target = msg.From, Data = removeRecordResult })
+			ao.send({ Target = msg.From, Action = "Remove-Record-Notice", Data = removeRecordResult })
 		end
 	end)
 

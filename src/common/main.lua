@@ -404,7 +404,7 @@ function ant.init()
 			end
 		end
 	)
-	Handlers.add(camel(ActionMap.State), utils.hasMatchingTag("Action", ActionMap.State), function(msg)
+	Handlers.add(ActionMap.State, Handlers.utils.hasMatchingTag("Action", ActionMap.State), function(msg)
 		local state = {
 			Records = Records,
 			Controllers = Controllers,
@@ -419,15 +419,23 @@ function ant.init()
 			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 
-		-- Add forwarded tags to the records notice messages
-		for tagName, tagValue in pairs(msg) do
+		local stateNotice = {
+			Target = msg.From,
+			Action = "State-Notice",
+			Data = json.encode(state),
+			Tags = {},
+		}
+
+		-- Add forwarded tags to the State-Notice messages
+		for tagName, tagValue in pairs(msg.Tags) do
 			-- Tags beginning with "X-" are forwarded
 			if string.sub(tagName, 1, 2) == "X-" then
-				state[tagName] = tagValue
+				stateNotice.Tags[tagName] = tagValue
 			end
 		end
 
-		ao.send({ Target = msg.From, Action = "State-Notice", Data = json.encode(state) })
+		-- Send State-Notice
+		ao.send(stateNotice)
 	end)
 
 	Handlers.prepend(camel(ActionMap.Evolve), utils.hasMatchingTag("Action", "Eval"), function(msg)

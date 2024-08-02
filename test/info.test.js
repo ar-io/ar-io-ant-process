@@ -77,6 +77,8 @@ describe('aos Info', async () => {
       Tags: [{ name: 'Action', value: 'State' }],
     });
 
+    console.dir(result.Messages);
+
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
     assert(state.Balances);

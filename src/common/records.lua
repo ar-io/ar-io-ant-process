@@ -33,7 +33,7 @@ function records.removeRecord(name)
 	local nameValidity, nameValidityError = pcall(utils.validateUndername, name)
 	assert(nameValidity ~= false, nameValidityError)
 	Records[name] = nil
-	return json.encode({ message = "Record deleted" })
+	return json.encode(Records)
 end
 
 function records.getRecord(name)

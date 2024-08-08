@@ -1,4 +1,4 @@
-package.path = "./ant/src/?.lua;" .. package.path
+package.path = "./src/?.lua;./src/common/?.lua;" .. package.path
 
 _G.ao = {
 	send = function(obj)

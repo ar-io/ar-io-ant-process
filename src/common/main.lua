@@ -406,6 +406,7 @@ function ant.init()
 				return
 			else
 				ao.send({ Target = msg.From, Action = "Initialize-State-Notice", Data = result })
+				utils.notices.notifyState(msg, AntRegistryId)
 			end
 		end
 	)

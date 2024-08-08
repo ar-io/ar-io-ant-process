@@ -326,4 +326,12 @@ function utils.notices.notifyState(msg, target)
 	ao.send({ Target = target, Action = "State-Notice", Data = json.encode(state) })
 end
 
+function utils.getHandlerNames(handlers)
+	local names = {}
+	for _, handler in ipairs(handlers.list) do
+		table.insert(names, handler.name)
+	end
+	return names
+end
+
 return utils

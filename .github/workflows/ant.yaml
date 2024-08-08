@@ -1,6 +1,6 @@
 name: Arweave Name Token
 
-on: [pull_request]
+on: [push]
 
 jobs:
   unit:
@@ -41,3 +41,16 @@ jobs:
       - run: yarn --frozen-lockfile
       - run: yarn aos:build
       - run: yarn test
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [unit, integration]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+      - run: yarn --frozen-lockfile
+      - run: yarn aos:build
+      - run: yarn aos:publish

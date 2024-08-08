@@ -313,7 +313,6 @@ function utils.notices.notifyState(msg, target)
 		TotalSupply = TotalSupply,
 		Initialized = Initialized,
 		["Source-Code-TX-ID"] = SourceCodeTxId,
-		FirstRun = FirstRun,
 	}
 
 	-- Add forwarded tags to the records notice messages

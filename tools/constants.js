@@ -63,6 +63,15 @@ const DEFAULT_HANDLE_OPTIONS = {
   Timestamp: Date.now(),
 };
 
+const ANT_EVAL_OPTIONS = {
+  ...DEFAULT_HANDLE_OPTIONS,
+  Tags: [
+    { name: 'Action', value: 'Eval' },
+    { name: 'Module', value: ''.padEnd(43, '1') },
+  ],
+  Data: BUNDLED_AOS_ANT_LUA,
+};
+
 module.exports = {
   BUNDLED_AOS_ANT_LUA,
   DEFAULT_ANT_STATE,
@@ -71,4 +80,5 @@ module.exports = {
   AO_LOADER_HANDLER_ENV,
   STUB_ADDRESS,
   DEFAULT_HANDLE_OPTIONS,
+  ANT_EVAL_OPTIONS,
 };

@@ -39,7 +39,6 @@ describe('aos Evolve', async () => {
       },
       evolveResult.Memory,
     );
-    console.dir(result, { depth: null });
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
     assert(state['Source-Code-TX-ID'] === srcCodeTxIdStub);

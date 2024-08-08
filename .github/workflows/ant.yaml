@@ -54,3 +54,21 @@ jobs:
       - run: yarn --frozen-lockfile
       - run: yarn aos:build
       - run: yarn aos:publish
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Get latest transaction ID from versions.json
+        id: get_tx_id
+        run: |
+          TX_ID=$(jq -r '.txIds | to_entries | sort_by(.key | tonumber) | last | .value' versions.json)
+          echo "::set-output name=TX_ID::$TX_ID"
+
+      - name: Create GitHub tag
+        env:
+          TX_ID: ${{ steps.get_tx_id.outputs.TX_ID }}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git tag -a "$TX_ID" -m "Release version $TX_ID"
+          git push origin "$TX_ID"

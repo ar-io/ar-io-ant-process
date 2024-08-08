@@ -8,7 +8,7 @@ function balances.walletHasSufficientBalance(wallet)
 end
 
 function balances.transfer(to)
-	assert(type(to) == "string", "'To' must be a string")
+	utils.validateArweaveId(to)
 	Balances = { [to] = 1 }
 	Owner = to
 	Controllers = {}
@@ -16,7 +16,7 @@ function balances.transfer(to)
 end
 
 function balances.balance(address)
-	assert(type(address) == "string", "Address must be a string")
+	utils.validateArweaveId(address)
 	local balance = Balances[address] or 0
 	return balance
 end

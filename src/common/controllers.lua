@@ -4,7 +4,7 @@ local utils = require(".common.utils")
 local controllers = {}
 
 function controllers.setController(controller)
-	assert(type(controller) == "string", "Controller must be a string")
+	utils.validateArweaveId(controller)
 
 	for _, c in ipairs(Controllers) do
 		assert(c ~= controller, "Controller already exists")
@@ -15,7 +15,7 @@ function controllers.setController(controller)
 end
 
 function controllers.removeController(controller)
-	assert(type(controller) == "string", "Controller must be a string")
+	utils.validateArweaveId(controller)
 	local controllerExists = false
 
 	for i, v in ipairs(Controllers) do

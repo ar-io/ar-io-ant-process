@@ -10,16 +10,11 @@ const arweave = Arweave.init({
   protocol: 'https',
 });
 async function main() {
-  const versions = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../versions.json'), 'utf-8'),
-  );
   const bundledLua = fs.readFileSync(
     path.join(__dirname, '../dist/aos-bundled.lua'),
     'utf-8',
   );
-  const wallet =
-    process.env.WALLET ??
-    fs.readFileSync(path.join(__dirname, 'key.json'), 'utf-8');
+  const wallet = fs.readFileSync(path.join(__dirname, 'key.json'), 'utf-8');
   const jwk = JSON.parse(wallet);
   const address = await arweave.wallets.jwkToAddress(jwk);
 
@@ -55,16 +50,5 @@ async function main() {
   await arweave.transactions.post(tx);
 
   console.log('Transaction ID:', tx.id);
-  const timestamp = Date.now();
-  versions.txIds[timestamp] = tx.id;
-  // sort by date
-  const sortedVersions = Object.fromEntries(
-    Object.entries(versions.txIds).sort(([time1], [time2]) => time2 - time1),
-  );
-
-  fs.writeFileSync(
-    path.join(__dirname, '../versions.json'),
-    JSON.stringify({ txIds: sortedVersions }, null, 2),
-  );
 }
 main();

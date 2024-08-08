@@ -26,13 +26,6 @@ function ant.init()
 	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
 	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
 
-	FirstRun = FirstRun or true
-
-	if FirstRun == true then
-		FirstRun = false
-		utils.notices.notifyState({}, AntRegistryId)
-	end
-
 	local ActionMap = {
 		-- write
 		AddController = "Add-Controller",
@@ -169,7 +162,6 @@ function ant.init()
 			Owner = Owner,
 			HandlerNames = utils.getHandlerNames(Handlers),
 			["Source-Code-TX-ID"] = SourceCodeTxId,
-			FirstRun = FirstRun,
 		}
 		ao.send({
 			Target = msg.From,

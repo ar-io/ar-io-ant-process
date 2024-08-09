@@ -36,7 +36,7 @@ async function main() {
   tx.addTag('App-Version', '0.0.1');
   tx.addTag('Content-Type', 'text/x-lua');
   tx.addTag('Author', 'Permanent Data Solutions');
-  tx.addTag('Originial-Tx-Id', tx1.id);
+  tx.addTag('Original-Tx-Id', tx1.id);
   tx.addTag(
     'Changelog',
     `# Changelog
@@ -44,6 +44,7 @@ async function main() {
 ### Added
 
 - Evolve capabilities and handlers.
+- ANT Registry updates on owner and controller changes.
 `,
   );
   await arweave.transactions.sign(tx, jwk);

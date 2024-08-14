@@ -3,6 +3,8 @@
 local constants = require(".common.constants")
 local json = require(".common.json")
 local utils = { _version = "0.0.1" }
+local crypto = require("crypto")
+local Stream = crypto.utils.stream
 
 local function isArray(table)
 	if type(table) == "table" then
@@ -600,6 +602,20 @@ function utils.parseBuyRecord(msg)
 		quantity = quantity,
 		price = price,
 	}
+end
+
+function utils.hashGlobalProperty(property)
+	local stream = Stream.fromString(tostring(_G[property]))
+	local hash = crypto.digest.sha2_256(stream)
+	return hash
+end
+
+function utils.generateGlobalStateHashes()
+	local hashes = {}
+	for _, property in ipairs(utils.keys(_G)) do
+		hashes[property] = utils.hashGlobalProperty(property)
+	end
+	return hashes
 end
 
 return utils

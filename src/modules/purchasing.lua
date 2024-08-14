@@ -148,7 +148,10 @@ function purchasing.init()
 
 	utils.createForwardedActionHandler(purchasing.ActionMap.BuyRecord, function(msg)
 		-- safely execute here and only then throw to refund the tokens
-		-- NOTE: this could possibly be abused to steal tokens from the ANT itself, but the ANT can protect itself by not holding too many tokens.
+		--[[
+			NOTE: this could possibly be abused to steal tokens from the ANT itself, but the ANT can protect itself by not holding too many tokens.
+			Not exactly sure how this could be exploited, but it's a possibility.
+		]]
 		local buyStatus, buyRecordParams = pcall(utils.parseBuyRecord, msg)
 		if not buyStatus then
 			utils.refundTokens(msg)

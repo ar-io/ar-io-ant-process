@@ -6,7 +6,10 @@ const AO_LOADER_HANDLER_ENV = {
   Process: {
     Id: ''.padEnd(43, '1'),
     Owner: STUB_ADDRESS,
-    Tags: [{ name: 'Authority', value: 'XXXXXX' }],
+    Tags: [
+      { name: 'Authority', value: 'XXXXXX' },
+      { name: 'ANT-Registry-Id', value: 'ant-registry-'.padEnd(43, '1') },
+    ],
   },
   Module: {
     Id: ''.padEnd(43, '1'),
@@ -60,6 +63,15 @@ const DEFAULT_HANDLE_OPTIONS = {
   Timestamp: Date.now(),
 };
 
+const ANT_EVAL_OPTIONS = {
+  ...DEFAULT_HANDLE_OPTIONS,
+  Tags: [
+    { name: 'Action', value: 'Eval' },
+    { name: 'Module', value: ''.padEnd(43, '1') },
+  ],
+  Data: BUNDLED_AOS_ANT_LUA,
+};
+
 module.exports = {
   BUNDLED_AOS_ANT_LUA,
   DEFAULT_ANT_STATE,
@@ -68,4 +80,5 @@ module.exports = {
   AO_LOADER_HANDLER_ENV,
   STUB_ADDRESS,
   DEFAULT_HANDLE_OPTIONS,
+  ANT_EVAL_OPTIONS,
 };

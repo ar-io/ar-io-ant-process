@@ -14,5 +14,40 @@ constants.INVALID_TTL_MESSAGE = "Invalid TTL. TLL must be an integer between "
 	.. " and "
 	.. constants.MAX_TTL_SECONDS
 	.. " seconds"
+constants.purchaseTypes = {
+	buy = "buy",
+	lease = "lease",
+	auctionBuy = "auctionBuy",
+	auctionLease = "auctionLease",
+}
+constants.auctionTypes = {
+	dutch = "dutch",
+	english = "english",
+}
+constants.times = {}
+-- seconds
+constants.times.MINUTE_IN_SECONDS = 60
+constants.times.HOUR_IN_SECONDS = 60 * 60
+constants.times.DAY_IN_SECONDS = 60 * 60 * 24
+constants.times.WEEK_IN_SECONDS = 60 * 60 * 24 * 7
+constants.times.MONTH_IN_SECONDS = 60 * 60 * 24 * 30
+constants.times.YEAR_IN_SECONDS = 31536000
+-- milliseconds
+constants.times.SECOND_IN_MS = 1000
+constants.times.MINUTE_IN_MS = 60 * 1000
+constants.times.HOUR_IN_MS = 60 * 60 * 1000
+constants.times.DAY_IN_MS = 60 * 60 * 24 * 1000
+constants.times.WEEK_IN_MS = 60 * 60 * 24 * 7 * 1000
+constants.times.MONTH_IN_MS = 60 * 60 * 24 * 30 * 1000
+constants.times.YEAR_IN_MS = 31536000 * 1000
+
+constants.profitSharing = {}
+constants.profitSharing.collectorPresets = {
+	owner = "Owner",
+	controllers = "Controllers",
+	balanceHolders = "Balance Holders",
+	undernameHolders = "Undername Holders", -- the under ANTs that are registered to undernames in the ANT
+	all = "all", -- all of the above
+}
 
 return constants

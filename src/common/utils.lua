@@ -1,7 +1,7 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
 
 local constants = require(".common.constants")
-local json = require("json")
+local json = require(".common.json")
 local utils = { _version = "0.0.1" }
 
 local function isArray(table)
@@ -189,17 +189,13 @@ utils.values = function(t)
 	return values
 end
 
-function utils.hasMatchingTag(tag, value)
-	return Handlers.utils.hasMatchingTag(tag, value)
-end
-
-function utils.reply(msg)
-	Handlers.utils.reply(msg)
-end
-
-function utils.validateUndername(name)
+function utils.validateUndername(name, allowedNamesRegex)
 	local valid = string.match(name, constants.UNDERNAME_REGEXP) == nil
 	assert(valid ~= false, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
+	if allowedNamesRegex then
+		valid = string.match(name, allowedNamesRegex) == nil
+		assert(valid ~= false, "ANT does not allow this undername to be purchased currently.")
+	end
 end
 
 function utils.validateArweaveId(id)
@@ -234,7 +230,7 @@ function utils.assertHasPermission(from)
 	if ao.env.Process.Id == from then
 		return
 	end
-	assert(false, "Only controllers and owners can set controllers, records, and change metadata.")
+	error("Only controllers and owners can set controllers, records, and change metadata.")
 end
 
 function utils.camelCase(str)
@@ -252,41 +248,54 @@ function utils.camelCase(str)
 	return str
 end
 
+function utils.getState()
+	return {
+		Records = Records,
+		Controllers = Controllers,
+		Balances = Balances,
+		Owner = Owner,
+		Name = Name,
+		Ticker = Ticker,
+		Logo = Logo,
+		Denomination = Denomination,
+		TotalSupply = TotalSupply,
+		Initialized = Initialized,
+		["Source-Code-TX-ID"] = SourceCodeTxId,
+	}
+end
+
 utils.notices = {}
 
+-- @param oldMsg table
+-- @param newMsg table
+-- Add forwarded tags to the new message
+-- @return newMsg table
+function utils.notices.addForwardedTags(oldMsg, newMsg)
+	for tagName, tagValue in pairs(oldMsg) do
+		-- Tags beginning with "X-" are forwarded
+		if string.sub(tagName, 1, 2) == "X-" then
+			newMsg[tagName] = tagValue
+		end
+	end
+	return newMsg
+end
+
 function utils.notices.credit(msg)
-	local notice = {
+	return utils.notices.addForwardedTags(msg, {
 		Target = msg.From,
 		Action = "Credit-Notice",
 		Recipient = msg.Recipient,
 		Quantity = tostring(1),
-	}
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			notice[tagName] = tagValue
-		end
-	end
-
-	return notice
+	})
 end
 
 function utils.notices.debit(msg)
-	local notice = {
+	return utils.notices.addForwardedTags(msg, {
 		Target = msg.From,
 		Action = "Debit-Notice",
 		Recipient = msg.Recipient,
 		Quantity = tostring(1),
-	}
-	-- Add forwarded tags to the credit and debit notice messages
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			notice[tagName] = tagValue
-		end
-	end
-
-	return notice
+	})
 end
 
 -- @param notices table
@@ -301,29 +310,11 @@ function utils.notices.notifyState(msg, target)
 		print("No target specified for state notice")
 		return
 	end
-	local state = {
-		Records = Records,
-		Controllers = Controllers,
-		Balances = Balances,
-		Owner = Owner,
-		Name = Name,
-		Ticker = Ticker,
-		Logo = Logo,
-		Denomination = Denomination,
-		TotalSupply = TotalSupply,
-		Initialized = Initialized,
-		["Source-Code-TX-ID"] = SourceCodeTxId,
-	}
-
-	-- Add forwarded tags to the records notice messages
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			state[tagName] = tagValue
-		end
-	end
-
-	ao.send({ Target = target, Action = "State-Notice", Data = json.encode(state) })
+	ao.send(utils.notices.addForwardedTags(msg, {
+		Target = target,
+		Action = "State-Notice",
+		Data = json.encode(utils.getState()),
+	}))
 end
 
 function utils.getHandlerNames(handlers)
@@ -332,6 +323,283 @@ function utils.getHandlerNames(handlers)
 		table.insert(names, handler.name)
 	end
 	return names
+end
+
+function utils.errorHandler(err)
+	return debug.traceback(err)
+end
+
+function utils.createHandler(tagName, tagValue, handler, position)
+	assert(
+		type(position) == "string" or type(position) == "nil",
+		utils.errorHandler("Position must be a string or nil")
+	)
+	assert(
+		position == nil or position == "add" or position == "prepend" or position == "append",
+		"Position must be one of 'add', 'prepend', 'append'"
+	)
+	return Handlers[position or "add"](
+		utils.camelCase(tagValue),
+		Handlers.utils.hasMatchingTag(tagName, tagValue),
+		function(msg)
+			print("Handling Action [" .. msg.Id .. "]: " .. tagValue)
+			local handlerStatus, handlerRes = xpcall(function()
+				handler(msg)
+			end, utils.errorHandler)
+
+			if not handlerStatus then
+				ao.send({
+					Target = msg.From,
+					Action = "Invalid-" .. tagValue .. "-Notice",
+					Error = tagValue .. "-Error",
+					["Message-Id"] = msg.Id,
+					Data = handlerRes,
+				})
+			end
+
+			return handlerRes
+		end
+	)
+end
+
+function utils.createActionHandler(action, msgHandler, position)
+	return utils.createHandler("Action", action, msgHandler, position)
+end
+
+function utils.createForwardedActionHandler(action, msgHandler, position)
+	return utils.createHandler("X-Action", action, msgHandler, position)
+end
+
+function utils.mergeSettings(defaults, tokenSettings)
+	local newSettings = defaults
+	for settingName, tokenSetting in pairs(tokenSettings) do
+		newSettings[settingName] = tokenSetting
+	end
+	return newSettings
+end
+
+function utils.getCollectorIds(collectorsType)
+	if collectorsType == constants.profitSharing.collectorPresets.owner then
+		return { Owner }
+	elseif collectorsType == constants.profitSharing.collectorPresets.controllers then
+		return Controllers
+	elseif collectorsType == constants.profitSharing.collectorPresets.balanceHolders then
+		return utils.keys(Balances)
+	elseif collectorsType == constants.profitSharing.collectorPresets.undernameHolders then
+		local processIds = {}
+		for _, record in pairs(Records) do
+			if record.processId then
+				processIds[record.processId] = true
+			end
+			return utils.keys(processIds)
+		end
+	elseif collectorsType == constants.profitSharing.collectorPresets.all then
+		local processIds = { [Owner] = true }
+		for _, record in pairs(Records) do
+			if record.processId then
+				processIds[record.processId] = true
+			end
+		end
+		for _, controller in pairs(Controllers) do
+			processIds[controller] = true
+		end
+		for holder in pairs(Balances) do
+			processIds[holder] = true
+		end
+		return utils.keys(processIds)
+	end
+end
+
+function utils.taxPurchase(msg, qty, rate, taxCollector)
+	assert(type(msg) == "table", "Message must be a table")
+	assert(type(qty) == "number", "Quantity must be a number")
+	assert(type(rate) == "number", "Rate must be a number")
+	assert(type(taxCollector) == "string", "Tax collector must be a string")
+	local tax = qty * rate
+	ao.send(utils.notices.addForwardedTags(msg, {
+		Target = taxCollector,
+		Action = "Transfer",
+		Recipient = taxCollector,
+		Quantity = tax,
+	}))
+end
+
+function utils.distributeShares(msg, qty, rate, collectorsType)
+	assert(type(msg) == "table", "Message must be a table")
+	assert(type(qty) == "number", "Quantity must be a number")
+	assert(type(rate) == "number", "Rate must be a number")
+	assert(constants.profitSharing.collectorPresets[collectorsType], "Invalid collector preset")
+	local collectors = utils.getCollectorIds(collectorsType)
+	local collectorsShare = qty * rate
+	local share = collectorsShare / #collectors
+	for _, collector in ipairs(collectors) do
+		ao.send(utils.notices.addForwardedTags(msg, {
+			Target = collector,
+			Action = "Transfer",
+			Recipient = collector,
+			Quantity = share * rate,
+		}))
+	end
+end
+
+function utils.refundTokens(msg, qty)
+	local sender = msg.Sender
+	if not sender then
+		print("No sender specified for transfer, unable to refund sender.")
+	else
+		ao.send(utils.notices.addForwardedTags(msg, {
+			Target = msg.From,
+			Action = "Transfer",
+			Recipient = sender,
+			Quantity = qty or msg.Quantity,
+			Error = qty and "You over paid! refunding the extra tokens" or "Invalid token for purchasing undernames",
+		}))
+	end
+end
+
+function utils.getPurchasePrice(p)
+	assert(type(p) == "table", "Params must be a table")
+	local tokenId = p.tokenId
+	local undername = p.undername
+	local purchaseType = p.purchaseType
+	local leaseDuration = p.leaseDuration
+	local auctionType = p.auctionType
+	local settings = p.settings
+
+	assert(
+		auctionType == nil
+			or auctionType == constants.auctionTypes.dutch
+			or auctionType == constants.auctionTypes.english,
+		"Invalid auction type"
+	)
+
+	local token = PriceSettings.whiteListedTokens[tokenId]
+	local tokenRate = token.tokenRate
+	local basePrice = (undername == "@" and settings.apexRecord.price or settings.undername.price) * tokenRate
+	if undername ~= "@" then
+		basePrice = basePrice * settings.undername.lengthFactor ^ #undername
+	end
+	local price = 0
+
+	if purchaseType == constants.purchaseTypes.lease then
+		assert(type(leaseDuration) == "number", "Lease duration is required for lease purchases")
+		assert(leaseDuration >= settings.leaseSettings.minLeaseTime, "Lease duration is too short")
+		assert(leaseDuration <= settings.leaseSettings.maxLeaseTime, "Lease duration is too long")
+		local increments = leaseDuration / settings.leaseSettings.leaseIncrement
+		assert(increments == math.floor(increments), "Invalid lease duration of: " .. tostring(increments))
+		price = basePrice * settings.leaseSettings.incrementRate * increments
+	end
+
+	if purchaseType == constants.purchaseTypes.buy then
+		price = basePrice * settings.buySettings.rate
+	end
+
+	if purchaseType == constants.purchaseTypes.auctionBuy then
+		local auctionSettings = settings.auctionSettings[auctionType]
+		price = basePrice * settings.buySettings.rate * auctionSettings.floorRate
+	end
+
+	if purchaseType == constants.purchaseTypes.auctionLease then
+		local increments = leaseDuration / settings.leaseSettings.leaseIncrement
+		assert(increments == math.floor(increments), "Invalid lease duration of: " .. tostring(increments))
+		local auctionSettings = settings.auctionSettings[auctionType]
+		price = basePrice * settings.leaseSettings.incrementRate * increments * auctionSettings.floorRate
+	end
+
+	return price
+end
+
+function utils.createAuction(p)
+	assert(type(p) == "table", "Params must be a table")
+	local undername = p.undername
+	local underAntId = p.underAntId
+	local purchaseType = p.purchaseType
+	local auctionType = p.auctionType
+	local startTimestamp = p.startTimestamp
+	local leaseDuration = p.leaseDuration
+	local settings = p.settings
+	local tokenSettings = p.tokenSettings
+	local auctionSettings = settings.auctionSettings[auctionType]
+
+	local basePrice = (undername == "@" and settings.apexRecord.price or settings.undername.price)
+		* tokenSettings.tokenRate
+	if undername ~= "@" then
+		basePrice = basePrice * settings.undername.lengthFactor ^ #undername
+	end
+	local auction = {
+		underAntId = underAntId,
+		auctionType = auctionType,
+		startTimestamp = startTimestamp,
+		endTimestamp = startTimestamp + auctionSettings.duration,
+		floorPrice = basePrice * settings.buySettings.rate * auctionSettings.floorRate,
+		ceilingPrice = basePrice * settings.buySettings.rate * auctionSettings.ceilingRate,
+		ceilingTime = auctionSettings.ceilingTime,
+		bids = auctionType == constants.auctionTypes.english and {} or nil,
+	}
+
+	if purchaseType == constants.purchaseTypes.auctionLease then
+		local increments = leaseDuration / settings.leaseSettings.leaseIncrement
+		assert(increments == math.floor(increments), "Invalid lease duration of: " .. tostring(increments))
+		auction.floorPrice = basePrice * settings.leaseSettings.incrementRate * increments * auctionSettings.floorRate
+		auction.ceilingPrice = basePrice
+			* settings.leaseSettings.incrementRate
+			* increments
+			* auctionSettings.ceilingRate
+	end
+
+	return auction
+end
+
+function utils.parseBuyRecord(msg)
+	assert(
+		msg.Tags["Action"] == "Credit-Notice",
+		"Not a 'Credit-Notice' action and thus invalid Buy-Record. Buy-Records should be initiated via Credit-Notice to pay for the undername."
+	)
+	assert(PriceSettings.whiteListedTokens[msg.From], "Invalid token for purchasing undernames")
+	local settings = utils.mergeSettings(PriceSettings.defaults, PriceSettings.whiteListedTokens[msg.From].overrides)
+	utils.validateUndername(msg.Tags["Undername"], settings.undername.allowedNamesRegex)
+	assert(
+		not Records[msg.Tags["Undername"]] and not Auctions[msg.Tags["Undername"]],
+		"Undername already exists or is currently being auctioned"
+	)
+	assert(type(msg.Tags["Under-ANT-ID"]) == "string", "Under-ANT-ID tag is required")
+	assert(constants.purchaseTypes[msg.Tags["Purchase-Type"]], "Invalid purchase type")
+	if msg.Tags["Purchase-Type"] == constants.purchaseTypes.lease then
+		assert(type(msg.Tags["Lease-Duration"]) == "number", "Lease duration is required for lease purchases")
+		assert(msg.Tags["Lease-Duration"] >= settings.leaseSettings.minLeaseTime, "Lease duration is too short")
+		assert(msg.Tags["Lease-Duration"] <= settings.leaseSettings.maxLeaseTime, "Lease duration is too long")
+	end
+	assert(msg.Tags["Auction-Type"] == nil or constants.auctionTypes[msg.Tags["Auction-Type"]], "Invalid auction type")
+	local quantity = tonumber(msg.Quantity)
+	assert(quantity, "Quantity is required")
+	local recordSettings = msg.Tags["Undername"] and settings.apexRecord or settings.undername
+	assert(recordSettings.purchaseTypes[msg.Tags["Purchase-Type"]], "Invalid purchase type for undername")
+
+	local price = utils.getPurchasePrice({
+		tokenId = msg.From,
+		undername = msg.Tags["Undername"],
+		purchaseType = msg.Tags["Purchase-Type"],
+		leaseDuration = msg.Tags["Lease-Duration"],
+		auctionType = msg.Tags["Auction-Type"],
+		settings = settings,
+	})
+
+	assert(quantity >= price, "Insufficient funds to purchase undername")
+
+	if price < quantity then -- refund the difference and continue
+		utils.refundTokens(msg, tostring(quantity - price))
+	end
+
+	return {
+		settings = settings,
+		undername = msg.Tags["Undername"],
+		underAntId = msg.Tags["Under-ANT-ID"],
+		leaseDuration = msg.Tags["Lease-Duration"],
+		purchaseType = msg.Tags["Purchase-Type"],
+		auctionType = msg.Tags["Auction-Type"],
+		quantity = quantity,
+		price = price,
+	}
 end
 
 return utils

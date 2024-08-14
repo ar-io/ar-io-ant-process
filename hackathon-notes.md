@@ -5,12 +5,14 @@
 - added appended eval handler to notify ANT registry on eval finish in case global vars were manually updated
 - added buy record handler
 - added utils to refund tokens, distribute shares, tax purchases, parse buy record
+- added `pubsub` module to listen to under_ants `Records` changes
+  - this actually extends the ANT capabilities quite a bit since now
+    anyone can subscribe to ANT state changes
+- updated setRecord and removeRecord to respect purchased undernames
+- Added price for action handler
 
-TODO:
+  TODO:
+  <!-- if there is time... -->
 
-- Add settings for under_ants to update on setRecord and removeRecord
-  - this should allow setting of multiple subscribed ANTs... maybe good chance to implement the pub/sub spec
 - Add bidding for dutch and english auctions
-- Add price for action handler
-- Update permissions on setting records that have been registered with tokens
 - Add a `tick` handler

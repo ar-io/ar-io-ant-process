@@ -29,7 +29,6 @@ describe('aos Balances', async () => {
         { name: 'Recipient', value: STUB_ADDRESS },
       ],
     });
-
     const ownerBalance = result.Messages[0].Data;
     assert(ownerBalance === 1);
   });

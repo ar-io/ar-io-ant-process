@@ -58,6 +58,8 @@ function ant.init()
 
 	createActionHandler(ant.ActionMap.SetRecord, function(msg)
 		utils.assertHasPermission(msg.From)
+		-- prevent purchased undernames from being overwritten
+		utils.assertRecordPermission(msg.From, msg.Tags["Sub-Domain"])
 		local tags = msg.Tags
 		local setRecordResult =
 			records.setRecord(tags["Sub-Domain"], tags["Transaction-Id"], tonumber(tags["TTL-Seconds"]))
@@ -66,6 +68,7 @@ function ant.init()
 
 	createActionHandler(ant.ActionMap.RemoveRecord, function(msg)
 		utils.assertHasPermission(msg.From)
+		utils.assertRecordPermission(msg.From, msg.Tags["Sub-Domain"])
 		local removeRecordResult = records.removeRecord(msg.Tags["Sub-Domain"])
 		ao.send({ Target = msg.From, Data = removeRecordResult })
 	end)

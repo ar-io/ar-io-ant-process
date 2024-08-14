@@ -3,7 +3,7 @@
 local constants = require(".common.constants")
 local json = require(".common.json")
 local utils = { _version = "0.0.1" }
-local crypto = require("crypto")
+local crypto = require(".crypto")
 local Stream = crypto.utils.stream
 
 local function isArray(table)
@@ -233,6 +233,17 @@ function utils.assertHasPermission(from)
 		return
 	end
 	error("Only controllers and owners can set controllers, records, and change metadata.")
+end
+
+function utils.assertRecordPermission(from, subDomain)
+	local record = Records[subDomain]
+	if record ~= nil and from ~= nil then
+		if record.processId ~= nil then
+			assert(record.processId == from, "Undername is leased and cannot be set manually")
+		end
+
+		assert(not Auctions[subDomain], "Undername is in auction and cannot be set manually")
+	end
 end
 
 function utils.camelCase(str)
@@ -613,7 +624,12 @@ end
 function utils.generateGlobalStateHashes()
 	local hashes = {}
 	for _, property in ipairs(utils.keys(_G)) do
-		hashes[property] = utils.hashGlobalProperty(property)
+		local hashStat, hashRes = pcall(utils.hashGlobalProperty, property)
+		if hashStat then
+			hashes[property] = hashRes
+		else
+			print("Error hashing property '" .. property .. "' :" .. " " .. hashRes)
+		end
 	end
 	return hashes
 end

@@ -76,8 +76,11 @@ function pubsub.init()
 	createActionHandler(pubsub.ActionMap.RemoveSubscriber, function(msg)
 		local subscriber = msg.Tags.Subscriber
 		assert(subscriber, "Subscriber is required")
-		local topics = json.decode(msg.Data)
-		assert(type(topics) == "table", "Topics are required and must be an array")
+		local topicsStatus, topics = pcall(json.decode, msg.Data)
+		-- if no topics are provided, remove the subscriber from all topics
+		if not topicsStatus then
+			topics = utils.keys(SubscriberMap[subscriber])
+		end
 
 		for _, topic in ipairs(topics) do
 			if TopicMap[topic] then
@@ -121,7 +124,7 @@ function pubsub.init()
 		ao.send(utils.notices.addForwardedTags(msg, {
 			Target = msg.From,
 			Action = "Subscriber-Topics-Notice",
-			Data = json.encode(SubscriberMap[subscriber]),
+			Data = json.encode(utils.keys(SubscriberMap[subscriber])),
 		}))
 	end)
 

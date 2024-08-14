@@ -13,7 +13,7 @@ purchasing.ActionMap = {
 	-- X- because this will come in as a credit notice and should have forwarded tags
 	BuyRecord = "X-Buy-Record",
 	BidUndername = "X-Bid-Undername",
-	StateNotice = "State-Notice",
+	Publish = "Publish",
 	-- read
 	GetPriceSettings = "Get-Price-Settings",
 	GetPriceForAction = "Get-Price-For-Action",
@@ -208,6 +208,39 @@ function purchasing.init()
 		end
 	end)
 
+	createActionHandler(purchasing.ActionMap.GetPriceForAction, function(msg)
+		local actionData = json.decode(msg.Data)
+
+		local tokenId = actionData.tokenId
+		local action = actionData.action
+		local undername = actionData.undername
+		local leaseDuration = actionData.leaseDuration
+		local purchaseType = actionData.purchaseType
+		local auctionType = actionData.auctionType
+
+		if action == purchasing.ActionMap.BuyRecord and purchaseTypes[purchaseType] then
+			local price = utils.getPurchasePrice({
+				tokenId = tokenId,
+				undername = undername,
+				purchaseType = purchaseType,
+				leaseDuration = leaseDuration,
+				auctionType = auctionType,
+				settings = utils.mergeSettings(
+					PriceSettings.defaults,
+					PriceSettings.whiteListedTokens[tokenId].overrides
+				),
+			})
+
+			ao.send(utils.notices.addForwardedTags(msg, {
+				Target = msg.From,
+				Action = "Price-For-Action-Notice",
+				Data = price,
+			}))
+		else
+			error("Invalid action: " .. action)
+		end
+	end)
+
 	createActionHandler(purchasing.ActionMap.InfoNotice, function(msg)
 		local token = msg.From
 		assert(PriceSettings.whiteListedTokens[token], "Token not added to whitelist")
@@ -219,16 +252,44 @@ function purchasing.init()
 		}
 	end)
 
-	createActionHandler(purchasing.ActionMap.StateNotice, function(msg)
+	createActionHandler(purchasing.ActionMap.Publish, function(msg)
 		local underAntId = msg.From
-		local state = json.decode(msg.Data)
-		local apexRecord = state.Records["@"]
-		assert(apexRecord, "No apex record found")
+		-- if topic not records, remove subscription and error out
+
+		if msg.Topic ~= "Records" then
+			ao.send(utils.notices.addForwardedTags(msg, {
+				Target = underAntId,
+				Action = "Remove-Subscriber",
+				Subscriber = ao.id,
+				-- if a topic was provided remove just that topic, else remove all topics
+				Data = msg.Topic and json.encode({ msg.Topic }) or msg.Topic,
+			}))
+			error("Only topic of Records can be published, removing topic: " .. msg.Topic)
+		end
+		local newRecords = json.decode(msg.Data)
+		local newApexRecord = newRecords["@"]
+
 		for domain, recordData in pairs(Records) do
-			if recordData.processId == underAntId then
-				Records[domain].transactionId = apexRecord.transactionId or ""
-				Records[domain].ttlSeconds = apexRecord.ttlSeconds or constants.MIN_TTL_SECONDS
+			if recordData.processId and recordData.processId == underAntId then
+				Records[domain].transactionId = newApexRecord.transactionId or ""
+				Records[domain].ttlSeconds = newApexRecord.ttlSeconds or constants.MIN_TTL_SECONDS
 			end
+		end
+
+		-- if under ant is not a registered ant, send a message to remove this process as a subscriber
+		local registeredUndernames = {}
+		for domain, recordData in pairs(Records) do
+			if recordData.processId and recordData.processId == underAntId then
+				table.insert(registeredUndernames, domain)
+			end
+		end
+		if #registeredUndernames == 0 then
+			ao.send(utils.notices.addForwardedTags(msg, {
+				Target = underAntId,
+				Action = "Remove-Subscriber",
+				Subscriber = ao.id,
+				-- remove all topics that this process is subscribed to
+			}))
 		end
 	end)
 end

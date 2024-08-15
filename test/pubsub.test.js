@@ -7,6 +7,13 @@ const {
   STUB_ADDRESS,
 } = require('../tools/constants');
 
+// aos testing copy pastas
+
+/**
+ * Send({ Target = ao.id, Action = "Add-Subscriber", Subscriber = "7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk", Data = require("json").encode({"Records"}) })
+ * Send({ Target = ao.id, Action = "Set-Record", ["Sub-Domain"] = "@", ["Transaction-Id"] = "7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk", ["TTL-Seconds"] = 3000  })
+ */
+
 describe('pubsub', async () => {
   const { handle: originalHandle, memory: startMemory } =
     await createAntAosLoader();
@@ -26,7 +33,7 @@ describe('pubsub', async () => {
     const topicsResult = await handle({
       Tags: [{ name: 'Action', value: 'Get-Topics' }],
     });
-    console.dir(topicsResult);
+    console.dir(topicsResult, { depth: null });
     const topics = JSON.parse(topicsResult.Messages[0].Data);
     assert(topics.length > 0);
     assert(topics.includes('Records'));
@@ -41,11 +48,10 @@ describe('pubsub', async () => {
           { name: 'Action', value: 'Add-Subscriber' },
           { name: 'Subscriber', value: STUB_ADDRESS },
         ],
-        Data: JSON.stringify(topics),
+        Data: JSON.stringify(['Records']),
       },
       topicsResult.Memory,
     );
-
     console.dir(subscribeResult, { depth: null });
     const subscriberNotice = subscribeResult.Messages[0].Data;
     assert(subscriberNotice == 'Success');
@@ -64,5 +70,32 @@ describe('pubsub', async () => {
       subscribedTopicsResult.Messages[0].Data,
     );
     assert(subscribedTopics.every((topic) => topics.includes(topic)));
+
+    const subscribersResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Get-Subscribers' }],
+      },
+      subscribeResult.Memory,
+    );
+    console.dir(subscribersResult, { depth: null });
+
+    const setRecordResult = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: '@' },
+          { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+          { name: 'TTL-Seconds', value: 3600 },
+        ],
+      },
+      subscribersResult.Memory,
+    );
+
+    const publishData = setRecordResult.Messages[1].Data;
+    assert(JSON.parse(publishData)['@'] !== undefined);
+    assert(
+      setRecordResult.Messages[1].Tags.find((t) => t.name === 'Action')
+        .value === 'Publish',
+    );
   });
 });

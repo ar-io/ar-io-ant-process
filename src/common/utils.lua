@@ -213,7 +213,7 @@ end
 
 function utils.validateOwner(caller)
 	local isOwner = false
-	if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
+	if Owner == caller or Balances[caller] or ao.id == caller then
 		isOwner = true
 	end
 	assert(isOwner, "Sender is not the owner.")
@@ -229,7 +229,7 @@ function utils.assertHasPermission(from)
 	if Owner == from then
 		return
 	end
-	if ao.env.Process.Id == from then
+	if ao.id == from then
 		return
 	end
 	error("Only controllers and owners can set controllers, records, and change metadata.")
@@ -353,7 +353,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 	)
 	return Handlers[position or "add"](
 		utils.camelCase(tagValue),
-		Handlers.utils.hasMatchingTag(tagName, tagValue),
+		Handlers.utils.continue(Handlers.utils.hasMatchingTag(tagName, tagValue)),
 		function(msg)
 			print("Handling Action [" .. msg.Id .. "]: " .. tagValue)
 			local handlerStatus, handlerRes = xpcall(function()
@@ -614,11 +614,11 @@ function utils.parseBuyRecord(msg)
 		price = price,
 	}
 end
-
+-- returns hex string hash of the property value
 function utils.hashGlobalProperty(property)
-	local stream = Stream.fromString(tostring(_G[property]))
+	local stream = Stream.fromString(json.encode(_G[property]))
 	local hash = crypto.digest.sha2_256(stream)
-	return hash
+	return tostring(hash.asHex())
 end
 
 function utils.generateGlobalStateHashes()

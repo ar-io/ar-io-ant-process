@@ -54,8 +54,10 @@ function pubsub.init()
 		local availableTopics = {}
 		for _, topic in ipairs(utils.keys(_G)) do
 			availableTopics[topic] = true
-			local hash = utils.hashGlobalProperty(topic)
-			TopicMap[topic] = TopicMap[topic] or { hash = hash, subscribers = {} }
+			local hashStatus, hash = pcall(utils.hashGlobalProperty, topic)
+			if hashStatus then
+				TopicMap[topic] = TopicMap[topic] or { hash = hash, subscribers = {} }
+			end
 		end
 
 		for _, topic in ipairs(topics) do
@@ -64,7 +66,7 @@ function pubsub.init()
 			end
 		end
 
-		SubscriberMap[subscriber] = {}
+		SubscriberMap[subscriber] = SubscriberMap[subscriber] or {}
 		for topic, _ in pairs(TopicMap) do
 			if TopicMap[topic].subscribers[subscriber] then
 				SubscriberMap[subscriber][topic] = true
@@ -99,7 +101,10 @@ function pubsub.init()
 		local topics = utils.keys(_G)
 		-- update topic map with new global state variables
 		for _, topic in ipairs(topics) do
-			TopicMap[topic] = TopicMap[topic] or { hash = utils.hashGlobalProperty(topic), subscribers = {} }
+			local hashStatus, hash = pcall(utils.hashGlobalProperty, topic)
+			if hashStatus then
+				TopicMap[topic] = TopicMap[topic] or { hash = hash, subscribers = {} }
+			end
 		end
 		ao.send(utils.notices.addForwardedTags(msg, {
 			Target = msg.From,
@@ -130,7 +135,8 @@ function pubsub.init()
 
 	Handlers.append(pubsub.ActionMap.Publish, function(msg)
 		-- always run the publish handler
-		return "continue"
+		-- -1 to break after this handler is called
+		return -1
 	end, function(msg)
 		local globalStateHashes = utils.generateGlobalStateHashes()
 		-- add new global state variables to the topic map
@@ -141,13 +147,12 @@ function pubsub.init()
 		-- notify subscribers of any changes in global state that they are subscribed to
 		for topic, topicData in pairs(TopicMap) do
 			if globalStateHashes[topic] ~= topicData.hash then
-				topicData.hash = globalStateHashes[topic]
 				for subscriber, _ in pairs(topicData.subscribers) do
 					ao.send(utils.notices.addForwardedTags(msg, {
 						Target = subscriber,
 						Action = pubsub.ActionMap.Publish,
 						Topic = topic,
-						["Topic-Hash"] = topicData.hash,
+						["Topic-Hash"] = globalStateHashes[topic],
 						Data = json.encode(_G[topic]),
 					}))
 				end

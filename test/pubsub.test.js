@@ -33,7 +33,7 @@ describe('pubsub', async () => {
     const topicsResult = await handle({
       Tags: [{ name: 'Action', value: 'Get-Topics' }],
     });
-    console.dir(topicsResult, { depth: null });
+
     const topics = JSON.parse(topicsResult.Messages[0].Data);
     assert(topics.length > 0);
     assert(topics.includes('Records'));
@@ -52,7 +52,7 @@ describe('pubsub', async () => {
       },
       topicsResult.Memory,
     );
-    console.dir(subscribeResult, { depth: null });
+
     const subscriberNotice = subscribeResult.Messages[0].Data;
     assert(subscriberNotice == 'Success');
 
@@ -65,7 +65,7 @@ describe('pubsub', async () => {
       },
       subscribeResult.Memory,
     );
-    console.dir(subscribedTopicsResult, { depth: null });
+
     const subscribedTopics = JSON.parse(
       subscribedTopicsResult.Messages[0].Data,
     );
@@ -77,7 +77,6 @@ describe('pubsub', async () => {
       },
       subscribeResult.Memory,
     );
-    console.dir(subscribersResult, { depth: null });
 
     const setRecordResult = await handle(
       {

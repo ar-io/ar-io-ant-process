@@ -261,6 +261,55 @@ function utils.camelCase(str)
 	return str
 end
 
+function utils.deepCopy(obj, seen)
+	if type(obj) ~= "table" then
+		return obj
+	end
+	if seen and seen[obj] then
+		return seen[obj]
+	end
+	local s = seen or {}
+	local res = setmetatable({}, getmetatable(obj))
+	s[obj] = res
+	for k, v in pairs(obj) do
+		res[utils.deepCopy(k, s)] = utils.deepCopy(v, s)
+	end
+	return res
+end
+
+function utils.applyDefaults(target, defaults)
+	for key, value in pairs(defaults) do
+		if type(value) == "table" then
+			if not target[key] then
+				target[key] = {}
+			end
+			utils.applyDefaults(target[key], value)
+		else
+			if target[key] == nil then
+				target[key] = value
+			end
+		end
+	end
+end
+
+function utils.setupSettings(userSettings, defaults)
+	local settings = utils.deepCopy(defaults)
+
+	-- Apply user settings over defaults
+	for key, value in pairs(userSettings) do
+		if type(value) == "table" then
+			if not settings[key] then
+				settings[key] = {}
+			end
+			utils.applyDefaults(settings[key], value)
+		else
+			settings[key] = value
+		end
+	end
+
+	return settings
+end
+
 function utils.getState()
 	return {
 		Records = Records,
@@ -392,9 +441,9 @@ function utils.mergeSettings(defaults, tokenSettings)
 end
 
 function utils.getCollectorIds(collectorsType)
-	if collectorsType == constants.profitSharing.collectorPresets.owner then
+	if collectorsType == constants.profitSharing.collectorPresets.Owner then
 		return { Owner }
-	elseif collectorsType == constants.profitSharing.collectorPresets.controllers then
+	elseif collectorsType == constants.profitSharing.collectorPresets.Controllers then
 		return Controllers
 	elseif collectorsType == constants.profitSharing.collectorPresets.balanceHolders then
 		return utils.keys(Balances)
@@ -434,6 +483,7 @@ function utils.taxPurchase(msg, qty, rate, taxCollector)
 		Action = "Transfer",
 		Recipient = taxCollector,
 		Quantity = tax,
+		Note = "Tax on undername purchase",
 	}))
 end
 
@@ -441,7 +491,7 @@ function utils.distributeShares(msg, qty, rate, collectorsType)
 	assert(type(msg) == "table", "Message must be a table")
 	assert(type(qty) == "number", "Quantity must be a number")
 	assert(type(rate) == "number", "Rate must be a number")
-	assert(constants.profitSharing.collectorPresets[collectorsType], "Invalid collector preset")
+	assert(constants.profitSharing.collectorPresets[collectorsType], "Invalid collector preset of " .. collectorsType)
 	local collectors = utils.getCollectorIds(collectorsType)
 	local collectorsShare = qty * rate
 	local share = collectorsShare / #collectors
@@ -451,6 +501,7 @@ function utils.distributeShares(msg, qty, rate, collectorsType)
 			Action = "Transfer",
 			Recipient = collector,
 			Quantity = share * rate,
+			Note = "Profit share from undername purchase",
 		}))
 	end
 end
@@ -464,8 +515,8 @@ function utils.refundTokens(msg, qty)
 			Target = msg.From,
 			Action = "Transfer",
 			Recipient = sender,
-			Quantity = qty or msg.Quantity,
-			Error = qty and "You over paid! refunding the extra tokens" or "Invalid token for purchasing undernames",
+			Quantity = tonumber(qty) or tonumber(msg.Quantity),
+			Note = qty and "You over paid! refunding the extra tokens" or "Invalid token for purchasing undernames",
 		}))
 	end
 end
@@ -570,30 +621,36 @@ function utils.parseBuyRecord(msg)
 	)
 	assert(PriceSettings.whiteListedTokens[msg.From], "Invalid token for purchasing undernames")
 	local settings = utils.mergeSettings(PriceSettings.defaults, PriceSettings.whiteListedTokens[msg.From].overrides)
-	utils.validateUndername(msg.Tags["Undername"], settings.undername.allowedNamesRegex)
+	utils.validateUndername(msg.Tags["X-Undername"], settings.undername.allowedNamesRegex)
 	assert(
-		not Records[msg.Tags["Undername"]] and not Auctions[msg.Tags["Undername"]],
+		not Records[msg.Tags["X-Undername"]] and not Auctions[msg.Tags["X-Undername"]],
 		"Undername already exists or is currently being auctioned"
 	)
-	assert(type(msg.Tags["Under-ANT-ID"]) == "string", "Under-ANT-ID tag is required")
-	assert(constants.purchaseTypes[msg.Tags["Purchase-Type"]], "Invalid purchase type")
-	if msg.Tags["Purchase-Type"] == constants.purchaseTypes.lease then
-		assert(type(msg.Tags["Lease-Duration"]) == "number", "Lease duration is required for lease purchases")
-		assert(msg.Tags["Lease-Duration"] >= settings.leaseSettings.minLeaseTime, "Lease duration is too short")
-		assert(msg.Tags["Lease-Duration"] <= settings.leaseSettings.maxLeaseTime, "Lease duration is too long")
+	assert(type(msg.Tags["X-Under-ANT-ID"]) == "string", "X-Under-ANT-ID tag is required")
+	assert(constants.purchaseTypes[msg.Tags["X-Purchase-Type"]], "Invalid purchase type")
+	if msg.Tags["X-Purchase-Type"] == constants.purchaseTypes.lease then
+		assert(type(msg.Tags["X-Lease-Duration"]) == "number", "Lease duration is required for lease purchases")
+		assert(msg.Tags["X-Lease-Duration"] >= settings.leaseSettings.minLeaseTime, "Lease duration is too short")
+		assert(msg.Tags["X-Lease-Duration"] <= settings.leaseSettings.maxLeaseTime, "Lease duration is too long")
 	end
-	assert(msg.Tags["Auction-Type"] == nil or constants.auctionTypes[msg.Tags["Auction-Type"]], "Invalid auction type")
+	assert(
+		msg.Tags["X-Auction-Type"] == nil or constants.auctionTypes[msg.Tags["X-Auction-Type"]],
+		"Invalid auction type"
+	)
 	local quantity = tonumber(msg.Quantity)
 	assert(quantity, "Quantity is required")
-	local recordSettings = msg.Tags["Undername"] and settings.apexRecord or settings.undername
-	assert(recordSettings.purchaseTypes[msg.Tags["Purchase-Type"]], "Invalid purchase type for undername")
+	local recordSettings = msg.Tags["X-Undername"] == "@" and settings.apexRecord or settings.undername
+	assert(
+		recordSettings.purchaseTypes[msg.Tags["X-Purchase-Type"]],
+		"Invalid purchase type of " .. msg.Tags["X-Purchase-Type"] .. " for undername"
+	)
 
 	local price = utils.getPurchasePrice({
 		tokenId = msg.From,
-		undername = msg.Tags["Undername"],
-		purchaseType = msg.Tags["Purchase-Type"],
-		leaseDuration = msg.Tags["Lease-Duration"],
-		auctionType = msg.Tags["Auction-Type"],
+		undername = msg.Tags["X-Undername"],
+		purchaseType = msg.Tags["X-Purchase-Type"],
+		leaseDuration = msg.Tags["X-Lease-Duration"],
+		auctionType = msg.Tags["X-Auction-Type"],
 		settings = settings,
 	})
 
@@ -605,11 +662,11 @@ function utils.parseBuyRecord(msg)
 
 	return {
 		settings = settings,
-		undername = msg.Tags["Undername"],
-		underAntId = msg.Tags["Under-ANT-ID"],
-		leaseDuration = msg.Tags["Lease-Duration"],
-		purchaseType = msg.Tags["Purchase-Type"],
-		auctionType = msg.Tags["Auction-Type"],
+		undername = msg.Tags["X-Undername"],
+		underAntId = msg.Tags["X-Under-ANT-ID"],
+		leaseDuration = msg.Tags["X-Lease-Duration"],
+		purchaseType = msg.Tags["X-Purchase-Type"],
+		auctionType = msg.Tags["X-Auction-Type"],
 		quantity = quantity,
 		price = price,
 	}

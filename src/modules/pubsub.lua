@@ -143,7 +143,6 @@ function pubsub.init()
 		for topic, topicHash in pairs(globalStateHashes) do
 			TopicMap[topic] = TopicMap[topic] or { hash = topicHash, subscribers = {} }
 		end
-
 		-- notify subscribers of any changes in global state that they are subscribed to
 		for topic, topicData in pairs(TopicMap) do
 			if globalStateHashes[topic] ~= topicData.hash then

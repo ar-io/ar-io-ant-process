@@ -43,11 +43,57 @@ constants.times.YEAR_IN_MS = 31536000 * 1000
 
 constants.profitSharing = {}
 constants.profitSharing.collectorPresets = {
-	owner = "Owner",
-	controllers = "Controllers",
-	balanceHolders = "Balance Holders",
-	undernameHolders = "Undername Holders", -- the under ANTs that are registered to undernames in the ANT
+	Owner = "Owner",
+	Controllers = "Controllers",
+	BalanceHolders = "BalanceHolders",
+	UndernameHolders = "UndernameHolders", -- the under ANTs that are registered to undernames in the ANT
 	all = "all", -- all of the above
+}
+constants.purchasing = {}
+constants.purchasing.defaults = {
+
+	apexRecord = {
+		price = 100,
+		purchaseTypes = { [constants.purchaseTypes.auctionLease] = true },
+	},
+	undername = {
+		price = 1,
+		lengthFactor = 1, -- nameLength * (price * tokenRate) * lengthFactor * taxRate = price
+		allowedNamesRegex = "^[a-zA-Z0-9-]{8,42}$", -- any undername between 8 and 42 characters long
+		purchaseTypes = { [constants.purchaseTypes.buy] = true, [constants.purchaseTypes.lease] = true },
+	},
+	profitSettings = {
+		enabled = true, -- enable or disable profit sharing
+		profitRate = 1, -- 100% of the price from sales after tax
+		collectors = constants.profitSharing.collectorPresets.Owner, -- who gets the profit
+	},
+	taxSettings = {
+		enabled = true, -- to tax or not to tax for this token
+		taxRate = 0.05, -- this can be set to 1 (100%) to transfer all tokens to the taxCollector (eg process.Owner or another process or wallet)
+		taxCollector = "agYcCFJtrMG6cqMuZfskIkFTGvUPddICmtQSBIoPdiA",
+	},
+	leaseSettings = {
+		minLeaseTime = constants.times.YEAR_IN_MS, -- 1 year
+		maxLeaseTime = constants.times.YEAR_IN_MS * 5, -- 5 years,
+		increment = constants.times.YEAR_IN_MS, -- 1 year
+		incrementRate = 0.10, -- 10% of the base price
+	},
+	buySettings = {
+		rate = 10, -- 10x the base price
+	},
+	auctionSettings = {
+		[constants.auctionTypes.dutch] = {
+			floorRate = 0.1, -- 10% of the base price
+			ceilingRate = 10, -- 10x the base price
+			ceilingTime = constants.times.WEEK_IN_MS,
+			interval = constants.times.HOUR_IN_MS * 2, -- price changes every 2 hours
+		},
+		[constants.auctionTypes.english] = {
+			floorRate = 0.5, -- 50% of the base price
+			ceilingRate = 10, -- 10x the base price, if reached accepts the bid and ends the auction
+			ceilingTime = constants.times.WEEK_IN_MS, -- 1 week, if reached ends the auction and accepts the bid
+		},
+	},
 }
 
 return constants

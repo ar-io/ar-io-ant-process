@@ -9,14 +9,15 @@ purchasing.ActionMap = {
 	-- write
 	SetPriceSettings = "Set-Price-Settings",
 	SetTokenSettings = "Set-Token-Settings",
-	PurchasingInfo = "Purchasing-Info",
 	-- X- because this will come in as a credit notice and should have forwarded tags
 	BuyRecord = "X-Buy-Record",
+	-- todo
 	BidUndername = "X-Bid-Undername",
 	Publish = "Publish",
 	-- read
 	GetPriceSettings = "Get-Price-Settings",
 	GetPriceForAction = "Get-Price-For-Action",
+	-- response handler for token info on setting token settings
 	InfoNotice = "Info-Notice",
 }
 
@@ -24,55 +25,12 @@ function purchasing.init()
 	Auctions = Auctions or {}
 	PriceSettings = PriceSettings
 		or {
-			defaults = {
-				apexRecord = {
-					price = 100,
-					purchaseTypes = { [purchaseTypes.auctionLease] = true },
-				},
-				undername = {
-					price = 1,
-					lengthFactor = 1, -- nameLength * (price * tokenRate) * lengthFactor * taxRate = price
-					allowedNamesRegex = "^[a-zA-Z0-9-]{8,42}$", -- any undername between 8 and 42 characters long
-					purchaseTypes = { [purchaseTypes.buy] = true, [purchaseTypes.lease] = true },
-				},
-				profitSettings = {
-					enabled = true, -- enable or disable profit sharing
-					profitRate = 1, -- 100% of the price from sales after tax
-					collectors = constants.profitSharing.collectorPresets.owner, -- who gets the profit
-				},
-				taxSettings = {
-					enabled = true, -- to tax or not to tax for this token
-					taxRate = 0.05, -- this can be set to 1 (100%) to transfer all tokens to the taxCollector (eg process.Owner or another process or wallet)
-					taxCollector = "agYcCFJtrMG6cqMuZfskIkFTGvUPddICmtQSBIoPdiA",
-				},
-				leaseSettings = {
-					minLeaseTime = constants.times.YEAR_IN_MS, -- 1 year
-					maxLeaseTime = constants.times.YEAR_IN_MS * 5, -- 5 years,
-					increment = constants.times.YEAR_IN_MS, -- 1 year
-					incrementRate = 0.10, -- 10% of the base price
-				},
-				buySettings = {
-					rate = 10, -- 10x the base price
-				},
-				auctionSettings = {
-					[constants.auctionTypes.dutch] = {
-						floorRate = 0.1, -- 10% of the base price
-						ceilingRate = 10, -- 10x the base price
-						ceilingTime = constants.times.WEEK_IN_MS,
-						interval = constants.times.HOUR_IN_MS * 2, -- price changes every 2 hours
-					},
-					[constants.auctionTypes.english] = {
-						floorRate = 0.5, -- 50% of the base price
-						ceilingRate = 10, -- 10x the base price, if reached accepts the bid and ends the auction
-						ceilingTime = constants.times.WEEK_IN_MS, -- 1 week, if reached ends the auction and accepts the bid
-					},
-				},
-			}, -- which tokens are allowed to be used for purchasing undernames
+			defaults = constants.purchasing.defaults, -- which tokens are allowed to be used for purchasing undernames
 			whiteListedTokens = {
 				["agYcCFJtrMG6cqMuZfskIkFTGvUPddICmtQSBIoPdiA"] = {
 					info = {
-						Name = "",
-						Ticker = "",
+						Name = "IO",
+						Ticker = "IO",
 						Logo = "",
 						Owner = "",
 						Denomination = "",
@@ -88,12 +46,7 @@ function purchasing.init()
 	createActionHandler(purchasing.ActionMap.SetPriceSettings, function(msg)
 		assert(msg.From == Owner, "Only the owner can set the price settings")
 		local settings = json.decode(msg.Data)
-		local newSettings = {}
-		for settingName, tokenSettings in pairs(settings) do
-			assert(PriceSettings.defaults[settingName], "Invalid setting name: " .. settingName)
-			newSettings[settingName] = tokenSettings
-		end
-		PriceSettings.defaults = newSettings
+		PriceSettings.defaults = utils.setupSettings(PriceSettings.defaults, settings)
 		ao.send(utils.notices.addForwardedTags(msg, {
 			Target = msg.From,
 			Action = "Set-Price-Settings-Notice",
@@ -128,21 +81,26 @@ function purchasing.init()
 
 		local tokenRate = settings.tokenRate or PriceSettings.whiteListedTokens[token].tokenRate
 		assert(type(tokenRate) == "number", "Invalid token rate")
-		local overrides = settings.overrides or PriceSettings.whiteListedTokens[token].overrides
+		local overrides = settings.overrides or {}
 
-		local newOverrides = PriceSettings.whiteListedTokens[token].overrides
-		for settingName, tokenSettings in pairs(overrides) do
-			assert(PriceSettings.defaults[settingName], "Invalid setting name: " .. settingName)
-			newOverrides[settingName] = tokenSettings
-		end
+		-- Use setupSettings to apply overrides recursively
+		PriceSettings.whiteListedTokens[token].overrides =
+			utils.setupSettings(overrides, PriceSettings.whiteListedTokens[token].overrides)
 
 		PriceSettings.whiteListedTokens[token].tokenRate = tokenRate
-		PriceSettings.whiteListedTokens[token].overrides = newOverrides
 
 		ao.send(utils.notices.addForwardedTags(msg, {
 			Target = msg.From,
 			Action = "Set-Token-Settings-Notice",
 			Data = json.encode(PriceSettings.whiteListedTokens),
+		}))
+	end)
+
+	createActionHandler(purchasing.ActionMap.GetPriceSettings, function(msg)
+		ao.send(utils.notices.addForwardedTags(msg, {
+			Target = msg.From,
+			Action = "Get-Price-Settings-Notice",
+			Data = json.encode(PriceSettings),
 		}))
 	end)
 
@@ -193,19 +151,22 @@ function purchasing.init()
 			Records[undername] = {
 				processId = underAntId,
 				purchaseType = purchaseType,
-				startTimestamp = msg.Timestamp,
+				startTimestamp = tonumber(msg.Timestamp),
 				-- endTimestamp is nil for buys
-				endTimestamp = leaseDuration and msg.Timestamp + leaseDuration or nil,
+				endTimestamp = leaseDuration and tonumber(msg.Timestamp) + leaseDuration or nil,
 				purchasePrice = price,
 				transactionId = "",
 				ttlSeconds = "",
 			}
+			-- subscribe to under ant records changes
 			ao.send(utils.notices.addForwardedTags(msg, {
 				Target = underAntId,
-				Action = "State",
-				["X-Undername"] = undername,
+				Action = "Add-Subscriber",
+				["Subscriber"] = ao.id,
+				Data = json.encode({ "Records" }),
 			}))
 		end
+		-- TODO: will need to add subscription to undername on auction end
 	end)
 
 	createActionHandler(purchasing.ActionMap.GetPriceForAction, function(msg)

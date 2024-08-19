@@ -16,10 +16,12 @@ constants.INVALID_TTL_MESSAGE = "Invalid TTL. TLL must be an integer between "
 	.. " seconds"
 constants.purchaseTypes = {
 	buy = "buy",
+	-- TODO: implement other purchaseTypes
 	lease = "lease",
 	auctionBuy = "auctionBuy",
 	auctionLease = "auctionLease",
 }
+-- TODO: implement auctions
 constants.auctionTypes = {
 	dutch = "dutch",
 	english = "english",
@@ -54,13 +56,13 @@ constants.purchasing.defaults = {
 
 	apexRecord = {
 		price = 100,
-		purchaseTypes = { [constants.purchaseTypes.auctionLease] = true },
+		purchaseTypes = { [constants.purchaseTypes.buy] = true },
 	},
 	undername = {
 		price = 1,
 		lengthFactor = 1, -- nameLength * (price * tokenRate) * lengthFactor * taxRate = price
 		allowedNamesRegex = "^[a-zA-Z0-9-]{8,42}$", -- any undername between 8 and 42 characters long
-		purchaseTypes = { [constants.purchaseTypes.buy] = true, [constants.purchaseTypes.lease] = true },
+		purchaseTypes = { [constants.purchaseTypes.buy] = true },
 	},
 	profitSettings = {
 		enabled = true, -- enable or disable profit sharing
@@ -72,27 +74,8 @@ constants.purchasing.defaults = {
 		taxRate = 0.05, -- this can be set to 1 (100%) to transfer all tokens to the taxCollector (eg process.Owner or another process or wallet)
 		taxCollector = "agYcCFJtrMG6cqMuZfskIkFTGvUPddICmtQSBIoPdiA",
 	},
-	leaseSettings = {
-		minLeaseTime = constants.times.YEAR_IN_MS, -- 1 year
-		maxLeaseTime = constants.times.YEAR_IN_MS * 5, -- 5 years,
-		increment = constants.times.YEAR_IN_MS, -- 1 year
-		incrementRate = 0.10, -- 10% of the base price
-	},
 	buySettings = {
 		rate = 10, -- 10x the base price
-	},
-	auctionSettings = {
-		[constants.auctionTypes.dutch] = {
-			floorRate = 0.1, -- 10% of the base price
-			ceilingRate = 10, -- 10x the base price
-			ceilingTime = constants.times.WEEK_IN_MS,
-			interval = constants.times.HOUR_IN_MS * 2, -- price changes every 2 hours
-		},
-		[constants.auctionTypes.english] = {
-			floorRate = 0.5, -- 50% of the base price
-			ceilingRate = 10, -- 10x the base price, if reached accepts the bid and ends the auction
-			ceilingTime = constants.times.WEEK_IN_MS, -- 1 week, if reached ends the auction and accepts the bid
-		},
 	},
 }
 

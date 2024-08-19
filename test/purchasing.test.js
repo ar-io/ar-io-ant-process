@@ -153,5 +153,18 @@ describe('purchasing', async () => {
       buyUndernameResult.Messages[3].Tags.find((t) => t.name === 'Action')
         .value === 'Add-Subscriber',
     );
+
+    // check record was set
+    const recordResult = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Record' },
+          { name: 'Sub-Domain', value: 'ardrive' },
+        ],
+      },
+      buyUndernameResult.Memory,
+    );
+    console.dir(recordResult, { depth: null });
+    assert(recordResult.Messages[0].Data);
   });
 });

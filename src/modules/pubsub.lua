@@ -73,6 +73,17 @@ function pubsub.init()
 			end
 		end
 		ao.send({ Target = msg.From, Action = "Add-Subscriber-Notice", Data = "Success" })
+		-- Send notices for state of the topics the new subscriber subscribed to
+		for _, topic in ipairs(topics) do
+			-- TODO: add ability to send function data
+			if not type(_G[topic]) == "function" then
+				ao.send({
+					Target = subscriber,
+					Action = "Publish",
+					Data = json.encode(_G[topic]),
+				})
+			end
+		end
 	end)
 
 	createActionHandler(pubsub.ActionMap.RemoveSubscriber, function(msg)

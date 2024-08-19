@@ -65,6 +65,7 @@ describe('pubsub', async () => {
       },
       subscribeResult.Memory,
     );
+    console.dir(subscribedTopicsResult, { depth: null });
 
     const subscribedTopics = JSON.parse(
       subscribedTopicsResult.Messages[0].Data,
@@ -89,7 +90,7 @@ describe('pubsub', async () => {
       },
       subscribersResult.Memory,
     );
-
+    console.dir(setRecordResult, { depth: null });
     const publishData = setRecordResult.Messages[1].Data;
     assert(JSON.parse(publishData)['@'] !== undefined);
     assert(

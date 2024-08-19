@@ -241,8 +241,6 @@ function utils.assertRecordPermission(from, subDomain)
 		if record.processId ~= nil then
 			assert(record.processId == from, "Undername is leased and cannot be set manually")
 		end
-
-		assert(not Auctions[subDomain], "Undername is in auction and cannot be set manually")
 	end
 end
 
@@ -526,16 +524,7 @@ function utils.getPurchasePrice(p)
 	local tokenId = p.tokenId
 	local undername = p.undername
 	local purchaseType = p.purchaseType
-	local leaseDuration = p.leaseDuration
-	local auctionType = p.auctionType
 	local settings = p.settings
-
-	assert(
-		auctionType == nil
-			or auctionType == constants.auctionTypes.dutch
-			or auctionType == constants.auctionTypes.english,
-		"Invalid auction type"
-	)
 
 	local token = PriceSettings.whiteListedTokens[tokenId]
 	local tokenRate = token.tokenRate
@@ -545,73 +534,11 @@ function utils.getPurchasePrice(p)
 	end
 	local price = 0
 
-	if purchaseType == constants.purchaseTypes.lease then
-		assert(type(leaseDuration) == "number", "Lease duration is required for lease purchases")
-		assert(leaseDuration >= settings.leaseSettings.minLeaseTime, "Lease duration is too short")
-		assert(leaseDuration <= settings.leaseSettings.maxLeaseTime, "Lease duration is too long")
-		local increments = leaseDuration / settings.leaseSettings.leaseIncrement
-		assert(increments == math.floor(increments), "Invalid lease duration of: " .. tostring(increments))
-		price = basePrice * settings.leaseSettings.incrementRate * increments
-	end
-
 	if purchaseType == constants.purchaseTypes.buy then
 		price = basePrice * settings.buySettings.rate
 	end
 
-	if purchaseType == constants.purchaseTypes.auctionBuy then
-		local auctionSettings = settings.auctionSettings[auctionType]
-		price = basePrice * settings.buySettings.rate * auctionSettings.floorRate
-	end
-
-	if purchaseType == constants.purchaseTypes.auctionLease then
-		local increments = leaseDuration / settings.leaseSettings.leaseIncrement
-		assert(increments == math.floor(increments), "Invalid lease duration of: " .. tostring(increments))
-		local auctionSettings = settings.auctionSettings[auctionType]
-		price = basePrice * settings.leaseSettings.incrementRate * increments * auctionSettings.floorRate
-	end
-
 	return price
-end
-
-function utils.createAuction(p)
-	assert(type(p) == "table", "Params must be a table")
-	local undername = p.undername
-	local underAntId = p.underAntId
-	local purchaseType = p.purchaseType
-	local auctionType = p.auctionType
-	local startTimestamp = p.startTimestamp
-	local leaseDuration = p.leaseDuration
-	local settings = p.settings
-	local tokenSettings = p.tokenSettings
-	local auctionSettings = settings.auctionSettings[auctionType]
-
-	local basePrice = (undername == "@" and settings.apexRecord.price or settings.undername.price)
-		* tokenSettings.tokenRate
-	if undername ~= "@" then
-		basePrice = basePrice * settings.undername.lengthFactor ^ #undername
-	end
-	local auction = {
-		underAntId = underAntId,
-		auctionType = auctionType,
-		startTimestamp = startTimestamp,
-		endTimestamp = startTimestamp + auctionSettings.duration,
-		floorPrice = basePrice * settings.buySettings.rate * auctionSettings.floorRate,
-		ceilingPrice = basePrice * settings.buySettings.rate * auctionSettings.ceilingRate,
-		ceilingTime = auctionSettings.ceilingTime,
-		bids = auctionType == constants.auctionTypes.english and {} or nil,
-	}
-
-	if purchaseType == constants.purchaseTypes.auctionLease then
-		local increments = leaseDuration / settings.leaseSettings.leaseIncrement
-		assert(increments == math.floor(increments), "Invalid lease duration of: " .. tostring(increments))
-		auction.floorPrice = basePrice * settings.leaseSettings.incrementRate * increments * auctionSettings.floorRate
-		auction.ceilingPrice = basePrice
-			* settings.leaseSettings.incrementRate
-			* increments
-			* auctionSettings.ceilingRate
-	end
-
-	return auction
 end
 
 function utils.parseBuyRecord(msg)
@@ -622,21 +549,10 @@ function utils.parseBuyRecord(msg)
 	assert(PriceSettings.whiteListedTokens[msg.From], "Invalid token for purchasing undernames")
 	local settings = utils.mergeSettings(PriceSettings.defaults, PriceSettings.whiteListedTokens[msg.From].overrides)
 	utils.validateUndername(msg.Tags["X-Undername"], settings.undername.allowedNamesRegex)
-	assert(
-		not Records[msg.Tags["X-Undername"]] and not Auctions[msg.Tags["X-Undername"]],
-		"Undername already exists or is currently being auctioned"
-	)
+	assert(not Records[msg.Tags["X-Undername"]], "Undername already exists")
 	assert(type(msg.Tags["X-Under-ANT-ID"]) == "string", "X-Under-ANT-ID tag is required")
 	assert(constants.purchaseTypes[msg.Tags["X-Purchase-Type"]], "Invalid purchase type")
-	if msg.Tags["X-Purchase-Type"] == constants.purchaseTypes.lease then
-		assert(type(msg.Tags["X-Lease-Duration"]) == "number", "Lease duration is required for lease purchases")
-		assert(msg.Tags["X-Lease-Duration"] >= settings.leaseSettings.minLeaseTime, "Lease duration is too short")
-		assert(msg.Tags["X-Lease-Duration"] <= settings.leaseSettings.maxLeaseTime, "Lease duration is too long")
-	end
-	assert(
-		msg.Tags["X-Auction-Type"] == nil or constants.auctionTypes[msg.Tags["X-Auction-Type"]],
-		"Invalid auction type"
-	)
+
 	local quantity = tonumber(msg.Quantity)
 	assert(quantity, "Quantity is required")
 	local recordSettings = msg.Tags["X-Undername"] == "@" and settings.apexRecord or settings.undername
@@ -649,8 +565,6 @@ function utils.parseBuyRecord(msg)
 		tokenId = msg.From,
 		undername = msg.Tags["X-Undername"],
 		purchaseType = msg.Tags["X-Purchase-Type"],
-		leaseDuration = msg.Tags["X-Lease-Duration"],
-		auctionType = msg.Tags["X-Auction-Type"],
 		settings = settings,
 	})
 
@@ -664,9 +578,7 @@ function utils.parseBuyRecord(msg)
 		settings = settings,
 		undername = msg.Tags["X-Undername"],
 		underAntId = msg.Tags["X-Under-ANT-ID"],
-		leaseDuration = msg.Tags["X-Lease-Duration"],
 		purchaseType = msg.Tags["X-Purchase-Type"],
-		auctionType = msg.Tags["X-Auction-Type"],
 		quantity = quantity,
 		price = price,
 	}

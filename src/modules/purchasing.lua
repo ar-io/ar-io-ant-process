@@ -12,7 +12,6 @@ purchasing.ActionMap = {
 	-- X- because this will come in as a credit notice and should have forwarded tags
 	BuyRecord = "X-Buy-Record",
 	-- todo
-	BidUndername = "X-Bid-Undername",
 	Publish = "Publish",
 	-- read
 	GetPriceSettings = "Get-Price-Settings",
@@ -22,7 +21,6 @@ purchasing.ActionMap = {
 }
 
 function purchasing.init()
-	Auctions = Auctions or {}
 	PriceSettings = PriceSettings
 		or {
 			defaults = constants.purchasing.defaults, -- which tokens are allowed to be used for purchasing undernames
@@ -119,8 +117,6 @@ function purchasing.init()
 		local settings = buyRecordParams.settings
 		local undername = buyRecordParams.undername
 		local underAntId = buyRecordParams.underAntId
-		local leaseDuration = buyRecordParams.leaseDuration
-		local auctionType = buyRecordParams.auctionType
 		local quantity = buyRecordParams.quantity
 		local purchaseType = buyRecordParams.purchaseType
 		local price = buyRecordParams.price
@@ -136,37 +132,22 @@ function purchasing.init()
 				settings.profitSettings.collectors
 			)
 		end
-		if auctionType then
-			Auctions[undername] = utils.createAuction({
-				undername = undername,
-				underAntId = underAntId,
-				purchaseType = purchaseType,
-				auctionType = auctionType,
-				startTimestamp = msg.Timestamp,
-				leaseDuration = leaseDuration,
-				settings = settings,
-				tokenSettings = PriceSettings.whiteListedTokens[msg.From],
-			})
-		else
-			Records[undername] = {
-				processId = underAntId,
-				purchaseType = purchaseType,
-				startTimestamp = tonumber(msg.Timestamp),
-				-- endTimestamp is nil for buys
-				endTimestamp = leaseDuration and tonumber(msg.Timestamp) + leaseDuration or nil,
-				purchasePrice = price,
-				transactionId = "",
-				ttlSeconds = "",
-			}
-			-- subscribe to under ant records changes
-			ao.send(utils.notices.addForwardedTags(msg, {
-				Target = underAntId,
-				Action = "Add-Subscriber",
-				["Subscriber"] = ao.id,
-				Data = json.encode({ "Records" }),
-			}))
-		end
-		-- TODO: will need to add subscription to undername on auction end
+		Records[undername] = {
+			processId = underAntId,
+			purchaseType = purchaseType,
+			startTimestamp = tonumber(msg.Timestamp),
+			-- endTimestamp is nil for buys, will need to add for leases
+			purchasePrice = price,
+			transactionId = "",
+			ttlSeconds = "",
+		}
+		-- subscribe to under ant records changes
+		ao.send(utils.notices.addForwardedTags(msg, {
+			Target = underAntId,
+			Action = "Add-Subscriber",
+			["Subscriber"] = ao.id,
+			Data = json.encode({ "Records" }),
+		}))
 	end)
 
 	createActionHandler(purchasing.ActionMap.GetPriceForAction, function(msg)
@@ -175,17 +156,13 @@ function purchasing.init()
 		local tokenId = actionData.tokenId
 		local action = actionData.action
 		local undername = actionData.undername
-		local leaseDuration = actionData.leaseDuration
 		local purchaseType = actionData.purchaseType
-		local auctionType = actionData.auctionType
 
 		if action == purchasing.ActionMap.BuyRecord and purchaseTypes[purchaseType] then
 			local price = utils.getPurchasePrice({
 				tokenId = tokenId,
 				undername = undername,
 				purchaseType = purchaseType,
-				leaseDuration = leaseDuration,
-				auctionType = auctionType,
 				settings = utils.mergeSettings(
 					PriceSettings.defaults,
 					PriceSettings.whiteListedTokens[tokenId].overrides

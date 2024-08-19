@@ -3,7 +3,7 @@
 local constants = require(".common.constants")
 local json = require(".common.json")
 local utils = { _version = "0.0.1" }
-local crypto = require(".crypto")
+local crypto = require(".common.crypto.init")
 local Stream = crypto.utils.stream
 
 local function isArray(table)

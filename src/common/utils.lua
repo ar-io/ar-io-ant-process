@@ -1,8 +1,10 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
 
 local constants = require(".common.constants")
-local json = require("json")
+local json = require(".common.json")
 local utils = { _version = "0.0.1" }
+local crypto = require(".common.crypto.init")
+local Stream = crypto.utils.stream
 
 local function isArray(table)
 	if type(table) == "table" then
@@ -189,17 +191,13 @@ utils.values = function(t)
 	return values
 end
 
-function utils.hasMatchingTag(tag, value)
-	return Handlers.utils.hasMatchingTag(tag, value)
-end
-
-function utils.reply(msg)
-	Handlers.utils.reply(msg)
-end
-
-function utils.validateUndername(name)
+function utils.validateUndername(name, allowedNamesRegex)
 	local valid = string.match(name, constants.UNDERNAME_REGEXP) == nil
 	assert(valid ~= false, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
+	if allowedNamesRegex then
+		valid = string.match(name, allowedNamesRegex) == nil
+		assert(valid ~= false, "ANT does not allow this undername to be purchased currently.")
+	end
 end
 
 function utils.validateArweaveId(id)
@@ -215,7 +213,7 @@ end
 
 function utils.validateOwner(caller)
 	local isOwner = false
-	if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
+	if Owner == caller or Balances[caller] or ao.id == caller then
 		isOwner = true
 	end
 	assert(isOwner, "Sender is not the owner.")
@@ -231,10 +229,19 @@ function utils.assertHasPermission(from)
 	if Owner == from then
 		return
 	end
-	if ao.env.Process.Id == from then
+	if ao.id == from then
 		return
 	end
-	assert(false, "Only controllers and owners can set controllers, records, and change metadata.")
+	error("Only controllers and owners can set controllers, records, and change metadata.")
+end
+
+function utils.assertRecordPermission(from, subDomain)
+	local record = Records[subDomain]
+	if record ~= nil and from ~= nil then
+		if record.processId ~= nil then
+			assert(record.processId == from, "Undername is leased and cannot be set manually")
+		end
+	end
 end
 
 function utils.camelCase(str)
@@ -252,41 +259,103 @@ function utils.camelCase(str)
 	return str
 end
 
+function utils.deepCopy(obj, seen)
+	if type(obj) ~= "table" then
+		return obj
+	end
+	if seen and seen[obj] then
+		return seen[obj]
+	end
+	local s = seen or {}
+	local res = setmetatable({}, getmetatable(obj))
+	s[obj] = res
+	for k, v in pairs(obj) do
+		res[utils.deepCopy(k, s)] = utils.deepCopy(v, s)
+	end
+	return res
+end
+
+function utils.applyDefaults(target, defaults)
+	for key, value in pairs(defaults) do
+		if type(value) == "table" then
+			if not target[key] then
+				target[key] = {}
+			end
+			utils.applyDefaults(target[key], value)
+		else
+			if target[key] == nil then
+				target[key] = value
+			end
+		end
+	end
+end
+
+function utils.setupSettings(userSettings, defaults)
+	local settings = utils.deepCopy(defaults)
+
+	-- Apply user settings over defaults
+	for key, value in pairs(userSettings) do
+		if type(value) == "table" then
+			if not settings[key] then
+				settings[key] = {}
+			end
+			utils.applyDefaults(settings[key], value)
+		else
+			settings[key] = value
+		end
+	end
+
+	return settings
+end
+
+function utils.getState()
+	return {
+		Records = Records,
+		Controllers = Controllers,
+		Balances = Balances,
+		Owner = Owner,
+		Name = Name,
+		Ticker = Ticker,
+		Logo = Logo,
+		Denomination = Denomination,
+		TotalSupply = TotalSupply,
+		Initialized = Initialized,
+		["Source-Code-TX-ID"] = SourceCodeTxId,
+	}
+end
+
 utils.notices = {}
 
+-- @param oldMsg table
+-- @param newMsg table
+-- Add forwarded tags to the new message
+-- @return newMsg table
+function utils.notices.addForwardedTags(oldMsg, newMsg)
+	for tagName, tagValue in pairs(oldMsg) do
+		-- Tags beginning with "X-" are forwarded
+		if string.sub(tagName, 1, 2) == "X-" then
+			newMsg[tagName] = tagValue
+		end
+	end
+	return newMsg
+end
+
 function utils.notices.credit(msg)
-	local notice = {
+	return utils.notices.addForwardedTags(msg, {
 		Target = msg.From,
 		Action = "Credit-Notice",
 		Recipient = msg.Recipient,
 		Quantity = tostring(1),
-	}
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			notice[tagName] = tagValue
-		end
-	end
-
-	return notice
+	})
 end
 
 function utils.notices.debit(msg)
-	local notice = {
+	return utils.notices.addForwardedTags(msg, {
 		Target = msg.From,
 		Action = "Debit-Notice",
 		Recipient = msg.Recipient,
 		Quantity = tostring(1),
-	}
-	-- Add forwarded tags to the credit and debit notice messages
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			notice[tagName] = tagValue
-		end
-	end
-
-	return notice
+	})
 end
 
 -- @param notices table
@@ -301,29 +370,11 @@ function utils.notices.notifyState(msg, target)
 		print("No target specified for state notice")
 		return
 	end
-	local state = {
-		Records = Records,
-		Controllers = Controllers,
-		Balances = Balances,
-		Owner = Owner,
-		Name = Name,
-		Ticker = Ticker,
-		Logo = Logo,
-		Denomination = Denomination,
-		TotalSupply = TotalSupply,
-		Initialized = Initialized,
-		["Source-Code-TX-ID"] = SourceCodeTxId,
-	}
-
-	-- Add forwarded tags to the records notice messages
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			state[tagName] = tagValue
-		end
-	end
-
-	ao.send({ Target = target, Action = "State-Notice", Data = json.encode(state) })
+	ao.send(utils.notices.addForwardedTags(msg, {
+		Target = target,
+		Action = "State-Notice",
+		Data = json.encode(utils.getState()),
+	}))
 end
 
 function utils.getHandlerNames(handlers)
@@ -332,6 +383,224 @@ function utils.getHandlerNames(handlers)
 		table.insert(names, handler.name)
 	end
 	return names
+end
+
+function utils.errorHandler(err)
+	return debug.traceback(err)
+end
+
+function utils.createHandler(tagName, tagValue, handler, position)
+	assert(
+		type(position) == "string" or type(position) == "nil",
+		utils.errorHandler("Position must be a string or nil")
+	)
+	assert(
+		position == nil or position == "add" or position == "prepend" or position == "append",
+		"Position must be one of 'add', 'prepend', 'append'"
+	)
+	return Handlers[position or "add"](
+		utils.camelCase(tagValue),
+		Handlers.utils.continue(Handlers.utils.hasMatchingTag(tagName, tagValue)),
+		function(msg)
+			print("Handling Action [" .. msg.Id .. "]: " .. tagValue)
+			local handlerStatus, handlerRes = xpcall(function()
+				handler(msg)
+			end, utils.errorHandler)
+
+			if not handlerStatus then
+				ao.send({
+					Target = msg.From,
+					Action = "Invalid-" .. tagValue .. "-Notice",
+					Error = tagValue .. "-Error",
+					["Message-Id"] = msg.Id,
+					Data = handlerRes,
+				})
+			end
+
+			return handlerRes
+		end
+	)
+end
+
+function utils.createActionHandler(action, msgHandler, position)
+	return utils.createHandler("Action", action, msgHandler, position)
+end
+
+function utils.createForwardedActionHandler(action, msgHandler, position)
+	return utils.createHandler("X-Action", action, msgHandler, position)
+end
+
+function utils.mergeSettings(defaults, tokenSettings)
+	local newSettings = defaults
+	for settingName, tokenSetting in pairs(tokenSettings) do
+		newSettings[settingName] = tokenSetting
+	end
+	return newSettings
+end
+
+function utils.getCollectorIds(collectorsType)
+	if collectorsType == constants.profitSharing.collectorPresets.Owner then
+		return { Owner }
+	elseif collectorsType == constants.profitSharing.collectorPresets.Controllers then
+		return Controllers
+	elseif collectorsType == constants.profitSharing.collectorPresets.balanceHolders then
+		return utils.keys(Balances)
+	elseif collectorsType == constants.profitSharing.collectorPresets.undernameHolders then
+		local processIds = {}
+		for _, record in pairs(Records) do
+			if record.processId then
+				processIds[record.processId] = true
+			end
+			return utils.keys(processIds)
+		end
+	elseif collectorsType == constants.profitSharing.collectorPresets.all then
+		local processIds = { [Owner] = true }
+		for _, record in pairs(Records) do
+			if record.processId then
+				processIds[record.processId] = true
+			end
+		end
+		for _, controller in pairs(Controllers) do
+			processIds[controller] = true
+		end
+		for holder in pairs(Balances) do
+			processIds[holder] = true
+		end
+		return utils.keys(processIds)
+	end
+end
+
+function utils.taxPurchase(msg, qty, rate, taxCollector)
+	assert(type(msg) == "table", "Message must be a table")
+	assert(type(qty) == "number", "Quantity must be a number")
+	assert(type(rate) == "number", "Rate must be a number")
+	assert(type(taxCollector) == "string", "Tax collector must be a string")
+	local tax = qty * rate
+	ao.send(utils.notices.addForwardedTags(msg, {
+		Target = taxCollector,
+		Action = "Transfer",
+		Recipient = taxCollector,
+		Quantity = tax,
+		Note = "Tax on undername purchase",
+	}))
+end
+
+function utils.distributeShares(msg, qty, rate, collectorsType)
+	assert(type(msg) == "table", "Message must be a table")
+	assert(type(qty) == "number", "Quantity must be a number")
+	assert(type(rate) == "number", "Rate must be a number")
+	assert(constants.profitSharing.collectorPresets[collectorsType], "Invalid collector preset of " .. collectorsType)
+	local collectors = utils.getCollectorIds(collectorsType)
+	local collectorsShare = qty * rate
+	local share = collectorsShare / #collectors
+	for _, collector in ipairs(collectors) do
+		ao.send(utils.notices.addForwardedTags(msg, {
+			Target = collector,
+			Action = "Transfer",
+			Recipient = collector,
+			Quantity = share * rate,
+			Note = "Profit share from undername purchase",
+		}))
+	end
+end
+
+function utils.refundTokens(msg, qty)
+	local sender = msg.Sender
+	if not sender then
+		print("No sender specified for transfer, unable to refund sender.")
+	else
+		ao.send(utils.notices.addForwardedTags(msg, {
+			Target = msg.From,
+			Action = "Transfer",
+			Recipient = sender,
+			Quantity = tonumber(qty) or tonumber(msg.Quantity),
+			Note = qty and "You over paid! refunding the extra tokens" or "Invalid token for purchasing undernames",
+		}))
+	end
+end
+
+function utils.getPurchasePrice(p)
+	assert(type(p) == "table", "Params must be a table")
+	local tokenId = p.tokenId
+	local undername = p.undername
+	local purchaseType = p.purchaseType
+	local settings = p.settings
+
+	local token = PriceSettings.whiteListedTokens[tokenId]
+	local tokenRate = token.tokenRate
+	local basePrice = (undername == "@" and settings.apexRecord.price or settings.undername.price) * tokenRate
+	if undername ~= "@" then
+		basePrice = basePrice * settings.undername.lengthFactor ^ #undername
+	end
+	local price = 0
+
+	if purchaseType == constants.purchaseTypes.buy then
+		price = basePrice * settings.buySettings.rate
+	end
+
+	return price
+end
+
+function utils.parseBuyRecord(msg)
+	assert(
+		msg.Tags["Action"] == "Credit-Notice",
+		"Not a 'Credit-Notice' action and thus invalid Buy-Record. Buy-Records should be initiated via Credit-Notice to pay for the undername."
+	)
+	assert(PriceSettings.whiteListedTokens[msg.From], "Invalid token for purchasing undernames")
+	local settings = utils.mergeSettings(PriceSettings.defaults, PriceSettings.whiteListedTokens[msg.From].overrides)
+	utils.validateUndername(msg.Tags["X-Undername"], settings.undername.allowedNamesRegex)
+	assert(not Records[msg.Tags["X-Undername"]], "Undername already exists")
+	assert(type(msg.Tags["X-Under-ANT-ID"]) == "string", "X-Under-ANT-ID tag is required")
+	assert(constants.purchaseTypes[msg.Tags["X-Purchase-Type"]], "Invalid purchase type")
+
+	local quantity = tonumber(msg.Quantity)
+	assert(quantity, "Quantity is required")
+	local recordSettings = msg.Tags["X-Undername"] == "@" and settings.apexRecord or settings.undername
+	assert(
+		recordSettings.purchaseTypes[msg.Tags["X-Purchase-Type"]],
+		"Invalid purchase type of " .. msg.Tags["X-Purchase-Type"] .. " for undername"
+	)
+
+	local price = utils.getPurchasePrice({
+		tokenId = msg.From,
+		undername = msg.Tags["X-Undername"],
+		purchaseType = msg.Tags["X-Purchase-Type"],
+		settings = settings,
+	})
+
+	assert(quantity >= price, "Insufficient funds to purchase undername")
+
+	if price < quantity then -- refund the difference and continue
+		utils.refundTokens(msg, tostring(quantity - price))
+	end
+
+	return {
+		settings = settings,
+		undername = msg.Tags["X-Undername"],
+		underAntId = msg.Tags["X-Under-ANT-ID"],
+		purchaseType = msg.Tags["X-Purchase-Type"],
+		quantity = quantity,
+		price = price,
+	}
+end
+-- returns hex string hash of the property value
+function utils.hashGlobalProperty(property)
+	local stream = Stream.fromString(json.encode(_G[property]))
+	local hash = crypto.digest.sha2_256(stream)
+	return tostring(hash.asHex())
+end
+
+function utils.generateGlobalStateHashes()
+	local hashes = {}
+	for _, property in ipairs(utils.keys(_G)) do
+		local hashStat, hashRes = pcall(utils.hashGlobalProperty, property)
+		if hashStat then
+			hashes[property] = hashRes
+		else
+			print("Error hashing property '" .. property .. "' :" .. " " .. hashRes)
+		end
+	end
+	return hashes
 end
 
 return utils

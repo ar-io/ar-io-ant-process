@@ -1,3 +1,3 @@
-local ant = require(".common.main")
+local main = require(".modules.main")
 
-ant.init()
+main.init()

@@ -43,8 +43,7 @@ async function main() {
 
 ### Added
 
-- Evolve capabilities and handlers.
-- ANT Registry updates on owner and controller changes.
+- Update ANT Registry with ANT ownership and controller roles on changes of those states.
 `,
   );
   await arweave.transactions.sign(tx, jwk);

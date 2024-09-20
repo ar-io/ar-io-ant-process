@@ -64,4 +64,27 @@ describe('aos Evolve', async () => {
     assert(state);
     assert(state['Source-Code-TX-ID'] === '__INSERT_SOURCE_CODE_ID__');
   });
+
+  it('should not evolve the ant with correct tags called by a non owner', async () => {
+    const srcCodeTxIdStub = ''.padEnd(43, '123-test');
+    const evolveResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Eval' },
+        { name: 'Source-Code-TX-ID', value: srcCodeTxIdStub },
+      ],
+      Data: BUNDLED_AOS_ANT_LUA,
+      Owner: 'im-not-the-owner-'.padEnd(43, 'a'),
+    });
+
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      evolveResult.Memory,
+    );
+
+    const state = JSON.parse(result.Messages[0].Data);
+    assert(state);
+    assert(state['Source-Code-TX-ID'] === '__INSERT_SOURCE_CODE_ID__');
+  });
 });

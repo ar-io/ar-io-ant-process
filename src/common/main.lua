@@ -419,6 +419,18 @@ function ant.init()
 		if not srcCodeTxId then
 			return
 		end
+
+		if Owner ~= msg.From then
+			ao.send({
+				Target = msg.From,
+				Action = "Invalid-Evolve-Notice",
+				Error = "Evolve-Error",
+				["Message-Id"] = msg.Id,
+				Data = "Only the Owner [" .. Owner or "no owner set" .. "] can call Evolve",
+			})
+			return
+		end
+
 		local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
 		if srcCodeTxIdStatus and not srcCodeTxIdStatus then
 			ao.send({

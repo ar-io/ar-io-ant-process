@@ -41,9 +41,10 @@ async function main() {
     'Changelog',
     `# Changelog
 
-### Added
+### Fixed
 
-- Update ANT Registry with ANT ownership and controller roles on changes of those states.
+- Repaired permission handling in Evolve handler to disallow modification of the SourceCodeTxId field by non-owners.
+
 `,
   );
   await arweave.transactions.sign(tx, jwk);

@@ -66,4 +66,37 @@ describe('aos Balances', async () => {
     const balances = JSON.parse(balancesResult.Messages[0].Data);
     assert(balances[recipient] === 1);
   });
+
+  it('Should send credit and debit notice on transfer', async () => {
+    const recipient = ''.padEnd(43, '2');
+    const transferResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Transfer' },
+        { name: 'Recipient', value: recipient },
+      ],
+    });
+
+    const creditNotice = transferResult.Messages.find((msg) =>
+      msg.Tags.find(
+        (tag) => tag.name === 'Action' && tag.value === 'Credit-Notice',
+      ),
+    );
+    assert(creditNotice);
+    assert(
+      creditNotice.Tags.find(
+        (tag) => tag.name === 'Sender' && tag.value === STUB_ADDRESS,
+      ),
+    );
+    const debitNotice = transferResult.Messages.find((msg) =>
+      msg.Tags.find(
+        (tag) => tag.name === 'Action' && tag.value === 'Debit-Notice',
+      ),
+    );
+    assert(debitNotice);
+    assert(
+      debitNotice.Tags.find(
+        (tag) => tag.name === 'Recipient' && tag.value === recipient,
+      ),
+    );
+  });
 });

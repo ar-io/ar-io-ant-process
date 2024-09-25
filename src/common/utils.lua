@@ -256,9 +256,9 @@ utils.notices = {}
 
 function utils.notices.credit(msg)
 	local notice = {
-		Target = msg.From,
+		Target = msg.Recipient,
 		Action = "Credit-Notice",
-		Recipient = msg.Recipient,
+		Sender = msg.From,
 		Quantity = tostring(1),
 	}
 	for tagName, tagValue in pairs(msg) do

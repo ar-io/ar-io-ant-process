@@ -43,7 +43,7 @@ async function main() {
 
 ### Fixed
 
-- Repaired permission handling in Evolve handler to disallow modification of the SourceCodeTxId field by non-owners.
+- Updated Credit and Debit notices to align with token spec as outlined in: [https://github.com/permaweb/aos/blob/main/blueprints/token.lua]
 
 `,
   );

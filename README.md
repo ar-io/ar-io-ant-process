@@ -331,7 +331,7 @@ dependencies = {
 - [ArNS Portal]
 - [AO Cookbook]
 
-[AR.IO Gateways]: https://ar.io/docs/gateway-network/#overview
+[AR.IO Gateways]: https://docs.ar.io/gateways/ar-io-node/overview/
 [ArNS Docs]: https://ar.io/docs/arns/
 [ArNS ANT Docs]: https://ar.io/docs/arns/#arweave-name-token-ant
 [ArNS Portal]: https://arns.app

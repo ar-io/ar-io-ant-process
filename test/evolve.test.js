@@ -23,7 +23,7 @@ describe('aos Evolve', async () => {
     );
   }
 
-  it('should evolve the ant', async () => {
+  it('should evolve the ant and retain eval ability', async () => {
     const srcCodeTxIdStub = ''.padEnd(43, '123-test');
     const evolveResult = await handle({
       Tags: [
@@ -42,6 +42,17 @@ describe('aos Evolve', async () => {
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
     assert(state['Source-Code-TX-ID'] === srcCodeTxIdStub);
+
+    const evalResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Eval' }],
+        Data: 'Handlers.list',
+      },
+      evolveResult.Memory,
+    );
+
+    assert(evalResult.Output.data.output);
+    assert(evalResult.Output.data.output.includes('evolve'));
   });
 
   it('should not evolve the ant', async () => {

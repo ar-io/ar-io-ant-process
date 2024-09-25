@@ -41,9 +41,12 @@ async function main() {
     'Changelog',
     `# Changelog
 
+
 ### Fixed
 
-- Updated Credit and Debit notices to align with token spec as outlined in: [https://github.com/permaweb/aos/blob/main/blueprints/token.lua]
+- Repaired evolve handler to allow ANTs to be used in AOS CLI
+
+
 
 `,
   );

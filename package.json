@@ -16,6 +16,7 @@
     "@permaweb/ao-loader": "^0.0.35",
     "@permaweb/aoconnect": "^0.0.55",
     "arweave": "^1.15.1",
+    "arweave-graphql": "^0.0.5",
     "csv": "^6.3.10",
     "json-to-csv-export": "^3.0.1",
     "plimit-lit": "^3.0.1",

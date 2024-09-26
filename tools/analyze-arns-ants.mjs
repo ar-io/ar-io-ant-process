@@ -1,8 +1,9 @@
-const fs = require('fs');
-const { AOProcess, IO, ANT, IO_TESTNET_PROCESS_ID } = require('@ar.io/sdk');
-const { connect } = require('@permaweb/aoconnect');
-const { pLimit } = require('plimit-lit');
-const { toCsvSync } = require('@iwsio/json-csv-node');
+import fs from 'fs';
+import { AOProcess, IO, ANT, IO_TESTNET_PROCESS_ID } from '@ar.io/sdk';
+import { connect } from '@permaweb/aoconnect';
+import { pLimit } from 'plimit-lit';
+import { toCsvSync } from '@iwsio/json-csv-node';
+import arweaveGraphql from 'arweave-graphql';
 
 const cleanSourceCodeId = 'RuoUVJOCJOvSfvvi_tn0UPirQxlYdC4_odqmORASP8g';
 
@@ -14,6 +15,7 @@ function createEntityLink(processId) {
 }
 
 async function getProcessEvalMessageIDsNotFromArIO(processId) {
+  // Dcd4bnUAxJ
   const messages = await fetch(
     `https://su-router.ao-testnet.xyz/${processId}?limit=100000`,
     {
@@ -31,7 +33,39 @@ async function getProcessEvalMessageIDsNotFromArIO(processId) {
     }
     return acc;
   }, []);
-  return evalMessages;
+
+  return { evalMessages };
+}
+
+async function getPermawebDeployManifestIds({ owners, ids }) {
+  let cursor = null;
+  let hasNextPage = true;
+  let manifestIds = [];
+  while (hasNextPage) {
+    const res = await arweaveGraphql('arweave.net/graphql').getTransactions({
+      after: cursor,
+      owners,
+      ids,
+      tags: [
+        { name: 'App-Name', values: ['Permaweb-Deploy'] },
+        {
+          name: 'Content-Type',
+          values: ['application/x.arweave-manifest+json'],
+        },
+      ],
+    });
+    const { edges, pageInfo } = res.transactions;
+    manifestIds = manifestIds.concat(
+      edges.map((edge) => ({
+        owner: edge.node.owner.address,
+        manifestId: edge.node.id,
+      })),
+    );
+    cursor = pageInfo.endCursor;
+    hasNextPage = pageInfo.hasNextPage;
+  }
+
+  return manifestIds;
 }
 
 async function main() {
@@ -56,12 +90,14 @@ async function main() {
     },
     {},
   );
+  console.log('fetching permaweb deploy manifests...');
 
   const affectedDomains = [];
   let totalDomains = Object.keys(domainProcessIdMapping).length;
   let scannedCount = 1;
 
   const limit = pLimit(30);
+  const manifestAntIdResolvedIdsMap = {};
   async function analyze(domain, antId) {
     try {
       console.log(
@@ -72,11 +108,19 @@ async function main() {
       const state = await ant.getState();
       const sourceCodeId = state?.['Source-Code-TX-ID'];
       const owner = state?.Owner;
-      /**
-       * - How many owners affected
-       * - How many ants with custom evals not from ar-io
-       */
-      const messagesResult = await getProcessEvalMessageIDsNotFromArIO(
+
+      const relatedManifestIds = Object.values(state.Records)
+        .map((record) => record?.transactionId)
+        .filter(
+          (txId) =>
+            txId !== undefined &&
+            typeof txId === 'string' &&
+            txId.length === 43,
+        );
+
+      manifestAntIdResolvedIdsMap[antId] = relatedManifestIds;
+
+      const { evalMessages } = await getProcessEvalMessageIDsNotFromArIO(
         antId,
       ).catch((e) => {
         console.error(e);
@@ -88,10 +132,11 @@ async function main() {
           ['ArNS Domain']: domain,
           ['Process ID']: antId,
           ['Owner ID']: owner,
-          ['Custom Eval Message Count']: messagesResult.length,
+          ['Custom Eval Message Count']: evalMessages.length,
           ['ArNS Domain Link']: createDomainLink(domain),
           ['Process ID Link']: createEntityLink(antId),
           ['Owner Link']: createEntityLink(owner),
+          relatedManifestIds,
         });
         console.log(
           `Domain ${domain} is detected to be affected, current affected domains count: ${Object.keys(affectedDomains).length}`,
@@ -109,6 +154,7 @@ async function main() {
         ['Process ID Link']: createEntityLink(antId),
         ['Owner Link']: 'unknown',
         ['Error']: 'Not reachable',
+        relatedManifestIds: [],
       });
     }
   }
@@ -118,10 +164,30 @@ async function main() {
     ),
   );
 
-  affectedDomains.sort(
-    (a, b) => a['Custom Eval Message Count'] - b['Custom Eval Message Count'],
-  );
+  console.log('fetching permaweb deploy manifests...');
+  // need to batch into sets of 500
+  const flatIds = Object.values(manifestAntIdResolvedIdsMap).flat();
+  const batches = [];
+  for (let i = 0; i < flatIds.length; i += 500) {
+    batches.push(flatIds.slice(i, i + 500));
+  }
 
+  async function updateAffectedDomains(batch) {
+    const manifestIds = await getPermawebDeployManifestIds({
+      ids: batch,
+    });
+    manifestIds.forEach(({ owner, manifestId }) => {
+      affectedDomains.forEach((domain) => {
+        if (domain?.relatedManifestIds?.includes(manifestId)) {
+          domain['Used Permaweb Deploy'] = true;
+        }
+      });
+    });
+  }
+
+  await Promise.all(
+    batches.map((batch) => limit(() => updateAffectedDomains(batch))),
+  );
   // write json file
   fs.writeFileSync(
     'affected-domains.json',
@@ -145,6 +211,10 @@ async function main() {
       {
         name: 'Custom Eval Message Count',
         label: 'Custom Eval Message Count',
+      },
+      {
+        name: 'Used Permaweb Deploy',
+        label: 'Used Permaweb Deploy',
       },
       {
         name: 'ArNS Domain Link',

@@ -11,9 +11,13 @@
     "test": "node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.js"
   },
   "devDependencies": {
-    "prettier": "^3.3.2",
+    "@ar.io/sdk": "^2.2.3",
+    "@iwsio/json-csv-node": "^6.1.7",
     "@permaweb/ao-loader": "^0.0.35",
     "@permaweb/aoconnect": "^0.0.55",
-    "arweave": "^1.15.1"
+    "arweave": "^1.15.1",
+    "csv": "^6.3.10",
+    "json-to-csv-export": "^3.0.1",
+    "prettier": "^3.3.2"
   }
 }

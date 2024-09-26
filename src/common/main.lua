@@ -414,36 +414,40 @@ function ant.init()
 		utils.notices.notifyState(msg, msg.From)
 	end)
 
-	Handlers.prepend(camel(ActionMap.Evolve),Handlers.utils.continue(utils.hasMatchingTag("Action", "Eval")), function(msg)
-		local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
-		if not srcCodeTxId then
-			return
-		end
+	Handlers.prepend(
+		camel(ActionMap.Evolve),
+		Handlers.utils.continue(utils.hasMatchingTag("Action", "Eval")),
+		function(msg)
+			local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
+			if not srcCodeTxId then
+				return
+			end
 
-		if Owner ~= msg.From then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Evolve-Notice",
-				Error = "Evolve-Error",
-				["Message-Id"] = msg.Id,
-				Data = "Only the Owner [" .. Owner or "no owner set" .. "] can call Evolve",
-			})
-			return
-		end
+			if Owner ~= msg.From then
+				ao.send({
+					Target = msg.From,
+					Action = "Invalid-Evolve-Notice",
+					Error = "Evolve-Error",
+					["Message-Id"] = msg.Id,
+					Data = "Only the Owner [" .. Owner or "no owner set" .. "] can call Evolve",
+				})
+				return
+			end
 
-		local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
-		if srcCodeTxIdStatus and not srcCodeTxIdStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Evolve-Notice",
-				Error = "Evolve-Error",
-				["Message-Id"] = msg.Id,
-				Data = "Source-Code-TX-ID is required",
-			})
-			return
+			local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
+			if srcCodeTxIdStatus and not srcCodeTxIdStatus then
+				ao.send({
+					Target = msg.From,
+					Action = "Invalid-Evolve-Notice",
+					Error = "Evolve-Error",
+					["Message-Id"] = msg.Id,
+					Data = "Source-Code-TX-ID is required",
+				})
+				return
+			end
+			SourceCodeTxId = srcCodeTxId
 		end
-		SourceCodeTxId = srcCodeTxId
-	end)
+	)
 end
 
 return ant

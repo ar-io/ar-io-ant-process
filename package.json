@@ -18,6 +18,7 @@
     "arweave": "^1.15.1",
     "csv": "^6.3.10",
     "json-to-csv-export": "^3.0.1",
+    "plimit-lit": "^3.0.1",
     "prettier": "^3.3.2"
   }
 }

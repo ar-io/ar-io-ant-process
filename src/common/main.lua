@@ -414,7 +414,7 @@ function ant.init()
 		utils.notices.notifyState(msg, msg.From)
 	end)
 
-	Handlers.prepend(camel(ActionMap.Evolve), utils.hasMatchingTag("Action", "Eval"), function(msg)
+	Handlers.prepend(camel(ActionMap.Evolve),Handlers.utils.continue(utils.hasMatchingTag("Action", "Eval")), function(msg)
 		local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
 		if not srcCodeTxId then
 			return

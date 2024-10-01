@@ -41,11 +41,9 @@ async function main() {
     'Changelog',
     `# Changelog
 
-
 ### Fixed
 
-- Repaired evolve handler to allow ANTs to be used in AOS CLI
-
+- ANT will now lower case undernames when provided to provide URL compatibility.
 
 
 `,

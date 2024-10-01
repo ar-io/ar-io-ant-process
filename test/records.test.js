@@ -98,4 +98,26 @@ describe('aos Records', async () => {
     const record = JSON.parse(recordsResult.Messages[0].Data)['timmy'];
     assert(!record);
   });
+
+  it('should set name as lower case when provided as uppercase', async () => {
+    const setRecordResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        { name: 'Sub-Domain', value: 'Timmy' },
+        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+        { name: 'TTL-Seconds', value: 3600 },
+      ],
+    });
+
+    const recordsResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Records' }],
+      },
+      setRecordResult.Memory,
+    );
+
+    const record = JSON.parse(recordsResult.Messages[0].Data)['timmy'];
+    assert(record.transactionId === ''.padEnd(43, '3'));
+    assert(record.ttlSeconds === 3600);
+  });
 });

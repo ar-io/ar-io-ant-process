@@ -18,7 +18,7 @@ function records.setRecord(name, transactionId, ttlSeconds)
 		error("Max records limit of 10,000 reached, please delete some records to make space")
 	end
 
-	Records[name] = {
+	Records[string.lower(name)] = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
 	}
@@ -32,7 +32,7 @@ end
 function records.removeRecord(name)
 	local nameValidity, nameValidityError = pcall(utils.validateUndername, name)
 	assert(nameValidity ~= false, nameValidityError)
-	Records[name] = nil
+	Records[string.lower(name)] = nil
 	return json.encode({ message = "Record deleted" })
 end
 
@@ -40,7 +40,7 @@ function records.getRecord(name)
 	utils.validateUndername(name)
 	assert(Records[name] ~= nil, "Record does not exist")
 
-	return json.encode(Records[name])
+	return json.encode(Records[string.lower(name)])
 end
 
 function records.getRecords()

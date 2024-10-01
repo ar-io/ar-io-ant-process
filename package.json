@@ -8,7 +8,7 @@
     "aos:publish": "node tools/bundle-aos.js && node tools/publish-aos.js",
     "aos:load": "node tools/bundle-aos.js && node tools/load-aos.js",
     "aos:spawn": "node tools/spawn-aos.js",
-    "test": "node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.js"
+    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.js"
   },
   "devDependencies": {
     "prettier": "^3.3.2",

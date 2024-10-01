@@ -24,7 +24,7 @@ describe('Registry Updates', async () => {
     );
   }
 
-  it('Should send update to registry when a controller is added', async () => {
+  it('should send update to registry when a controller is added', async () => {
     const result = await handle({
       Tags: [
         { name: 'Action', value: 'Add-Controller' },
@@ -44,7 +44,7 @@ describe('Registry Updates', async () => {
     assert(notifyMessage, 'State-Notice message not found');
   });
 
-  it('Should send update to registry when a controller is removed', async () => {
+  it('should send update to registry when a controller is removed', async () => {
     await handle({
       Tags: [
         { name: 'Action', value: 'Add-Controller' },
@@ -71,7 +71,7 @@ describe('Registry Updates', async () => {
     assert(notifyMessage, 'State-Notice message not found');
   });
 
-  it('Should send update to registry when ANT is transferred', async () => {
+  it('should send update to registry when ANT is transferred', async () => {
     const result = await handle({
       Tags: [
         { name: 'Action', value: 'Transfer' },

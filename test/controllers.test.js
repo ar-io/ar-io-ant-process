@@ -22,7 +22,7 @@ describe('aos Controllers', async () => {
     );
   }
 
-  it('Should get the controllers', async () => {
+  it('should get the controllers', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Controllers' }],
     });
@@ -32,7 +32,7 @@ describe('aos Controllers', async () => {
     assert(controllers.includes(STUB_ADDRESS));
   });
 
-  it('Should add the controller', async () => {
+  it('should add the controller', async () => {
     const controller = ''.padEnd(43, '2');
     const result = await handle({
       Tags: [
@@ -44,7 +44,7 @@ describe('aos Controllers', async () => {
     assert(JSON.parse(result.Messages[0].Data).includes(controller), true);
   });
 
-  it('Should remove the controller', async () => {
+  it('should remove the controller', async () => {
     const result = await handle({
       Tags: [
         { name: 'Action', value: 'Remove-Controller' },

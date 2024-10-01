@@ -22,7 +22,7 @@ describe('aos Balances', async () => {
     );
   }
 
-  it('Should fetch the owner balance', async () => {
+  it('should fetch the owner balance', async () => {
     const result = await handle({
       Tags: [
         { name: 'Action', value: 'Balance' },
@@ -33,7 +33,7 @@ describe('aos Balances', async () => {
     const ownerBalance = result.Messages[0].Data;
     assert(ownerBalance === 1);
   });
-  it('Should fetch the balances of the ANT', async () => {
+  it('should fetch the balances of the ANT', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Balances' }],
     });
@@ -47,7 +47,7 @@ describe('aos Balances', async () => {
     assert(ownerBalance === 1);
   });
 
-  it('Should transfer the ANT', async () => {
+  it('should transfer the ANT', async () => {
     const recipient = ''.padEnd(43, '2');
     const transferResult = await handle({
       Tags: [
@@ -67,7 +67,7 @@ describe('aos Balances', async () => {
     assert(balances[recipient] === 1);
   });
 
-  it('Should send credit and debit notice on transfer', async () => {
+  it('should send credit and debit notice on transfer', async () => {
     const recipient = ''.padEnd(43, '2');
     const transferResult = await handle({
       Tags: [

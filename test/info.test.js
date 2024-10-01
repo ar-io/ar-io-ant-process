@@ -22,7 +22,7 @@ describe('aos Info', async () => {
     );
   }
 
-  it('Should get the process info', async () => {
+  it('should get the process info', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Info' }],
     });
@@ -34,9 +34,31 @@ describe('aos Info', async () => {
     assert(processInfo.Denomination !== undefined);
     assert(processInfo.Logo);
     assert(processInfo.Owner);
+    assert(processInfo.Handlers);
+    assert.deepStrictEqual(processInfo.Handlers, [
+      'evolve',
+      '_eval',
+      '_default',
+      'transfer',
+      'balance',
+      'balances',
+      'totalSupply',
+      'info',
+      'addController',
+      'removeController',
+      'controllers',
+      'setRecord',
+      'removeRecord',
+      'record',
+      'records',
+      'setName',
+      'setTicker',
+      'initializeState',
+      'state',
+    ]);
   });
 
-  it('Should set the name of the process', async () => {
+  it('should set the name of the process', async () => {
     const setNameResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Name' },
@@ -54,7 +76,7 @@ describe('aos Info', async () => {
     assert(info.Name === 'Test Process');
   });
 
-  it('Should set the ticker of the process', async () => {
+  it('should set the ticker of the process', async () => {
     const setTickerResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Ticker' },

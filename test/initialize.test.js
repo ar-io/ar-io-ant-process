@@ -22,7 +22,7 @@ describe('aos Initialization', async () => {
     );
   }
 
-  it('Should initialize the state of the ant', async () => {
+  it('should initialize the state of the ant', async () => {
     const antState = {
       name: 'Test Process',
       ticker: 'TEST',

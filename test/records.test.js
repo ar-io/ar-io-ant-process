@@ -22,7 +22,7 @@ describe('aos Records', async () => {
     );
   }
 
-  it('Should get the records of the ant', async () => {
+  it('should get the records of the ant', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Records' }],
     });
@@ -32,7 +32,7 @@ describe('aos Records', async () => {
     assert(records['@']);
   });
 
-  it('Should get a singular record of the ant', async () => {
+  it('should get a singular record of the ant', async () => {
     const result = await handle({
       Tags: [
         { name: 'Action', value: 'Record' },
@@ -46,7 +46,7 @@ describe('aos Records', async () => {
     assert(record.ttlSeconds);
   });
 
-  it('Should set the record of an ANT', async () => {
+  it('should set the record of an ANT', async () => {
     const setRecordResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Record' },
@@ -68,7 +68,7 @@ describe('aos Records', async () => {
     assert(record.ttlSeconds === 3600);
   });
 
-  it('Should remove the record of an ANT', async () => {
+  it('should remove the record of an ANT', async () => {
     const setRecordResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Record' },

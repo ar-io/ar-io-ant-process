@@ -160,7 +160,7 @@ function ant.init()
 			Logo = Logo,
 			Denomination = tostring(Denomination),
 			Owner = Owner,
-			HandlerNames = utils.getHandlerNames(Handlers),
+			Handlers = utils.getHandlerNames(Handlers),
 			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 		ao.send({

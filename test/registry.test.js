@@ -9,7 +9,7 @@ const {
 
 describe('Registry Updates', async () => {
   const { handle: originalHandle, memory: startMemory } =
-    await createAntAosLoader();
+    await createAntAosLoader(process.env.luaSourceId);
 
   const controllerAddress = 'controller-address'.padEnd(43, '0');
 

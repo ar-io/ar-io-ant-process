@@ -9,7 +9,7 @@ const {
 
 describe('aos Info', async () => {
   const { handle: originalHandle, memory: startMemory } =
-    await createAntAosLoader();
+    await createAntAosLoader(process.env.luaSourceId);
 
   async function handle(options = {}, mem = startMemory) {
     return originalHandle(

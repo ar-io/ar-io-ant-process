@@ -2,7 +2,7 @@ local utils = require(".common.utils")
 local json = require(".common.json")
 local records = {}
 -- defaults to landing page txid
-Records = Records or { ["@"] = { transactionId = "UyC5P5qKPZaltMmmZAWdakhlDXsBF6qmyrbWYFchRTk", ttlSeconds = 3600 } }
+Records = Records or { ["@"] = { transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI", ttlSeconds = 3600 } }
 
 function records.setRecord(name, transactionId, ttlSeconds)
 	local nameValidity, nameValidityError = pcall(utils.validateUndername, name)

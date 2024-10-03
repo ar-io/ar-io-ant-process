@@ -41,11 +41,9 @@ async function main() {
     'Changelog',
     `# Changelog
 
-### Fixed
+### Changed
 
-- ANT will now lower case undernames when provided to provide URL compatibility.
-
-
+- Changed default landing page transaction ID.
 `,
   );
   await arweave.transactions.sign(tx, jwk);

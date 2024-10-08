@@ -46,10 +46,14 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    environment: main
     needs: [unit, integration]
-    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write # to be able to publish a GitHub release
     outputs:
-      publish-output: ${{ steps.set-publish-output.outputs.publish-output }}
+      published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
+      # lua_code: ${{ steps.publish-lua-code.outputs.luaSourceCode }}
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2
@@ -57,30 +61,50 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'yarn'
       - run: yarn --frozen-lockfile
-      - run: yarn aos:build
+      - name: Publish Lua Code
         id: publish-lua-code
-      - run: yarn aos:publish
         env:
-          ARWEAVE_PUBLISHING_KEY: ${{ secrets.ARWEAVE_PUBLISHING_KEY }}
-      - name: Capture Publish Output
-        id: set-publish-output
+          WALLET: ${{ secrets.WALLET }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          publish_output=$(node -e "const fs = require('fs'); const output = JSON.parse(fs.readFileSync('tools/publish-output.json', 'utf-8')); console.log(output);")
-          echo "::set-output name=publish-output::$publish_output"
-      # Add the following steps to commit and push the changelog file and create a tag
-      - name: Commit and Push Changelog
-        run: |
-          prettier --write changelogs/*.md
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add changelogs/*.md
-          git commit -m "feat(publish): create changelog for ${{ fromJson(steps.set-publish-output.outputs.publish-output).luaCodeTxId }}"
-          git push origin HEAD
-          git tag -a ${{ fromJson(steps.set-publish-output.outputs.publish-output).luaCodeTxId }}
-          git push origin ${{ fromJson(steps.set-publish-output.outputs.publish-output).luaCodeTxId }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Run the publish command once and store the output in a variable
+          PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
 
+          # Extract the source transaction ID and Lua source code from the stored output
+          LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "publishedLuaTxId\.[a-zA-Z0-9_-]{43}" | cut -d'.' -f2)
+          # LUA_SOURCE_CODE=$(echo "$PUBLISH_OUTPUT" | grep -oP 'luaSourceCode{{{\K.*(?=}}})')
+
+          # Set the output variables for the workflow step
+          echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
+          # echo "::set-output name=luaSourceCode::$LUA_SOURCE_CODE"
+
+      - name: Create Tag for Lua ID
+        run: |
+          git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
+          git push --tags
+
+  # release:
+  #   needs: publish
+  #   if: github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         tag_name: ${{ needs.publish.outputs.published_lua_code_id }}
+  #         release_name: Release ${{ needs.publish.outputs.published_lua_code_id }}
+  #         body: |
+  #           Release for AOS bundled Lua code
+  #         draft: false
+  #         prerelease: false
+  #     - name: Upload Artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: aos-bundled-lua
+  #         path: ${{ needs.publish.outputs.lua_code }}
   notify:
     runs-on: ubuntu-latest
     needs: [unit, integration, publish]
@@ -94,9 +118,7 @@ jobs:
           text: |
             Unit Tests: ${{ needs.unit.result }}
             Integration Tests: ${{ needs.integration.result }}
-            Published Lua Id: ${{ fromJson(needs.publish.outputs.publish-output).luaCodeTxId }}
-            Publisher Address: ${{ fromJson(needs.publish.outputs.publish-output).publisherAddress }}
-            Changelog: ${{ format('```{0}```', fromJson(needs.publish.outputs.publish-output).changelog) }}
+            Published Lua Id: ${{ needs.publish.outputs.published_lua_code_id}}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -4,14 +4,6 @@ const fs = require('fs');
 const { TurboFactory } = require('@ardrive/turbo-sdk');
 const { createData, ArweaveSigner } = require('@dha-team/arbundles');
 
-const changelog = `
-# Changelog
-
-### Changed
-
-- Changed default landing page transaction ID.
-`;
-
 const srcCodeTxIdPlaceholder = '__INSERT_SOURCE_CODE_ID__';
 
 const arweave = Arweave.init({
@@ -63,6 +55,9 @@ async function main() {
     }`,
     })
     .then((res) => {
+      // TODO: add pagination once we have more than 100 versions
+      if (res.data.data.transactions.edges.length > 99)
+        throw new Error('Too many transactions found, implement pagination');
       return res.data.data.transactions.edges[0].node.tags.find(
         (tag) => tag.name === 'Original-Tx-Id',
       )?.value;
@@ -86,7 +81,7 @@ async function main() {
     console.log('No changes in source code detected, skipping publishing');
     process.exit(0); // Exit with code 0 to indicate success
   }
-  let wallet = process.env.ARWEAVE_PUBLISHING_KEY;
+  let wallet = process.env.WALLET;
   if (!wallet) {
     try {
       wallet = fs.readFileSync(path.join(__dirname, 'key.json'), 'utf-8');
@@ -106,7 +101,6 @@ async function main() {
     'App-Version': '8',
     'Content-Type': 'text/x-lua',
     Author: 'Permanent Data Solutions',
-    Changelog: changelog,
     'Git-Hash': process.env.GITHUB_SHA,
   }).map(([name, value]) => ({ name, value }));
 
@@ -125,7 +119,7 @@ async function main() {
     dataTx1.id,
   );
 
-  const data2 = await createData(bundledLuaWithTxId, signer, {
+  const data2 = createData(bundledLuaWithTxId, signer, {
     tags: [...publishingTags, { name: 'Original-Tx-Id', value: dataTx1.id }],
   });
   await data2.sign(signer);

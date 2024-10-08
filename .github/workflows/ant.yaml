@@ -1,6 +1,6 @@
 name: Arweave Name Token
 
-on: [push]
+on: [push, workflow_dispatch]
 
 jobs:
   unit:
@@ -44,19 +44,53 @@ jobs:
       - run: yarn aos:build
       - run: yarn test
 
-  notify:
+  publish:
     runs-on: ubuntu-latest
     needs: [unit, integration]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+      - run: yarn --frozen-lockfile
+      - run: yarn aos:build
+      - run: yarn aos:publish
+        env:
+          ARWEAVE_PUBLISHING_KEY: ${{ secrets.ARWEAVE_PUBLISHING_KEY }}
+    outputs:
+      publish-output: ${{ steps.publish.outputs.publish-output }}
+
+  create-lua-tag:
+    needs: publish
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Create Lua code version tag
+        run: |
+          echo "${{ fromJson(needs.publish.outputs.publish-output)['Lua Code Transaction ID'] }}" > tag.txt
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a ${{ fromJson(needs.publish.outputs.publish-output)['Lua Code Transaction ID'] }} -F tag.txt
+          git push origin ${{ fromJson(needs.publish.outputs.publish-output)['Lua Code Transaction ID'] }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [unit, integration, publish]
     if: always()
     steps:
       - name: Notify Slack on Success
-        if: success() && github.ref == 'refs/heads/main' && needs.unit.result == 'success' && needs.integration.result == 'success'
+        if: github.ref == 'refs/heads/main' && needs.unit.result == 'success' && needs.integration.result == 'success' && (needs.publish.result == 'success' || needs.publish.result == 'skipped')
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
           text: |
             Unit Tests: ${{ needs.unit.result }}
             Integration Tests: ${{ needs.integration.result }}
+            Publish Output: ${{ fromJson(needs.publish.outputs.publish-output) }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

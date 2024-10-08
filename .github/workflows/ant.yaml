@@ -48,6 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit, integration]
     if: github.ref == 'refs/heads/main'
+    outputs:
+      publish-output: ${{ steps.set-publish-output.outputs.publish-output }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2
@@ -56,24 +58,26 @@ jobs:
           cache: 'yarn'
       - run: yarn --frozen-lockfile
       - run: yarn aos:build
+        id: publish-lua-code
       - run: yarn aos:publish
         env:
           ARWEAVE_PUBLISHING_KEY: ${{ secrets.ARWEAVE_PUBLISHING_KEY }}
-    outputs:
-      publish-output: ${{ steps.publish.outputs.publish-output }}
-
-  create-lua-tag:
-    needs: publish
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Create Lua code version tag
+      - name: Capture Publish Output
+        id: set-publish-output
         run: |
-          echo "${{ fromJson(needs.publish.outputs.publish-output)['Lua Code Transaction ID'] }}" > tag.txt
+          publish_output=$(node -e "const fs = require('fs'); const output = JSON.parse(fs.readFileSync('tools/publish-output.json', 'utf-8')); console.log(output);")
+          echo "::set-output name=publish-output::$publish_output"
+      # Add the following steps to commit and push the changelog file and create a tag
+      - name: Commit and Push Changelog
+        run: |
+          prettier --write changelogs/*.md
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag -a ${{ fromJson(needs.publish.outputs.publish-output)['Lua Code Transaction ID'] }} -F tag.txt
-          git push origin ${{ fromJson(needs.publish.outputs.publish-output)['Lua Code Transaction ID'] }}
+          git add changelogs/*.md
+          git commit -m "feat(publish): create changelog for ${{ fromJson(steps.set-publish-output.outputs.publish-output).luaCodeTxId }}"
+          git push origin HEAD
+          git tag -a ${{ fromJson(steps.set-publish-output.outputs.publish-output).luaCodeTxId }}
+          git push origin ${{ fromJson(steps.set-publish-output.outputs.publish-output).luaCodeTxId }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,7 +94,9 @@ jobs:
           text: |
             Unit Tests: ${{ needs.unit.result }}
             Integration Tests: ${{ needs.integration.result }}
-            Publish Output: ${{ fromJson(needs.publish.outputs.publish-output) }}
+            Published Lua Id: ${{ fromJson(needs.publish.outputs.publish-output).luaCodeTxId }}
+            Publisher Address: ${{ fromJson(needs.publish.outputs.publish-output).publisherAddress }}
+            Changelog: ${{ format('```{0}```', fromJson(needs.publish.outputs.publish-output).changelog) }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

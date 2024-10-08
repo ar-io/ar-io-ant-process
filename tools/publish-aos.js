@@ -18,12 +18,82 @@ const arweave = Arweave.init({
   host: 'arweave.net',
   port: 443,
   protocol: 'https',
+  logging: false,
 });
+
+function getPublishedSourceCodeIds() {
+  // Read all filenames from the changelogs directory
+  const changeLogFileNames = fs.readdirSync(
+    path.join(__dirname, '../changelogs'),
+  );
+
+  // Process each file name to extract the source code ID
+  const txIds = changeLogFileNames
+    .map((fileName) => {
+      // Remove the date portion at the start, which is in the format YYYY-MM-DD-
+      const parts = fileName.split('-').slice(3); // Skip the first 3 parts (YYYY, MM, DD)
+      const idWithExtension = parts.join('-'); // Join the remaining parts in case the ID itself has dashes
+      const txId = idWithExtension.split('.').shift(); // Remove the file extension (e.g., .md)
+
+      return txId;
+    })
+    .filter((txId) => txId.length === 43); // Filter for valid IDs with length 43
+
+  return txIds;
+}
 async function main() {
+  // get the last published source code from the changelogs folder (can check the date on it, check for multiple dates) and
+  // fetch the code from arweave, then compare it with the current code
+
+  const publishedSourceCodeIds = getPublishedSourceCodeIds();
+  const sourceCodeTransactions = await arweave.api
+    .post('/graphql', {
+      query: `{transactions(
+        ids:[ ${publishedSourceCodeIds.map((id) => `"${id}"`).join(',')}]) {
+			edges {
+				node {
+					id
+					tags {
+						name
+						value
+					}
+          block {
+            timestamp
+          }
+				}
+			}
+		}
+        }`,
+    })
+
+    .then((res) => {
+      return res.data.data.transactions.edges
+        .map((edge) => edge.node)
+        .sort((a, b) => b.block.timestamp - a.block.timestamp);
+    });
+
+  const lastPublishedSourceCodeId = sourceCodeTransactions[0].tags.find(
+    (tag) => tag.name === 'Original-Tx-Id',
+  )?.value;
+
+  const lastPublishedSourceCode = await arweave.transactions
+    .getData(lastPublishedSourceCodeId, { decode: true, string: true })
+    .catch((error) => {
+      console.error(
+        'Error fetching last published source code, unable to compare with current code. \n',
+        error,
+      );
+    });
+
   const bundledLua = fs.readFileSync(
     path.join(__dirname, '../dist/aos-bundled.lua'),
     'utf-8',
   );
+
+  if (lastPublishedSourceCode === bundledLua) {
+    console.log('No changes in source code detected, skipping publishing');
+    process.exit(0); // Exit with code 0 to indicate success
+  }
   let wallet = process.env.ARWEAVE_PUBLISHING_KEY;
   if (!wallet) {
     try {
@@ -73,12 +143,28 @@ async function main() {
     dataItemStreamFactory: () => data2.getRaw(),
   });
 
-  console.log(
+  // create changelog and write to changelogs folder
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+  const changelogPath = path.join(
+    __dirname,
+    '../changelogs',
+    `${formattedDate}-${dataTx2.id}.md`,
+  );
+
+  fs.writeFileSync(changelogPath, changelog, 'utf-8');
+
+  fs.writeFileSync(
+    path.join(__dirname, 'publish-output.json'),
     JSON.stringify({
-      ['Lua Code Transaction ID']: dataTx2.id,
-      ['Changelog']: changelog,
-      ['Published with']: address,
+      luaCodeTxId: dataTx2.id,
+      changelog,
+      publisherAddress: address,
     }),
+    'utf-8',
   );
 }
 main();

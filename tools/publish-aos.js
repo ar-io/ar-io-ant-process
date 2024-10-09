@@ -25,7 +25,7 @@ async function main() {
       wallet = fs.readFileSync(path.join(__dirname, 'key.json'), 'utf-8');
     } catch (error) {
       console.error(
-        'No key found, please set ARWEAVE_PUBLISHING_KEY environment variable or provide a key.json file',
+        'No key found, please set WALLET environment variable or provide a key.json file',
       );
       return;
     }

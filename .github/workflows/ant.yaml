@@ -67,44 +67,15 @@ jobs:
           WALLET: ${{ secrets.WALLET }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          # Run the publish command once and store the output in a variable
           PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
-
-          # Extract the source transaction ID and Lua source code from the stored output
           LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "publishedLuaTxId\.[a-zA-Z0-9_-]{43}" | cut -d'.' -f2)
-          # LUA_SOURCE_CODE=$(echo "$PUBLISH_OUTPUT" | grep -oP 'luaSourceCode{{{\K.*(?=}}})')
-
-          # Set the output variables for the workflow step
           echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
-          # echo "::set-output name=luaSourceCode::$LUA_SOURCE_CODE"
 
       - name: Create Tag for Lua ID
         run: |
           git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
           git push --tags
 
-  # release:
-  #   needs: publish
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Create Release
-  #       id: create_release
-  #       uses: actions/create-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ needs.publish.outputs.published_lua_code_id }}
-  #         release_name: Release ${{ needs.publish.outputs.published_lua_code_id }}
-  #         body: |
-  #           Release for AOS bundled Lua code
-  #         draft: false
-  #         prerelease: false
-  #     - name: Upload Artifact
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: aos-bundled-lua
-  #         path: ${{ needs.publish.outputs.lua_code }}
   notify:
     runs-on: ubuntu-latest
     needs: [unit, integration, publish]

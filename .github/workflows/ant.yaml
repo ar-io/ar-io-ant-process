@@ -52,7 +52,6 @@ jobs:
       contents: write # to be able to publish a GitHub release
     outputs:
       published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
-      # lua_code: ${{ steps.publish-lua-code.outputs.luaSourceCode }}
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +88,7 @@ jobs:
           text: |
             Unit Tests: ${{ needs.unit.result }}
             Integration Tests: ${{ needs.integration.result }}
-            Published Lua Id: ${{ needs.publish.outputs.published_lua_code_id}}
+            Published Lua Id: ${{ needs.publish.outputs.published_lua_code_id || 'N/A' }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

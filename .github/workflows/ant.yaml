@@ -68,7 +68,6 @@ jobs:
           DRY_RUN: ${{github.ref_name != 'main'}}
         run: |
           PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
-          cat $PUBLISH_OUTPUT
           # This line extracts the transaction ID of the published Lua source code from the output
           # It uses grep to find the line containing "Generated source code data item with id:"
           # Then it uses sed to extract the 43-character transaction ID

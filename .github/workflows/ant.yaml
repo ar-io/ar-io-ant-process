@@ -1,6 +1,6 @@
 name: Arweave Name Token
 
-on: [push]
+on: [push, workflow_dispatch]
 
 jobs:
   unit:
@@ -44,19 +44,56 @@ jobs:
       - run: yarn aos:build
       - run: yarn test
 
+  publish:
+    runs-on: ubuntu-latest
+    environment: main
+    needs: [unit, integration]
+    permissions:
+      contents: write # to be able to publish a GitHub release
+    outputs:
+      published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+      - run: yarn --frozen-lockfile
+      - name: Publish Lua Code
+        id: publish-lua-code
+        env:
+          WALLET: ${{ secrets.WALLET }}
+          GITHUB_SHA: ${{ github.sha }}
+          DRY_RUN: ${{github.ref_name != 'main'}}
+        run: |
+          PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
+          # This line extracts the transaction ID of the published Lua source code from the output
+          # It uses grep to find the line containing "Generated source code data item with id:"
+          # Then it uses sed to extract the 43-character transaction ID
+          LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated source code data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
+          echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
+
+      - name: Create Tag for Lua ID
+        if: ${{github.ref_name == 'main'}}
+        run: |
+          git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
+          git push origin "${{ steps.publish-lua-code.outputs.srcTxId }}"
+
   notify:
     runs-on: ubuntu-latest
-    needs: [unit, integration]
+    needs: [unit, integration, publish]
     if: always()
     steps:
       - name: Notify Slack on Success
-        if: success() && github.ref == 'refs/heads/main' && needs.unit.result == 'success' && needs.integration.result == 'success'
+        if: (github.ref_name == 'main' || github.ref_name == 'develop') && needs.unit.result == 'success' && needs.integration.result == 'success'
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
           text: |
             Unit Tests: ${{ needs.unit.result }}
             Integration Tests: ${{ needs.integration.result }}
+            Published Lua Id: ${{ needs.publish.outputs.published_lua_code_id || 'N/A' }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,12 +1,11 @@
-const { createAntAosLoader } = require('./utils');
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
-const {
+import { createAntAosLoader } from './utils.mjs';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
-  STUB_ADDRESS,
   BUNDLED_AOS_ANT_LUA,
-} = require('../tools/constants');
+} from '../tools/constants.mjs';
 
 describe('aos Evolve', async () => {
   const { handle: originalHandle, memory: startMemory } =

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 /**
  * @typedef Module
@@ -112,4 +112,4 @@ function bundle(entryLuaPath) {
   return bundledLua;
 }
 
-module.exports = { bundle };
+export { bundle };

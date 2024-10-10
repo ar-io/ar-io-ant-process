@@ -1,4 +1,5 @@
-const AoLoader = require('@permaweb/ao-loader');
+import { AoLoader } from '@permaweb/ao-loader';
+
 const {
   BUNDLED_AOS_ANT_LUA,
   DEFAULT_ANT_STATE,

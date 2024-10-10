@@ -67,7 +67,10 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
         run: |
           PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
-          LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "publishedLuaTxId\.[a-zA-Z0-9_-]{43}" | cut -d'.' -f2)
+          # This line extracts the transaction ID of the published Lua source code from the output
+          # It uses grep to find the line containing "Generated source code data item with id:"
+          # Then it uses sed to extract the 43-character transaction ID
+          LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated source code data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
           echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
 
       - name: Create Tag for Lua ID

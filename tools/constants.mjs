@@ -1,5 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+
 const STUB_ADDRESS = ''.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
 const AO_LOADER_HANDLER_ENV = {

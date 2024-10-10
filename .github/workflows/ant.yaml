@@ -74,10 +74,11 @@ jobs:
           LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated source code data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
           echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
 
-      # - name: Create Tag for Lua ID
-      #   run: |
-      #     git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
-      #     git push --tags
+      - name: Create Tag for Lua ID
+        if: ${{github.ref_name == 'main'}}
+        run: |
+          git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
+          git push origin "${{ steps.publish-lua-code.outputs.srcTxId }}"
 
   notify:
     runs-on: ubuntu-latest

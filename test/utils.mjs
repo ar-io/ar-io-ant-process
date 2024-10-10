@@ -1,12 +1,11 @@
-const AoLoader = require('@permaweb/ao-loader');
-const {
+import AoLoader from '@permaweb/ao-loader';
+import {
   AOS_WASM,
   AO_LOADER_HANDLER_ENV,
   AO_LOADER_OPTIONS,
-  BUNDLED_AOS_ANT_LUA,
   DEFAULT_HANDLE_OPTIONS,
   ANT_EVAL_OPTIONS,
-} = require('../tools/constants');
+} from '../tools/constants.mjs';
 
 /**
  * Loads the aos wasm binary and returns the handle function with program memory
@@ -29,7 +28,4 @@ async function createAntAosLoader() {
   return createAosLoader(ANT_EVAL_OPTIONS);
 }
 
-module.exports = {
-  createAntAosLoader,
-  createAosLoader,
-};
+export { createAntAosLoader, createAosLoader };

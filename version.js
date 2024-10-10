@@ -1,3 +1,3 @@
-// TODO: AUTO GENERATED FILE, DO NOT EDIT
+// TODO: make this an auto generated file
 
 export default '8';

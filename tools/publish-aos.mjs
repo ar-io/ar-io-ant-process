@@ -19,7 +19,7 @@ const dryRun =
   process.argv.includes('--dry-run') || process.env.DRY_RUN === 'true';
 const walletPath = process.argv.includes('--wallet-file')
   ? process.argv[process.argv.indexOf('--wallet-file') + 1]
-  : process.env.WALLET_PATH || 'key.json';
+  : process.env.WALLET_PATH || path.join(__dirname, 'key.json');
 const jwk = process.env.WALLET
   ? JSON.parse(process.env.WALLET)
   : JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
@@ -35,8 +35,6 @@ const publishingTags = Object.entries({
 })
   .filter(([_, value]) => value !== undefined)
   .map(([name, value]) => ({ name, value }));
-
-console.log(publishingTags);
 
 /**
  * NOTE: with the current use of SOURCE-CODE-TX-ID, we have to publish the generate the source code twice
@@ -62,15 +60,14 @@ console.log('Generated bundled data item with id: ' + data2.id);
 if (!dryRun) {
   console.log('Publishing ANT Source code to Arweave...');
   await Promise.all([
-    turbo.uploadDataItem({
+    turbo.uploadSignedDataItem({
       dataItemSizeFactory: () => data1.getRaw().byteLength,
       dataItemStreamFactory: () => data1.getRaw(),
     }),
-    turbo.uploadDataItem({
+    turbo.uploadSignedDataItem({
       dataItemSizeFactory: () => data2.getRaw().byteLength,
       dataItemStreamFactory: () => data2.getRaw(),
     }),
   ]);
-  console.log('publishedLuaTxId.' + dataTx2.id);
 }
 console.log('Tagged source code tx id: ' + data1.id);

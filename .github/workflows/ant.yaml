@@ -52,7 +52,7 @@ jobs:
       contents: write # to be able to publish a GitHub release
     outputs:
       published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2
@@ -65,6 +65,7 @@ jobs:
         env:
           WALLET: ${{ secrets.WALLET }}
           GITHUB_SHA: ${{ github.sha }}
+          DRY_RUN: ${{github.ref_name == 'refs/heads/develop'}}
         run: |
           PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
           # This line extracts the transaction ID of the published Lua source code from the output
@@ -73,10 +74,10 @@ jobs:
           LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated source code data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
           echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
 
-      - name: Create Tag for Lua ID
-        run: |
-          git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
-          git push --tags
+      # - name: Create Tag for Lua ID
+      #   run: |
+      #     git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
+      #     git push --tags
 
   notify:
     runs-on: ubuntu-latest

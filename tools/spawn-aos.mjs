@@ -1,7 +1,7 @@
-const { connect, createDataItemSigner } = require('@permaweb/aoconnect');
-const fs = require('fs');
-const path = require('path');
-const Arweave = require('arweave');
+import { connect, createDataItemSigner } from '@permaweb/aoconnect';
+import fs from 'fs';
+import path from 'path';
+import Arweave from 'arweave';
 
 const arweave = Arweave.init({
   host: 'arweave.net',

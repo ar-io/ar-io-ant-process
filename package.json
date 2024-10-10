@@ -1,19 +1,21 @@
 {
+  "type": "module",
   "scripts": {
     "module:build": "cd src && ao build && cd .. && yarn module:load",
-    "module:publish": "cd src && ao publish process.wasm -w ../tools/key.json --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
-    "module:load": "node tools/load-module.js",
-    "module:spawn": "node tools/spawn-module.js",
-    "aos:build": "node tools/bundle-aos.js",
-    "aos:publish": "node tools/bundle-aos.js && node tools/publish-aos.js",
-    "aos:load": "node tools/bundle-aos.js && node tools/load-aos.js",
-    "aos:spawn": "node tools/spawn-aos.js",
-    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.js"
+    "module:publish": "cd src && ao publish process.wasm -w ../tools/key.mjson --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
+    "module:load": "node tools/load-module.mjs",
+    "module:spawn": "node tools/spawn-module.mjs",
+    "aos:build": "node tools/bundle-aos.mjs",
+    "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
+    "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
+    "aos:spawn": "node tools/spawn-aos.mjs",
+    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs"
   },
   "devDependencies": {
-    "prettier": "^3.3.2",
+    "@ardrive/turbo-sdk": "^1.19.0",
     "@permaweb/ao-loader": "^0.0.35",
     "@permaweb/aoconnect": "^0.0.55",
-    "arweave": "^1.15.1"
+    "arweave": "^1.15.1",
+    "prettier": "^3.3.2"
   }
 }

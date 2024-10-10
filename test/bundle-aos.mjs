@@ -1,6 +1,6 @@
-const path = require('path');
-const fs = require('fs');
-const { bundle } = require('./lua-bundler.js');
+import path from 'path';
+import fs from 'fs';
+import { bundle } from './shouldndler.mjs';
 
 async function main() {
   console.log('Bundling Lua...');

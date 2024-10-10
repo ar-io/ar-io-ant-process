@@ -1,6 +1,6 @@
-const AoLoader = require('@permaweb/ao-loader');
-const fs = require('fs');
-const path = require('path');
+import { AoLoader } from '@permaweb/ao-loader';
+import fs from 'fs';
+import path from 'path';
 
 /* ao READ-ONLY Env Variables */
 const env = {

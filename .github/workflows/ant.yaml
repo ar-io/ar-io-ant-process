@@ -85,7 +85,7 @@ jobs:
     if: always()
     steps:
       - name: Notify Slack on Success
-        if: github.ref == 'refs/heads/main' && needs.unit.result == 'success' && needs.integration.result == 'success' && (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+        if: (github.ref_name == 'main' || github.ref_name == 'develop') && needs.unit.result == 'success' && needs.integration.result == 'success'
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}

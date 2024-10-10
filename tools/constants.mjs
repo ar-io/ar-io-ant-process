@@ -1,5 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const STUB_ADDRESS = ''.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
@@ -73,7 +77,7 @@ const ANT_EVAL_OPTIONS = {
   Data: BUNDLED_AOS_ANT_LUA,
 };
 
-module.exports = {
+export {
   BUNDLED_AOS_ANT_LUA,
   DEFAULT_ANT_STATE,
   AOS_WASM,

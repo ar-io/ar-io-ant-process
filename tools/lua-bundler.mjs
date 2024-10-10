@@ -112,4 +112,4 @@ function bundle(entryLuaPath) {
   return bundledLua;
 }
 
-module.exports = { bundle };
+export { bundle };

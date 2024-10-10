@@ -1,11 +1,11 @@
-const { createAntAosLoader } = require('./utils');
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
-const {
+import { createAntAosLoader } from './utils.mjs';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
   STUB_ADDRESS,
-} = require('../tools/constants');
+} from '../tools/constants.mjs';
 
 describe('Registry Updates', async () => {
   const { handle: originalHandle, memory: startMemory } =

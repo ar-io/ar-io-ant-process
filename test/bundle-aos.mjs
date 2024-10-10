@@ -1,11 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { bundle } from './lua-bundler.mjs';
-
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { bundle } from './shouldndler.mjs';
 
 async function main() {
   console.log('Bundling Lua...');

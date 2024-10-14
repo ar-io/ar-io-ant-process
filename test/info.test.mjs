@@ -54,6 +54,7 @@ describe('aos Info', async () => {
       'setTicker',
       'initializeState',
       'state',
+      'releaseName',
     ]);
   });
 

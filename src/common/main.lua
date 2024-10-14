@@ -42,6 +42,8 @@ function ant.init()
 		Records = "Records",
 		State = "State",
 		Evolve = "Evolve",
+		-- IO Network Contract Handlers
+		ReleaseName = "Release-Name",
 	}
 
 	local TokenSpecActionMap = {
@@ -450,6 +452,37 @@ function ant.init()
 			SourceCodeTxId = srcCodeTxId
 		end
 	)
+
+	-- IO Network Contract Handlers
+	Handlers.add(camel("Release-Name"), utils.hasMatchingTag("Action", "Release-Name"), function(msg)
+		local assertHasPermission, permissionErr = pcall(utils.validateOwner, msg.From)
+		if assertHasPermission == false then
+			return ao.send({
+				Target = msg.From,
+				Action = "Invalid-Release-Name-Notice",
+				Data = permissionErr,
+				Error = "Release-Name-Error",
+			})
+		end
+
+		local name = string.lower(msg.Tags["Name"])
+		local ioProcess = msg.Tags["IO-Process-Id"]
+
+		-- send the release message to the provided IO Process Id
+		ao.send({
+			Target = ioProcess,
+			Action = "Release-Name-Notice",
+			Initiator = msg.From,
+			Name = name,
+		})
+
+		ao.send({
+			Target = msg.From,
+			Action = "Release-Name-Notice",
+			Initiator = msg.From,
+			Name = name,
+		})
+	end)
 end
 
 return ant

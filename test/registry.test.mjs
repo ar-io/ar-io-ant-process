@@ -11,7 +11,7 @@ describe('Registry Updates', async () => {
   const { handle: originalHandle, memory: startMemory } =
     await createAntAosLoader();
 
-  const controllerAddress = 'controller-address'.padEnd(43, '0');
+  const controllerAddress = 'controller-address-'.padEnd(43, '0');
 
   async function handle(options = {}, mem = startMemory) {
     return originalHandle(

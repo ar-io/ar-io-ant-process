@@ -1,7 +1,7 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
 
 local constants = require(".common.constants")
-local json = require("json")
+local json = require(".common.json")
 local utils = { _version = "0.0.1" }
 
 local function isArray(table)
@@ -197,20 +197,26 @@ function utils.reply(msg)
 	Handlers.utils.reply(msg)
 end
 
+-- NOTE: lua 5.3 has limited regex support, particularly for lookaheads and negative lookaheads or use of {n}
 function utils.validateUndername(name)
-	local valid = string.match(name, constants.UNDERNAME_REGEXP) == nil
-	assert(valid ~= false, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
+	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
+	local validRegex = string.match(name, "^@$") ~= nil
+		or string.match(name, "^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$") ~= nil
+	local valid = validLength and validRegex
+	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 end
 
 function utils.validateArweaveId(id)
-	local valid = string.match(id, constants.ARWEAVE_ID_REGEXP) == nil
-
-	assert(valid == true, constants.INVALID_ARWEAVE_ID_MESSAGE)
+	-- the provided id matches the regex, and is not nil
+	local validLength = #id == 43
+	local validChars = string.match(id, "^[a-zA-Z0-9_-]+$") ~= nil
+	local valid = validLength and validChars
+	assert(valid, constants.INVALID_ARWEAVE_ID_MESSAGE)
 end
 
 function utils.validateTTLSeconds(ttl)
 	local valid = type(ttl) == "number" and ttl >= constants.MIN_TTL_SECONDS and ttl <= constants.MAX_TTL_SECONDS
-	return assert(valid ~= false, constants.INVALID_TTL_MESSAGE)
+	assert(valid, constants.INVALID_TTL_MESSAGE)
 end
 
 function utils.validateOwner(caller)

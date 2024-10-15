@@ -4,6 +4,7 @@ import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
+  STUB_ADDRESS,
 } from '../tools/constants.mjs';
 
 describe('IO Network Updates', async () => {
@@ -25,7 +26,7 @@ describe('IO Network Updates', async () => {
     const result = await handle({
       Tags: [
         { name: 'Action', value: 'Release-Name' },
-        { name: 'IO-Process-Id', value: 'io-process-id' },
+        { name: 'IO-Process-Id', value: 'io-process-id-'.padEnd(43, '1') },
         { name: 'Name', value: 'name' },
       ],
     });
@@ -33,10 +34,41 @@ describe('IO Network Updates', async () => {
     // two messages should be sent - one to the io process and one to the sender
     assert(result.Messages?.length === 2, 'Expected two messages');
 
-    const message = result.Messages[0]?.Tags.find(
+    const message = result.Messages[0]?.Tags?.find(
       (tag) => tag.name === 'Action' && tag.value === 'Release-Name-Notice',
     );
     assert(message, 'Release-Name-Notice message not found');
+
+    // ensure a message Target is the IO process id provided and the other is to the sender and both contain the initiator, name and process id
+    assert(
+      result.Messages.some(
+        (msg) =>
+          msg.Target === 'io-process-id-'.padEnd(43, '1') &&
+          msg.Tags.find(
+            (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
+          ) &&
+          msg.Tags.find((tag) => tag.name === 'Name' && tag.value === 'name') &&
+          msg.Tags.find(
+            (tag) =>
+              tag.name === 'Action' && tag.value === 'Release-Name-Notice',
+          ),
+      ),
+    );
+
+    assert(
+      result.Messages.some(
+        (msg) =>
+          msg.Target === STUB_ADDRESS &&
+          msg.Tags.find(
+            (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
+          ) &&
+          msg.Tags.find((tag) => tag.name === 'Name' && tag.value === 'name') &&
+          msg.Tags.find(
+            (tag) =>
+              tag.name === 'Action' && tag.value === 'Release-Name-Notice',
+          ),
+      ),
+    );
   });
 
   it('should send a release-name-error-notice if the sender is not the owner', async () => {

@@ -454,7 +454,7 @@ function ant.init()
 	)
 
 	-- IO Network Contract Handlers
-	Handlers.add(camel("Release-Name"), utils.hasMatchingTag("Action", "Release-Name"), function(msg)
+	Handlers.add(camel(ActionMap.ReleaseName), utils.hasMatchingTag("Action", ActionMap.ReleaseName), function(msg)
 		local assertHasPermission, permissionErr = pcall(utils.validateOwner, msg.From)
 		if assertHasPermission == false then
 			return ao.send({

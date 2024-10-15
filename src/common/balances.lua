@@ -37,4 +37,32 @@ function balances.setTicker(ticker)
 	return json.encode({ ticker = Ticker })
 end
 
+function balances.setDescription(description)
+	assert(type(description) == "string", "Description must be a string")
+	assert(#description <= 512, "Description must not be longer than 512 characters")
+	Description = description
+	return json.encode({ description = Description })
+end
+
+function balances.setKeywords(keywords)
+	assert(type(keywords) == "table", "Keywords must be an array")
+	assert(#keywords <= 16, "There must not be more than 16 keywords")
+
+	local seenKeywords = {} -- Table to track seen keywords
+
+	for _, keyword in ipairs(keywords) do
+		assert(type(keyword) == "string", "Each keyword must be a string")
+		assert(#keyword <= 32, "Each keyword must not be longer than 32 characters")
+		assert(not keyword:find("%s"), "Keywords must not contain spaces")
+		assert(keyword:match("^[%w-_]+$"), "Keywords must only contain alphanumeric characters, dashes, or underscores")
+
+		-- Check for duplicates
+		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
+		seenKeywords[keyword] = true
+	end
+
+	Keywords = keywords
+	return json.encode({ keywords = Keywords })
+end
+
 return balances

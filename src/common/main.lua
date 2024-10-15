@@ -19,6 +19,8 @@ function ant.init()
 	Name = Name or "Arweave Name Token"
 	Ticker = Ticker or "ANT"
 	Logo = Logo or "Sie_26dvgyok0PZD_-iQAFOhOd5YxDTkczOLoqTTL_A"
+	Description = Description or "A brief description of this ANT."
+	Keywords = Keywords or {}
 	Denomination = Denomination or 0
 	TotalSupply = TotalSupply or 1
 	Initialized = Initialized or false
@@ -34,6 +36,8 @@ function ant.init()
 		RemoveRecord = "Remove-Record",
 		SetName = "Set-Name",
 		SetTicker = "Set-Ticker",
+		SetDescription = "Set-Description",
+		SetKeywords = "Set-Keywords",
 		--- initialization method for bootstrapping the contract from other platforms ---
 		InitializeState = "Initialize-State",
 		-- read
@@ -158,6 +162,8 @@ function ant.init()
 			Ticker = Ticker,
 			["Total-Supply"] = tostring(TotalSupply),
 			Logo = Logo,
+			Description = Description,
+			Keywords = Keywords,
 			Denomination = tostring(Denomination),
 			Owner = Owner,
 			Handlers = utils.getHandlerNames(Handlers),
@@ -388,6 +394,75 @@ function ant.init()
 		end
 
 		ao.send({ Target = msg.From, Action = "Set-Ticker-Notice", Data = tickerRes })
+	end)
+
+	Handlers.add(
+		camel(ActionMap.SetDescription),
+		utils.hasMatchingTag("Action", ActionMap.SetDescription),
+		function(msg)
+			local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
+			if assertHasPermission == false then
+				return ao.send({
+					Target = msg.From,
+					Action = "Invalid-Set-Description-Notice",
+					Data = permissionErr,
+					Error = "Set-Description-Error",
+					["Message-Id"] = msg.Id,
+				})
+			end
+			local descriptionStatus, descriptionRes = pcall(balances.setDescription, msg.Tags.Description)
+			if not descriptionStatus then
+				ao.send({
+					Target = msg.From,
+					Action = "Invalid-Set-Description-Notice",
+					Data = descriptionRes,
+					Error = "Set-Description-Error",
+					["Message-Id"] = msg.Id,
+				})
+				return
+			end
+
+			ao.send({ Target = msg.From, Action = "Set-Description-Notice", Data = descriptionRes })
+		end
+	)
+
+	Handlers.add(camel(ActionMap.SetKeywords), utils.hasMatchingTag("Action", ActionMap.SetKeywords), function(msg)
+		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
+		if assertHasPermission == false then
+			return ao.send({
+				Target = msg.From,
+				Action = "Invalid-Set-Keywords-Notice",
+				Data = permissionErr,
+				Error = "Set-Keywords-Error",
+				["Message-Id"] = msg.Id,
+			})
+		end
+
+		-- Decode JSON from the tag
+		local success, keywords = pcall(json.decode, msg.Tags.Keywords)
+		if not success or type(keywords) ~= "table" then
+			return ao.send({
+				Target = msg.From,
+				Action = "Invalid-Set-Keywords-Notice",
+				Data = "Invalid JSON format for keywords",
+				Error = "Set-Keywords-Error",
+				["Message-Id"] = msg.Id,
+			})
+		end
+
+		local keywordsStatus, keywordsRes = pcall(balances.setKeywords, keywords)
+		if not keywordsStatus then
+			ao.send({
+				Target = msg.From,
+				Action = "Invalid-Set-Keywords-Notice",
+				Data = keywordsRes,
+				Error = "Set-Keywords-Error",
+				["Message-Id"] = msg.Id,
+			})
+			return
+		end
+
+		ao.send({ Target = msg.From, Action = "Set-Keywords-Notice", Data = keywordsRes })
 	end)
 
 	Handlers.add(

@@ -26,6 +26,8 @@ describe('aos Initialization', async () => {
     const antState = {
       name: 'Test Process',
       ticker: 'TEST',
+      description: 'TEST DESCRIPTION',
+      keywords: ['KEYWORD-1', 'KEYWORD-2', 'KEYWORD-3'],
       owner: STUB_ADDRESS,
       controllers: [STUB_ADDRESS],
       balances: { [STUB_ADDRESS]: 1 },
@@ -36,15 +38,26 @@ describe('aos Initialization', async () => {
         },
       },
     };
+
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Initialize-State' }],
       Data: JSON.stringify(antState),
     });
-    const { name, ticker, balances, controllers, records } = JSON.parse(
-      result.Messages[0].Data,
-    );
-    assert(name === antState.name);
-    assert(ticker === antState.ticker);
+
+    const {
+      name,
+      ticker,
+      description,
+      keywords,
+      balances,
+      controllers,
+      records,
+    } = JSON.parse(result.Messages[0].Data);
+
+    assert.strictEqual(name, antState.name);
+    assert.strictEqual(ticker, antState.ticker);
+    assert.strictEqual(description, antState.description);
+    assert.deepStrictEqual(keywords, antState.keywords);
     assert.deepEqual(balances, antState.balances);
     assert.deepEqual(controllers, antState.controllers);
     assert.deepEqual(records, antState.records);

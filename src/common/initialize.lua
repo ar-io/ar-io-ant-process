@@ -9,9 +9,13 @@ function initialize.initializeANTState(state)
 	local records = encoded.records
 	local name = encoded.name
 	local ticker = encoded.ticker
+	local description = encoded.description
+	local keywords = encoded.keywords
 	local owner = encoded.owner
 	assert(type(name) == "string", "name must be a string")
 	assert(type(ticker) == "string", "ticker must be a string")
+	assert(type(description) == "string", "description must be a string")
+	assert(#description <= 512, "Description must not be longer than 512 characters")
 	assert(type(balances) == "table", "balances must be a table")
 	for k, v in pairs(balances) do
 		balances[k] = tonumber(v)
@@ -26,8 +30,23 @@ function initialize.initializeANTState(state)
 		utils.validateTTLSeconds(v.ttlSeconds)
 	end
 
+	assert(type(keywords) == "table", "Keywords must be an array")
+	assert(#keywords <= 16, "There must not be more than 16 keywords")
+
+	local seenKeywords = {}
+	for _, keyword in ipairs(keywords) do
+		assert(type(keyword) == "string", "Each keyword must be a string")
+		assert(#keyword <= 32, "Each keyword must not be longer than 32 characters")
+		assert(not keyword:find("%s"), "Keywords must not contain spaces")
+		assert(keyword:match("^[%w-_]+$"), "Keywords must only contain alphanumeric characters, dashes, or underscores")
+		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
+		seenKeywords[keyword] = true
+	end
+
 	Name = name
 	Ticker = ticker
+	Description = description
+	Keywords = keywords
 	Balances = balances
 	Controllers = controllers
 	Records = records
@@ -37,6 +56,8 @@ function initialize.initializeANTState(state)
 	return json.encode({
 		name = Name,
 		ticker = Ticker,
+		description = Description,
+		keywords = Keywords,
 		balances = Balances,
 		controllers = Controllers,
 		records = Records,

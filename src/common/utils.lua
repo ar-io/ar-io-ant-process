@@ -309,6 +309,8 @@ function utils.notices.notifyState(msg, target)
 		Name = Name,
 		Ticker = Ticker,
 		Logo = Logo,
+		Description = Description,
+		Keywords = Keywords,
 		Denomination = Denomination,
 		TotalSupply = TotalSupply,
 		Initialized = Initialized,

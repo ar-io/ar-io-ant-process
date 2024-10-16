@@ -205,10 +205,10 @@ Sets the ticker symbol for the ANT.
 
 Sets the description for the ANT.
 
-| Tag Name    | Type   | Pattern           | Required | Description                       |
-| ----------- | ------ | ----------------- | -------- | --------------------------------- |
-| Action      | string | "Set-Description" | true     | Action tag for triggering handler |
-| Description | string | N/A               | true     | New description for ANT.          |
+| Tag Name    | Type   | Pattern            | Required | Description                       |
+| ----------- | ------ | ------------------ | -------- | --------------------------------- |
+| Action      | string | "Set-Description"  | true     | Action tag for triggering handler |
+| Description | string | Max 512 characters | true     | New description for ANT.          |
 
 #### `Set-Keywords`
 

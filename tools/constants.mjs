@@ -5,11 +5,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const STUB_ADDRESS = ''.padEnd(43, '1');
+const STUB_PROCESS_ID = 'process-id-'.padEnd(43, '1');
+const STUB_ADDRESS = 'arweave-address-'.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
 const AO_LOADER_HANDLER_ENV = {
   Process: {
-    Id: ''.padEnd(43, '1'),
+    Id: STUB_PROCESS_ID,
     Owner: STUB_ADDRESS,
     Tags: [
       { name: 'Authority', value: 'XXXXXX' },
@@ -86,6 +87,7 @@ export {
   AO_LOADER_OPTIONS,
   AO_LOADER_HANDLER_ENV,
   STUB_ADDRESS,
+  STUB_PROCESS_ID,
   DEFAULT_HANDLE_OPTIONS,
   ANT_EVAL_OPTIONS,
 };

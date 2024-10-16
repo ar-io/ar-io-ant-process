@@ -6,33 +6,13 @@ local json = require("src.common.json")
 
 local fake_address = "1111111111111111111111111111111111111111111"
 
-_G.ao = {
-	send = function()
-		return true
-	end,
-	id = "test",
-}
-_G.Balances = { [fake_address] = 1 }
-_G.Records = {}
-_G.Controllers = { fake_address }
-_G.Name = "Arweave Name Token"
-_G.Ticker = "ANT"
-_G.Description = "ANT's Description"
-_G.Keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" }
-_G.Logo = "LOGO"
-_G.Denomination = 1
-
-os.clock = function()
-	return 0
-end
-
 local originalState = {
 	name = "Arweave Name Token",
 	ticker = "ANT",
 	description = "ANT's description",
 	keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" },
 	controllers = { fake_address },
-	records = { ["@"] = { transactionId = "test", ttlSeconds = 900 } },
+	records = { ["@"] = { transactionId = fake_address, ttlSeconds = 900 } },
 	balances = { [fake_address] = 1 },
 	owner = fake_address,
 }
@@ -46,11 +26,8 @@ describe("Arweave Name Token", function()
 		_G.Ticker = "ANT"
 		_G.Description = "ANT's description"
 		_G.Keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" }
+		_G.Denomination = 1
 	end)
-
-	setup(function() end)
-
-	teardown(function() end)
 
 	it("Initializes the state of the process", function()
 		initialize.initializeANTState(json.encode(originalState)) -- happy

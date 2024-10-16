@@ -30,18 +30,7 @@ function initialize.initializeANTState(state)
 		utils.validateTTLSeconds(v.ttlSeconds)
 	end
 
-	assert(type(keywords) == "table", "Keywords must be an array")
-	assert(#keywords <= 16, "There must not be more than 16 keywords")
-
-	local seenKeywords = {}
-	for _, keyword in ipairs(keywords) do
-		assert(type(keyword) == "string", "Each keyword must be a string")
-		assert(#keyword <= 32, "Each keyword must not be longer than 32 characters")
-		assert(not keyword:find("%s"), "Keywords must not contain spaces")
-		assert(keyword:match("^[%w-_]+$"), "Keywords must only contain alphanumeric characters, dashes, or underscores")
-		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
-		seenKeywords[keyword] = true
-	end
+	utils.validateKeywords(keywords)
 
 	Name = name
 	Ticker = ticker

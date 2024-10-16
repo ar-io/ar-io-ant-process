@@ -342,4 +342,24 @@ function utils.getHandlerNames(handlers)
 	return names
 end
 
+function utils.validateKeywords(keywords)
+	assert(type(keywords) == "table", "Keywords must be an array")
+	assert(#keywords <= 16, "There must not be more than 16 keywords")
+
+	local seenKeywords = {} -- Table to track seen keywords
+
+	for _, keyword in ipairs(keywords) do
+		assert(type(keyword) == "string", "Each keyword must be a string")
+		assert(#keyword <= 32, "Each keyword must not be longer than 32 characters")
+		assert(not keyword:find("%s"), "Keywords must not contain spaces")
+		assert(
+			keyword:match("^[%w-_#@]+$"),
+			"Keywords must only contain alphanumeric characters, dashes, underscores, #, or @"
+		)
+		-- Check for duplicates
+		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
+		seenKeywords[keyword] = true
+	end
+end
+
 return utils

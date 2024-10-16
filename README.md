@@ -214,10 +214,10 @@ Sets the description for the ANT.
 
 Sets the keywords for the ANT.
 
-| Tag Name | Type   | Pattern        | Required | Description                       |
-| -------- | ------ | -------------- | -------- | --------------------------------- |
-| Action   | string | "Set-Keywords" | true     | Action tag for triggering handler |
-| Keywords | table  | "^[%w-_]+$"    | true     | New keywords for ANT.             |
+| Tag Name | Type   | Pattern                                                          | Required | Description                       |
+| -------- | ------ | ---------------------------------------------------------------- | -------- | --------------------------------- |
+| Action   | string | "Set-Keywords"                                                   | true     | Action tag for triggering handler |
+| Keywords | table  | "^[%w-_#@]+$", max 32 characters, max 16 keywords, min 1 keyword | true     | New keywords for ANT.             |
 
 #### `Set-Controller`
 

@@ -37,6 +37,8 @@ async function main() {
       },
     },
     ticker: 'ANT',
+    description: 'Description for this ANT.',
+    keywords: ['KEYWORD-1', 'KEYWORD-2', 'KEYWORD-3'],
   });
 
   const processId = await ao.spawn({

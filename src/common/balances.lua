@@ -37,4 +37,18 @@ function balances.setTicker(ticker)
 	return json.encode({ ticker = Ticker })
 end
 
+function balances.setDescription(description)
+	assert(type(description) == "string", "Description must be a string")
+	assert(#description <= 512, "Description must not be longer than 512 characters")
+	Description = description
+	return json.encode({ description = Description })
+end
+
+function balances.setKeywords(keywords)
+	utils.validateKeywords(keywords)
+
+	Keywords = keywords
+	return json.encode({ keywords = Keywords })
+end
+
 return balances

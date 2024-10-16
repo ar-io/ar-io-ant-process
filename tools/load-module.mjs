@@ -35,6 +35,17 @@ async function main() {
     ['Remove-Controller', { Controller: ''.padEnd(43, '1') }],
     ['Set-Name', { Name: 'Test Name' }],
     ['Set-Ticker', { Ticker: 'TEST' }],
+    ['Set-Description', { Description: 'TEST DESCRIPTION' }],
+    [
+      'Set-Keywords',
+      {
+        Keywords: JSON.stringify([
+          'TEST-KEYWORD-1',
+          'TEST-KEYWORD-2',
+          'TEST-KEYWORD-3',
+        ]),
+      },
+    ], // Test for Set-Keywords
     [
       'Set-Record',
       {
@@ -90,6 +101,8 @@ async function main() {
             },
           },
           ticker: 'ANT',
+          description: 'Description of this ANT.',
+          keywords: ['KEYWORD-1', 'KEYWORD-2', 'KEYWORD-3'],
         }),
       },
       env,

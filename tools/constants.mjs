@@ -56,6 +56,8 @@ const DEFAULT_ANT_STATE = JSON.stringify({
     },
   },
   ticker: 'ANT',
+  description: "ANT's description",
+  keywords: ['KEYWORD-1', 'KEYWORD-2', 'KEYWORD-3'],
 });
 
 const DEFAULT_HANDLE_OPTIONS = {

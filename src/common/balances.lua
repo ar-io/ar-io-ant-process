@@ -54,8 +54,10 @@ function balances.setKeywords(keywords)
 		assert(type(keyword) == "string", "Each keyword must be a string")
 		assert(#keyword <= 32, "Each keyword must not be longer than 32 characters")
 		assert(not keyword:find("%s"), "Keywords must not contain spaces")
-		assert(keyword:match("^[%w-_]+$"), "Keywords must only contain alphanumeric characters, dashes, or underscores")
-
+		assert(
+			keyword:match("^[%w-_#@]+$"),
+			"Keywords must only contain alphanumeric characters, dashes, underscores, #, or @"
+		)
 		-- Check for duplicates
 		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
 		seenKeywords[keyword] = true

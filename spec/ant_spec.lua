@@ -146,10 +146,10 @@ describe("Arweave Name Token", function()
 
 	-- Test when keywords contain invalid characters
 	it("throws an error if keywords contain invalid characters", function()
-		local keywordsWithSpecialChars = { "valid", "inva@lid" } -- Contains special character '@'
+		local keywordsWithSpecialChars = { "valid", "inva!lid" } -- Contains special character '!'
 		assert.has_error(function()
 			balances.setKeywords(keywordsWithSpecialChars)
-		end, "Keywords must only contain alphanumeric characters, dashes, or underscores")
+		end, "Keywords must only contain alphanumeric characters, dashes, underscores, #, or @")
 	end)
 
 	-- Test when any keyword is duplicated

@@ -201,6 +201,24 @@ Sets the ticker symbol for the ANT.
 | Action   | string | "Set-Ticker" | true     | Action tag for triggering handler |
 | Ticker   | string | N/A          | true     | New ticker symbol for ANT.        |
 
+#### `Set-Description`
+
+Sets the description for the ANT.
+
+| Tag Name    | Type   | Pattern            | Required | Description                       |
+| ----------- | ------ | ------------------ | -------- | --------------------------------- |
+| Action      | string | "Set-Description"  | true     | Action tag for triggering handler |
+| Description | string | Max 512 characters | true     | New description for ANT.          |
+
+#### `Set-Keywords`
+
+Sets the keywords for the ANT.
+
+| Tag Name | Type   | Pattern                                                          | Required | Description                       |
+| -------- | ------ | ---------------------------------------------------------------- | -------- | --------------------------------- |
+| Action   | string | "Set-Keywords"                                                   | true     | Action tag for triggering handler |
+| Keywords | table  | "^[%w-_#@]+$", max 32 characters, max 16 keywords, min 1 keyword | true     | New keywords for ANT.             |
+
 #### `Set-Controller`
 
 Adds a new controller to the ANT.

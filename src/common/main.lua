@@ -48,6 +48,7 @@ function ant.init()
 		Evolve = "Evolve",
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
+		ReassignName = "Reassign-Name",
 	}
 
 	local TokenSpecActionMap = {
@@ -532,12 +533,13 @@ function ant.init()
 	Handlers.add(camel(ActionMap.ReleaseName), utils.hasMatchingTag("Action", ActionMap.ReleaseName), function(msg)
 		local assertHasPermission, permissionErr = pcall(utils.validateOwner, msg.From)
 		if assertHasPermission == false then
-			return ao.send({
+			ao.send({
 				Target = msg.From,
 				Action = "Invalid-Release-Name-Notice",
 				Data = permissionErr,
 				Error = "Release-Name-Error",
 			})
+			return
 		end
 
 		local name = string.lower(msg.Tags["Name"])
@@ -546,7 +548,7 @@ function ant.init()
 		-- send the release message to the provided IO Process Id
 		ao.send({
 			Target = ioProcess,
-			Action = "Release-Name-Notice",
+			Action = "Release-Name",
 			Initiator = msg.From,
 			Name = name,
 		})
@@ -556,6 +558,49 @@ function ant.init()
 			Action = "Release-Name-Notice",
 			Initiator = msg.From,
 			Name = name,
+		})
+	end)
+
+	Handlers.add(camel(ActionMap.ReassignName), utils.hasMatchingTag("Action", ActionMap.ReassignName), function(msg)
+		local assertHasPermission, permissionErr = pcall(utils.validateOwner, msg.From)
+		if assertHasPermission == false then
+			return ao.send({
+				Target = msg.From,
+				Action = "Invalid-Reassign-Name-Notice",
+				Data = permissionErr,
+				Error = "Reassign-Name-Error",
+			})
+		end
+
+		local assertValidProcessId, processErr = pcall(utils.validateArweaveId, msg.Tags["Process-Id"])
+		if assertValidProcessId == false then
+			return ao.send({
+				Target = msg.From,
+				Action = "Invalid-Reassign-Name-Notice",
+				Data = processErr,
+				Error = "Reassign-Name-Error",
+			})
+		end
+
+		local name = string.lower(msg.Tags["Name"])
+		local ioProcess = msg.Tags["IO-Process-Id"]
+		local antProcessIdToReassign = msg.Tags["Process-Id"]
+
+		-- send the release message to the provided IO Process Id
+		ao.send({
+			Target = ioProcess,
+			Action = "Reassign-Name",
+			Initiator = msg.From,
+			Name = name,
+			["Process-Id"] = antProcessIdToReassign,
+		})
+
+		ao.send({
+			Target = msg.From,
+			Action = "Reassign-Name-Submit-Notice",
+			Initiator = msg.From,
+			Name = name,
+			["Process-Id"] = antProcessIdToReassign,
 		})
 	end)
 end

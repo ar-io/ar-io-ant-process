@@ -29,6 +29,15 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: '5.3'
+      - run: luacheck .
+
   # TODO: add ar-io-sdk e2e tests against lua code to be bundled on changes (e.g. create a new ant, publish it and validate it works with the sdk)
 
   integration:

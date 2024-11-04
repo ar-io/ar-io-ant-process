@@ -34,41 +34,33 @@ describe('IO Network Updates', async () => {
     // two messages should be sent - one to the io process and one to the sender
     assert(result.Messages?.length === 2, 'Expected two messages');
 
-    const message = result.Messages[0]?.Tags?.find(
-      (tag) => tag.name === 'Action' && tag.value === 'Release-Name-Notice',
+    // Check if there is a message to the IO Process ID with Action 'Release-Name'
+    const ioProcessMessage = result.Messages.find(
+      (msg) =>
+        msg.Target === 'io-process-id-'.padEnd(43, '1') &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Action' && tag.value === 'Release-Name',
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
+        ) &&
+        msg.Tags.some((tag) => tag.name === 'Name' && tag.value === 'name'),
     );
-    assert(message, 'Release-Name-Notice message not found');
+    assert(ioProcessMessage, 'Message to IO Process not found');
 
-    // ensure a message Target is the IO process id provided and the other is to the sender and both contain the initiator, name and process id
-    assert(
-      result.Messages.some(
-        (msg) =>
-          msg.Target === 'io-process-id-'.padEnd(43, '1') &&
-          msg.Tags.find(
-            (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
-          ) &&
-          msg.Tags.find((tag) => tag.name === 'Name' && tag.value === 'name') &&
-          msg.Tags.find(
-            (tag) =>
-              tag.name === 'Action' && tag.value === 'Release-Name-Notice',
-          ),
-      ),
+    // Check if there is a message to the sender with Action 'Release-Name-Notice'
+    const senderMessage = result.Messages.find(
+      (msg) =>
+        msg.Target === STUB_ADDRESS &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Action' && tag.value === 'Release-Name-Notice',
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
+        ) &&
+        msg.Tags.some((tag) => tag.name === 'Name' && tag.value === 'name'),
     );
-
-    assert(
-      result.Messages.some(
-        (msg) =>
-          msg.Target === STUB_ADDRESS &&
-          msg.Tags.find(
-            (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
-          ) &&
-          msg.Tags.find((tag) => tag.name === 'Name' && tag.value === 'name') &&
-          msg.Tags.find(
-            (tag) =>
-              tag.name === 'Action' && tag.value === 'Release-Name-Notice',
-          ),
-      ),
-    );
+    assert(senderMessage, 'Message to Sender not found');
   });
 
   it('should send a release-name-error-notice if the sender is not the owner', async () => {
@@ -89,5 +81,99 @@ describe('IO Network Updates', async () => {
       (tag) => tag.name === 'Error' && tag.value === 'Release-Name-Error',
     );
     assert(error, 'Release-Name-Error message not found');
+  });
+
+  it('should send updates to IO network when a name is reassigned', async () => {
+    const result = await handle({
+      Tags: [
+        { name: 'Action', value: 'Reassign-Name' },
+        { name: 'IO-Process-Id', value: 'io-process-id-'.padEnd(43, '1') },
+        { name: 'Name', value: 'test-name' },
+        { name: 'Process-Id', value: STUB_ADDRESS },
+      ],
+    });
+
+    // two messages should be sent - one to the io process and one to the sender
+    assert(result.Messages?.length === 2, 'Expected two messages');
+
+    // Check if there is a message to the IO Process ID with Action 'Reassign-Name'
+    const ioProcessMessage = result.Messages.find(
+      (msg) =>
+        msg.Target === 'io-process-id-'.padEnd(43, '1') &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Action' && tag.value === 'Reassign-Name',
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Name' && tag.value === 'test-name',
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Process-Id' && tag.value === STUB_ADDRESS,
+        ),
+    );
+    assert(ioProcessMessage, 'Message to IO Process not found');
+
+    // Check if there is a message to the sender with Action 'Reassign-Name-Submit-Notice'
+    const senderMessage = result.Messages.find(
+      (msg) =>
+        msg.Target === STUB_ADDRESS &&
+        msg.Tags.some(
+          (tag) =>
+            tag.name === 'Action' &&
+            tag.value === 'Reassign-Name-Submit-Notice',
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Name' && tag.value === 'test-name',
+        ) &&
+        msg.Tags.some(
+          (tag) => tag.name === 'Process-Id' && tag.value === STUB_ADDRESS,
+        ),
+    );
+    assert(senderMessage, 'Message to Sender not found');
+  });
+
+  it('should send a reassign-name-error-notice if the sender is not the owner', async () => {
+    const result = await handle({
+      Tags: [
+        { name: 'Action', value: 'Reassign-Name' },
+        { name: 'IO-Process-Id', value: 'io-process-id' },
+        { name: 'Name', value: 'name' },
+        { name: 'Process-Id', value: STUB_ADDRESS },
+      ],
+      From: 'not-owner',
+      Owner: 'not-owner',
+    });
+
+    // assert no other messages
+    assert(result.Messages?.length === 1, 'Expected only one message');
+
+    const error = result.Messages[0]?.Tags.find(
+      (tag) => tag.name === 'Error' && tag.value === 'Reassign-Name-Error',
+    );
+    assert(error, 'Reassign-Name-Error message not found');
+  });
+
+  it('should send a reassign-name-error-notice for invalid process IDs', async () => {
+    const result = await handle({
+      Tags: [
+        { name: 'Action', value: 'Reassign-Name' },
+        { name: 'IO-Process-Id', value: 'io-process-id' },
+        { name: 'Name', value: 'name' },
+        { name: 'Process-Id', value: 'Whpisudfys089yfs0df' },
+      ],
+    });
+
+    // assert no other messages
+    assert(result.Messages?.length === 1, 'Expected only one message');
+
+    const error = result.Messages[0]?.Tags.find(
+      (tag) => tag.name === 'Error' && tag.value === 'Reassign-Name-Error',
+    );
+    assert(error, 'Reassign-Name-Error message not found');
   });
 });

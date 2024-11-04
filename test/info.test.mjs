@@ -59,6 +59,7 @@ describe('aos Info', async () => {
       'initializeState',
       'state',
       'releaseName',
+      'reassignName',
     ]);
   });
 

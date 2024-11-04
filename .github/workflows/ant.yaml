@@ -43,7 +43,7 @@ jobs:
       - name: Install Luacheck
         run: luarocks install luacheck
 
-      - run: luacheck .
+      - run: luacheck src spec
 
   # TODO: add ar-io-sdk e2e tests against lua code to be bundled on changes (e.g. create a new ant, publish it and validate it works with the sdk)
 

@@ -23,7 +23,7 @@ describe('aos Evolve', async () => {
   }
 
   it('should evolve the ant and retain eval ability', async () => {
-    const srcCodeTxIdStub = ''.padEnd(43, '123-test');
+    const srcCodeTxIdStub = 'new-source-code-tx-id-'.padEnd(43, '-1');
     const evolveResult = await handle({
       Tags: [
         { name: 'Action', value: 'Eval' },

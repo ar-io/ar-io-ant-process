@@ -514,8 +514,8 @@ function ant.init()
 				return
 			end
 
-			local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
-			if srcCodeTxIdStatus and not srcCodeTxIdResult then
+			local srcCodeTxIdStatus = pcall(utils.validateArweaveId, srcCodeTxId)
+			if not srcCodeTxIdStatus then
 				ao.send({
 					Target = msg.From,
 					Action = "Invalid-Evolve-Notice",

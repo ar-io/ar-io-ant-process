@@ -56,7 +56,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: main
-    needs: [unit, integration]
+    needs: [lint, unit, integration]
     permissions:
       contents: write # to be able to publish a GitHub release
     outputs:

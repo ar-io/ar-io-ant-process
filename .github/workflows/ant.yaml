@@ -29,6 +29,22 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: '5.3'
+
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4.3.0
+
+      - name: Install Luacheck
+        run: luarocks install luacheck
+
+      - run: luacheck src spec
+
   # TODO: add ar-io-sdk e2e tests against lua code to be bundled on changes (e.g. create a new ant, publish it and validate it works with the sdk)
 
   integration:
@@ -47,7 +63,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: main
-    needs: [unit, integration]
+    needs: [lint, unit, integration]
     permissions:
       contents: write # to be able to publish a GitHub release
     outputs:

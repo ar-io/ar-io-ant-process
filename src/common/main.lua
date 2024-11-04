@@ -327,13 +327,13 @@ function ant.init()
 	end)
 
 	Handlers.add(camel(ActionMap.Records), utils.hasMatchingTag("Action", ActionMap.Records), function(msg)
-		local records = records.getRecords()
+		local allRecords = records.getRecords()
 
 		-- Credit-Notice message template, that is sent to the Recipient of the transfer
 		local recordsNotice = {
 			Target = msg.From,
 			Action = "Records-Notice",
-			Data = records,
+			Data = allRecords,
 		}
 
 		-- Add forwarded tags to the records notice messages
@@ -515,7 +515,7 @@ function ant.init()
 			end
 
 			local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
-			if srcCodeTxIdStatus and not srcCodeTxIdStatus then
+			if srcCodeTxIdStatus and not srcCodeTxIdResult then
 				ao.send({
 					Target = msg.From,
 					Action = "Invalid-Evolve-Notice",

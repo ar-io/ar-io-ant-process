@@ -56,7 +56,7 @@ function initialize.initializeANTState(state)
 end
 
 local function findObject(array, key, value)
-	for i, object in ipairs(array) do
+	for _, object in ipairs(array) do
 		if object[key] == value then
 			return object
 		end

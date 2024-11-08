@@ -15,7 +15,6 @@ function ant.init()
 	local controllers = require(".common.controllers")
 
 	Owner = Owner or ao.env.Process.Owner
-	Records = Records or {}
 	Balances = Balances or { [Owner] = 1 }
 	Controllers = Controllers or { Owner }
 

@@ -344,7 +344,7 @@ function utils.notices.notifyState(msg, target)
 		print("No target specified for state notice")
 		return
 	end
-	Records = Records or {}
+
 	local state = {
 		Records = Records,
 		Controllers = Controllers,

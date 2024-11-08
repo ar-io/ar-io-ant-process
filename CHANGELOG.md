@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Release-Name Handler
+  - Calls the IO Network Process to release the specified ArNS name that is registered to the ANT.
+- Reassign-Name Handler
+  - Calls the IO Network Process to assign a new ANT Process to the respective name - must be a name registered the the ANT in question.
+- Set-Decription Handler
+  - Allows for setting the description of the ANT
+- Set-Keywords Handler
+  - Allows for setting keywords on the ANT
+
 <!-- eslint-disable-next-line -->
 
 ## [7] - [p6svP-fOm1N9imdx9wF2h3u81Qbc7y-HLEGBDCCE3s4] - (2024-10-03)

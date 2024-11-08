@@ -45,19 +45,22 @@ describe('Registry Updates', async () => {
   });
 
   it('should send update to registry when a controller is removed', async () => {
-    await handle({
+    const addControllerRes = await handle({
       Tags: [
         { name: 'Action', value: 'Add-Controller' },
         { name: 'Controller', value: controllerAddress },
       ],
     });
 
-    const result = await handle({
-      Tags: [
-        { name: 'Action', value: 'Remove-Controller' },
-        { name: 'Controller', value: controllerAddress },
-      ],
-    });
+    const result = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Remove-Controller' },
+          { name: 'Controller', value: controllerAddress },
+        ],
+      },
+      addControllerRes.Memory,
+    );
 
     const message = result.Messages[0]?.Tags.find(
       (tag) =>
@@ -68,6 +71,7 @@ describe('Registry Updates', async () => {
     const notifyMessage = result.Messages[1]?.Tags.find(
       (tag) => tag.name === 'Action' && tag.value === 'State-Notice',
     );
+
     assert(notifyMessage, 'State-Notice message not found');
   });
 
@@ -88,6 +92,7 @@ describe('Registry Updates', async () => {
     const notifyMessage = result.Messages[2]?.Tags.find(
       (tag) => tag.name === 'Action' && tag.value === 'State-Notice',
     );
+
     assert(notifyMessage, 'State-Notice message not found');
   });
 });

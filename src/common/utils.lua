@@ -197,6 +197,29 @@ function utils.reply(msg)
 	Handlers.utils.reply(msg)
 end
 
+--- Deep copies a table
+--- @param original table The table to copy
+--- @return table|nil The deep copy of the table or nil if the original is nil
+function utils.deepCopy(original)
+	if not original then
+		return nil
+	end
+
+	if type(original) ~= "table" then
+		return original
+	end
+
+	local copy = {}
+	for key, value in pairs(original) do
+		if type(value) == "table" then
+			copy[key] = utils.deepCopy(value) -- Recursively copy the nested table
+		else
+			copy[key] = value
+		end
+	end
+	return copy
+end
+
 -- NOTE: lua 5.3 has limited regex support, particularly for lookaheads and negative lookaheads or use of {n}
 function utils.validateUndername(name)
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
@@ -260,6 +283,20 @@ end
 
 utils.notices = {}
 
+-- @param oldMsg table
+-- @param newMsg table
+-- Add forwarded tags to the new message
+-- @return newMsg table
+function utils.notices.addForwardedTags(oldMsg, newMsg)
+	for tagName, tagValue in pairs(oldMsg) do
+		-- Tags beginning with "X-" are forwarded
+		if string.sub(tagName, 1, 2) == "X-" then
+			newMsg[tagName] = tagValue
+		end
+	end
+	return newMsg
+end
+
 function utils.notices.credit(msg)
 	local notice = {
 		Target = msg.Recipient,
@@ -307,6 +344,7 @@ function utils.notices.notifyState(msg, target)
 		print("No target specified for state notice")
 		return
 	end
+	Records = Records or {}
 	local state = {
 		Records = Records,
 		Controllers = Controllers,
@@ -340,6 +378,63 @@ function utils.getHandlerNames(handlers)
 		table.insert(names, handler.name)
 	end
 	return names
+end
+
+function utils.errorHandler(err)
+	return debug.traceback(err)
+end
+
+function utils.createHandler(tagName, tagValue, handler, position)
+	assert(
+		type(position) == "string" or type(position) == "nil",
+		utils.errorHandler("Position must be a string or nil")
+	)
+	assert(
+		position == nil or position == "add" or position == "prepend" or position == "append",
+		"Position must be one of 'add', 'prepend', 'append'"
+	)
+	return Handlers[position or "add"](
+		utils.camelCase(tagValue),
+		Handlers.utils.continue(Handlers.utils.hasMatchingTag(tagName, tagValue)),
+		function(msg)
+			-- sometimes the message id is not present on dryrun
+			print("Handling Action [" .. msg.Id or "no-msg-id" .. "]: " .. tagValue)
+			local prevOwner = tostring(Owner)
+			local prevControllers = utils.deepCopy(Controllers)
+
+			local handlerStatus, handlerRes = xpcall(function()
+				return handler(msg)
+			end, utils.errorHandler)
+
+			if not handlerStatus then
+				ao.send(utils.notices.addForwardedTags(msg, {
+					Target = msg.From,
+					Action = "Invalid-" .. tagValue .. "-Notice",
+					Error = tagValue .. "-Error",
+					["Message-Id"] = msg.Id,
+					Data = handlerRes,
+				}))
+			elseif handlerRes then
+				ao.send(utils.notices.addForwardedTags(msg, {
+					Target = msg.From,
+					Action = tagValue .. "-Notice",
+					Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
+				}))
+			end
+
+			local hasNewOwner = Owner ~= prevOwner
+			local hasDifferentControllers = #utils.keys(Controllers) ~= #utils.keys(prevControllers)
+			if hasNewOwner or hasDifferentControllers then
+				utils.notices.notifyState(msg, msg.From)
+			end
+
+			return handlerRes
+		end
+	)
+end
+
+function utils.createActionHandler(action, msgHandler, position)
+	return utils.createHandler("Action", action, msgHandler, position)
 end
 
 function utils.validateKeywords(keywords)

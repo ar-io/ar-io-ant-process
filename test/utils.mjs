@@ -18,6 +18,7 @@ export async function createAosLoader(params) {
     { ...DEFAULT_HANDLE_OPTIONS, ...params },
     AO_LOADER_HANDLER_ENV,
   );
+
   return {
     handle,
     memory: evalRes.Memory,

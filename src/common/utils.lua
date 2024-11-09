@@ -1,5 +1,5 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
-
+require(".common.types")
 local constants = require(".common.constants")
 local json = require(".common.json")
 local utils = { _version = "0.0.1" }
@@ -19,8 +19,8 @@ local function isArray(table)
 	return false
 end
 
--- @param {function} fn
--- @param {number} arity
+--- @param fn function
+--- @param arity number
 utils.curry = function(fn, arity)
 	assert(type(fn) == "function", "function is required as first argument")
 	arity = arity or debug.getinfo(fn, "u").nparams
@@ -42,8 +42,8 @@ utils.curry = function(fn, arity)
 end
 
 --- Concat two Array Tables.
--- @param {table<Array>} a
--- @param {table<Array>} b
+--- @param a table
+--- @param b table
 utils.concat = utils.curry(function(a, b)
 	assert(type(a) == "table", "first argument should be a table that is an array")
 	assert(type(b) == "table", "second argument should be a table that is an array")
@@ -61,9 +61,9 @@ utils.concat = utils.curry(function(a, b)
 end, 2)
 
 --- reduce applies a function to a table
--- @param {function} fn
--- @param {any} initial
--- @param {table<Array>} t
+--- @param fn function
+--- @param initial any
+--- @param t table
 utils.reduce = utils.curry(function(fn, initial, t)
 	assert(type(fn) == "function", "first argument should be a function that accepts (result, value, key)")
 	assert(type(t) == "table" and isArray(t), "third argument should be a table that is an array")
@@ -78,8 +78,8 @@ utils.reduce = utils.curry(function(fn, initial, t)
 	return result
 end, 3)
 
--- @param {function} fn
--- @param {table<Array>} data
+--- @param fn function
+--- @param data table
 utils.map = utils.curry(function(fn, data)
 	assert(type(fn) == "function", "first argument should be a unary function")
 	assert(type(data) == "table" and isArray(data), "second argument should be an Array")
@@ -92,13 +92,13 @@ utils.map = utils.curry(function(fn, data)
 	return utils.reduce(map, {}, data)
 end, 2)
 
--- @param {function} fn
--- @param {table<Array>} data
+--- @param fn function
+--- @param data table
 utils.filter = utils.curry(function(fn, data)
 	assert(type(fn) == "function", "first argument should be a unary function")
 	assert(type(data) == "table" and isArray(data), "second argument should be an Array")
 
-	local function filter(result, v, _k)
+	local function filter(result, v)
 		if fn(v) then
 			table.insert(result, v)
 		end
@@ -108,8 +108,8 @@ utils.filter = utils.curry(function(fn, data)
 	return utils.reduce(filter, {}, data)
 end, 2)
 
--- @param {function} fn
--- @param {table<Array>} t
+--- @param fn function
+--- @param t table
 utils.find = utils.curry(function(fn, t)
 	assert(type(fn) == "function", "first argument should be a unary function")
 	assert(type(t) == "table", "second argument should be a table that is an array")
@@ -120,9 +120,9 @@ utils.find = utils.curry(function(fn, t)
 	end
 end, 2)
 
--- @param {string} propName
--- @param {string} value
--- @param {table} object
+--- @param propName string
+--- @param value string
+--- @param object table
 utils.propEq = utils.curry(function(propName, value, object)
 	assert(type(propName) == "string", "first argument should be a string")
 	-- assert(type(value) == "string", "second argument should be a string")
@@ -131,7 +131,7 @@ utils.propEq = utils.curry(function(propName, value, object)
 	return object[propName] == value
 end, 3)
 
--- @param {table<Array>} data
+--- @param data table
 utils.reverse = function(data)
 	assert(type(data) == "table", "argument needs to be a table that is an array")
 	return utils.reduce(function(result, v, i)
@@ -140,12 +140,13 @@ utils.reverse = function(data)
 	end, {}, data)
 end
 
--- @param {function} ...
+--- @param ... function
 utils.compose = utils.curry(function(...)
 	local mutations = utils.reverse({ ... })
 
 	return function(v)
 		local result = v
+		---@diagnostic disable-next-line
 		for _, fn in pairs(mutations) do
 			assert(type(fn) == "function", "each argument needs to be a function")
 			result = fn(result)
@@ -154,14 +155,14 @@ utils.compose = utils.curry(function(...)
 	end
 end, 2)
 
--- @param {string} propName
--- @param {table} object
+--- @param propName string
+--- @param object table
 utils.prop = utils.curry(function(propName, object)
 	return object[propName]
 end, 2)
 
--- @param {any} val
--- @param {table<Array>} t
+--- @param val any
+--- @param t table
 utils.includes = utils.curry(function(val, t)
 	assert(type(t) == "table", "argument needs to be a table")
 	return utils.find(function(v)
@@ -169,7 +170,7 @@ utils.includes = utils.curry(function(val, t)
 	end, t) ~= nil
 end, 2)
 
--- @param {table} t
+--- @param t table
 utils.keys = function(t)
 	assert(type(t) == "table", "argument needs to be a table")
 	local keys = {}
@@ -179,7 +180,7 @@ utils.keys = function(t)
 	return keys
 end
 
--- @param {table} t
+--- @param t table
 utils.values = function(t)
 	assert(type(t) == "table", "argument needs to be a table")
 	local values = {}
@@ -193,7 +194,9 @@ function utils.hasMatchingTag(tag, value)
 	return Handlers.utils.hasMatchingTag(tag, value)
 end
 
+---@param msg AoMessage
 function utils.reply(msg)
+	---@diagnostic disable-next-line
 	Handlers.utils.reply(msg)
 end
 
@@ -221,6 +224,12 @@ function utils.deepCopy(original)
 end
 
 -- NOTE: lua 5.3 has limited regex support, particularly for lookaheads and negative lookaheads or use of {n}
+---@param name string
+---@description Asserts that the provided name is a valid undername
+---@example
+---```lua
+---utils.validateUndername("my-undername")
+---```
 function utils.validateUndername(name)
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
 	local validRegex = string.match(name, "^@$") ~= nil
@@ -229,6 +238,12 @@ function utils.validateUndername(name)
 	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 end
 
+---@param id string
+---@description Asserts that the provided id is a valid arweave id
+---@example
+---```lua
+---utils.validateArweaveId("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_-")
+---```
 function utils.validateArweaveId(id)
 	-- the provided id matches the regex, and is not nil
 	local validLength = #id == 43
@@ -237,11 +252,23 @@ function utils.validateArweaveId(id)
 	assert(valid, constants.INVALID_ARWEAVE_ID_MESSAGE)
 end
 
+---@param ttl integer
+---@description Asserts that the ttl is a valid number
+---@example
+---```lua
+---utils.validateTTLSeconds(3600)
+---```
 function utils.validateTTLSeconds(ttl)
 	local valid = type(ttl) == "number" and ttl >= constants.MIN_TTL_SECONDS and ttl <= constants.MAX_TTL_SECONDS
 	assert(valid, constants.INVALID_TTL_MESSAGE)
 end
 
+---@param caller string
+---@description Asserts that the caller is the owner
+---@example
+---```lua
+---utils.validateOwner(msg.From)
+---```
 function utils.validateOwner(caller)
 	local isOwner = false
 	if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
@@ -250,6 +277,12 @@ function utils.validateOwner(caller)
 	assert(isOwner, "Sender is not the owner.")
 end
 
+--- @param from string
+--- @description Asserts that the caller is the owner or a controller
+--- @example
+--- ```lua
+--- utils.assertHasPermission(msg.From)
+--- ```
 function utils.assertHasPermission(from)
 	for _, c in ipairs(Controllers) do
 		if c == from then
@@ -281,71 +314,10 @@ function utils.camelCase(str)
 	return str
 end
 
-utils.notices = {}
-
--- @param oldMsg table
--- @param newMsg table
--- Add forwarded tags to the new message
--- @return newMsg table
-function utils.notices.addForwardedTags(oldMsg, newMsg)
-	for tagName, tagValue in pairs(oldMsg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			newMsg[tagName] = tagValue
-		end
-	end
-	return newMsg
-end
-
-function utils.notices.credit(msg)
-	local notice = {
-		Target = msg.Recipient,
-		Action = "Credit-Notice",
-		Sender = msg.From,
-		Quantity = tostring(1),
-	}
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			notice[tagName] = tagValue
-		end
-	end
-
-	return notice
-end
-
-function utils.notices.debit(msg)
-	local notice = {
-		Target = msg.From,
-		Action = "Debit-Notice",
-		Recipient = msg.Recipient,
-		Quantity = tostring(1),
-	}
-	-- Add forwarded tags to the credit and debit notice messages
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			notice[tagName] = tagValue
-		end
-	end
-
-	return notice
-end
-
--- @param notices table
-function utils.notices.sendNotices(notices)
-	for _, notice in ipairs(notices) do
-		ao.send(notice)
-	end
-end
-
-function utils.notices.notifyState(msg, target)
-	if not target then
-		print("No target specified for state notice")
-		return
-	end
-
-	local state = {
+---@description gets the state of the relavent ANT globals
+---@return AntState
+function utils.getState()
+	return {
 		Records = Records,
 		Controllers = Controllers,
 		Balances = Balances,
@@ -360,18 +332,75 @@ function utils.notices.notifyState(msg, target)
 		Initialized = Initialized,
 		["Source-Code-TX-ID"] = SourceCodeTxId,
 	}
-
-	-- Add forwarded tags to the records notice messages
-	for tagName, tagValue in pairs(msg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			state[tagName] = tagValue
-		end
-	end
-
-	ao.send({ Target = target, Action = "State-Notice", Data = json.encode(state) })
 end
 
+utils.notices = {}
+
+--- @param oldMsg AoMessage
+--- @param newMsg AoMessage
+--- @description Add forwarded tags to the new message
+--- @return AoMessage
+function utils.notices.addForwardedTags(oldMsg, newMsg)
+	for tagName, tagValue in pairs(oldMsg) do
+		-- Tags beginning with "X-" are forwarded
+		if string.sub(tagName, 1, 2) == "X-" then
+			newMsg[tagName] = tagValue
+		end
+	end
+	return newMsg
+end
+
+--- @param msg AoMessage
+--- @description Create a credit notice message
+--- @return AoMessage
+function utils.notices.credit(msg)
+	return utils.notices.addForwardedTags(msg, {
+		Target = msg.Recipient,
+		Action = "Credit-Notice",
+		Sender = msg.From,
+		Quantity = tostring(1),
+	})
+end
+
+--- @param msg AoMessage
+--- @description Create a debit notice message
+--- @return AoMessage
+function utils.notices.debit(msg)
+	return utils.notices.addForwardedTags(msg, {
+		Target = msg.From,
+		Action = "Debit-Notice",
+		Recipient = msg.Recipient,
+		Quantity = tostring(1),
+	})
+end
+
+--- @param notices table<AoMessage>
+function utils.notices.sendNotices(notices)
+	for _, notice in ipairs(notices) do
+		ao.send(notice)
+	end
+end
+
+--- @param msg AoMessage
+--- @param target string
+--- @description Notify the target of the current state
+--- @return nil
+function utils.notices.notifyState(msg, target)
+	if not target then
+		print("No target specified for state notice")
+		return
+	end
+
+	ao.send(utils.notices.addForwardedTags(msg, {
+		Target = target,
+		Action = "State-Notice",
+		Data = json.encode(utils.getState()),
+	}))
+end
+
+--- @param handlers Handlers
+--- @description Get the names of all handlers
+--- @return table<string>
 function utils.getHandlerNames(handlers)
 	local names = {}
 	for _, handler in ipairs(handlers.list) do
@@ -380,10 +409,26 @@ function utils.getHandlerNames(handlers)
 	return names
 end
 
+--- @param err any
+--- @description Error handler for xpcall
+--- @return string
 function utils.errorHandler(err)
 	return debug.traceback(err)
 end
 
+---@param tagName string
+---@param tagValue string
+---@param handler function
+---@param position "add" | "prepend" | "append" | nil
+---@description
+---Creates a handler for a specific tag
+---If the handler returns a string, it will be sent as a notice to the sender
+---If the Owner or Controllers change, a state notice will be sent to the sender
+---If a handler throws an error, an error notice will be sent to the sender
+---@example
+---```lua
+---utils.createHandler("Action", "InitializeState", function(msg) print("Initializing state") end)
+---```
 function utils.createHandler(tagName, tagValue, handler, position)
 	assert(
 		type(position) == "string" or type(position) == "nil",
@@ -401,6 +446,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			print("Handling Action [" .. msg.Id or "no-msg-id" .. "]: " .. tagValue)
 			local prevOwner = tostring(Owner)
 			local prevControllers = utils.deepCopy(Controllers)
+			assert(prevControllers, "Unable to deep copy controllers")
 
 			local handlerStatus, handlerRes = xpcall(function()
 				return handler(msg)
@@ -433,10 +479,21 @@ function utils.createHandler(tagName, tagValue, handler, position)
 	)
 end
 
+---@param action string
+---@param msgHandler function
+---@param position "add" | "prepend" | "append" | nil
 function utils.createActionHandler(action, msgHandler, position)
 	return utils.createHandler("Action", action, msgHandler, position)
 end
 
+---@param keywords table<string>
+---@description Validates the keywords
+---Amount of keywords must be less than or equal to 16
+---Each keyword must be a unique string of 32 characters or less
+---@example
+---```lua
+---utils.validateKeywords({"keyword1", "keyword2"})
+---```
 function utils.validateKeywords(keywords)
 	assert(type(keywords) == "table", "Keywords must be an array")
 	assert(#keywords <= 16, "There must not be more than 16 keywords")

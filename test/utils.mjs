@@ -11,7 +11,7 @@ import {
  * Loads the aos wasm binary and returns the handle function with program memory
  * @returns {Promise<{handle: Function, memory: WebAssembly.Memory}>}
  */
-async function createAosLoader(params) {
+export async function createAosLoader(params) {
   const handle = await AoLoader(AOS_WASM, AO_LOADER_OPTIONS);
   const evalRes = await handle(
     null,
@@ -24,8 +24,6 @@ async function createAosLoader(params) {
   };
 }
 
-async function createAntAosLoader() {
+export async function createAntAosLoader() {
   return createAosLoader(ANT_EVAL_OPTIONS);
 }
-
-export { createAntAosLoader, createAosLoader };

@@ -1,5 +1,4 @@
 -- need to specify this as a module so it can be imported
-local types = {}
 ---@alias AoMessage {
 --- Id: string,
 --- From: string,
@@ -48,5 +47,3 @@ local types = {}
 --- ["Source-Code-TX-ID"|SourceCodeTxId]: string,
 --- Records: table<string, Record>,
 ---}
-
-return types

@@ -1,6 +1,6 @@
 --- Module for managing balances and transactions.
 -- @module balances
-require(".common.types")
+
 local utils = require(".common.utils")
 local json = require(".common.json")
 

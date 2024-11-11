@@ -1,5 +1,4 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
-require(".common.types")
 local constants = require(".common.constants")
 local json = require(".common.json")
 local utils = { _version = "0.0.1" }

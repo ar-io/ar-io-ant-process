@@ -1,4 +1,3 @@
-require(".common.types")
 local ant = {}
 
 function ant.init()
@@ -172,7 +171,7 @@ function ant.init()
 		local tags = msg.Tags
 		local name, transactionId, ttlSeconds =
 			string.lower(tags["Sub-Domain"]), tags["Transaction-Id"], tonumber(tags["TTL-Seconds"])
-
+		assert(ttlSeconds, "Missing ttl seconds")
 		return records.setRecord(name, transactionId, ttlSeconds)
 	end)
 

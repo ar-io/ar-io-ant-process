@@ -51,7 +51,7 @@ function records.getRecord(name)
 end
 
 --- Get all records from the ANT
----@return string The encoded JSON representation of all records.
+---@return table<table> The sorted records of the ANT
 function records.getRecords()
 	local antRecords = utils.deepCopy(Records)
 	assert(antRecords, "Failed to copy Records")
@@ -67,7 +67,7 @@ function records.getRecords()
 		return a[1] < b[1]
 	end)
 
-	return json.encode(recordEntries)
+	return recordEntries
 end
 
 return records

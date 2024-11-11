@@ -189,6 +189,16 @@ utils.values = function(t)
 	return values
 end
 
+---@param t table
+---@return table<table>
+utils.entries = function(t)
+	local entries = {}
+	for _, key in ipairs(utils.keys(t)) do
+		table.insert(entries, { key, t[key] })
+	end
+	return entries
+end
+
 function utils.hasMatchingTag(tag, value)
 	return Handlers.utils.hasMatchingTag(tag, value)
 end

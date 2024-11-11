@@ -53,7 +53,21 @@ end
 --- Get all records from the ANT
 ---@return string The encoded JSON representation of all records.
 function records.getRecords()
-	return json.encode(Records)
+	local antRecords = utils.deepCopy(Records)
+	assert(antRecords, "Failed to copy Records")
+	local recordEntries = utils.entries(antRecords)
+	-- sort the records alphabetically, ensuring "@" record is first
+	table.sort(recordEntries, function(a, b)
+		if a[1] == "@" then
+			return true
+		end
+		if b[1] == "@" then
+			return false
+		end
+		return a[1] < b[1]
+	end)
+
+	return json.encode(recordEntries)
 end
 
 return records

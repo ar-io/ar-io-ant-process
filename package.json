@@ -10,8 +10,8 @@
     "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
     "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
     "aos:spawn": "node tools/spawn-aos.mjs",
-    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs",
-    "integration-coverage": "node tools/analyze-handler-coverage.mjs --luaEntryFile src/common/main.lua --testFilePattern test/**/*.test.mjs --ignoredHandlers ['Evolve']",
+    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs && yarn integration-coverage",
+    "integration-coverage": "node tools/analyze-handler-coverage.mjs --luaEntryFile src/common/main.lua --testFilePattern test/**/*.test.mjs",
     "prepare": "husky"
   },
   "devDependencies": {

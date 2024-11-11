@@ -57,10 +57,11 @@ function ant.init()
 		Balance = "Balance",
 		Transfer = "Transfer",
 		TotalSupply = "Total-Supply",
-		CreditNotice = "Credit-Notice",
+
 		-- not implemented
-		Mint = "Mint",
-		Burn = "Burn",
+		-- CreditNotice = "Credit-Notice",
+		-- Mint = "Mint",
+		-- Burn = "Burn",
 	}
 
 	Handlers.add(

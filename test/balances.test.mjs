@@ -22,6 +22,15 @@ describe('aos Balances', async () => {
     );
   }
 
+  async function getTotalSupply(mem) {
+    return handle(
+      {
+        Tags: [{ name: 'Action', value: 'Total-Supply' }],
+      },
+      mem,
+    );
+  }
+
   it('should fetch the owner balance', async () => {
     const result = await handle({
       Tags: [
@@ -98,5 +107,12 @@ describe('aos Balances', async () => {
         (tag) => tag.name === 'Recipient' && tag.value === recipient,
       ),
     );
+  });
+  it('should get total supply', async () => {
+    const res = await getTotalSupply();
+
+    const totalSupply = res.Messages[0];
+    assert(totalSupply, 'failed to get total supply');
+    assert(totalSupply.Data == 1, 'total supply should be equal to 1');
   });
 });

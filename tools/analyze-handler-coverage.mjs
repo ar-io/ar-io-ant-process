@@ -98,7 +98,7 @@ function generateCoverageReport(luaHandlers, testedHandlers) {
     ((luaHandlers.length - untestedHandlers.length) / luaHandlers.length) * 100;
   const reportLines = [];
 
-  reportLines.push(chalk.bold('\nCoverage Report'));
+  reportLines.push(chalk.bold('\nHandlers Coverage Report'));
   reportLines.push(`Total Handlers: ${chalk.cyan(luaHandlers.length)}`);
   reportLines.push(
     `Tested Handlers: ${chalk.green(luaHandlers.length - untestedHandlers.length)}`,

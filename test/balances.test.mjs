@@ -33,6 +33,17 @@ describe('aos Balances', async () => {
     return JSON.parse(result.Messages[0].Data);
   }
 
+  async function getTotalSupply(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Total-Supply' }],
+      },
+      mem,
+    );
+
+    return result.Messages[0].Data;
+  }
+
   it('should fetch the owner balance', async () => {
     const result = await handle({
       Tags: [
@@ -121,5 +132,9 @@ describe('aos Balances', async () => {
 
     const info = await getInfo(result.Memory);
     assert(info.Logo === logo, 'Failed to set logo');
+  });
+  it('should get total supply', async () => {
+    const res = await getTotalSupply();
+    assert(res, 'total supply should be equal to 1');
   });
 });

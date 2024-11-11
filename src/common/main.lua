@@ -14,20 +14,45 @@ function ant.init()
 	local records = require(".common.records")
 	local controllers = require(".common.controllers")
 
+	---@alias Owner string
+	---@description The owner of the ANT
 	Owner = Owner or ao.env.Process.Owner
+	---@alias Balances table<string, integer>
+	---@description The list of balances for the ANT
 	Balances = Balances or { [Owner] = 1 }
+	---@alias Controllers table<integer, string>
+	---@description The list of controllers for the ANT
 	Controllers = Controllers or { Owner }
 
+	---@alias Name string
+	---@description The name of the ANT
 	Name = Name or "Arweave Name Token"
+	---@alias Ticker string
+	---@description The ticker symbol of the ANT
 	Ticker = Ticker or "ANT"
+	---@alias Logo string
+	---@description Arweave transaction ID that is the logo of the ANT
 	Logo = Logo or "Sie_26dvgyok0PZD_-iQAFOhOd5YxDTkczOLoqTTL_A"
+	---@alias Description string
+	---@description A brief description of this ANT up to 255 characters
 	Description = Description or "A brief description of this ANT."
+	---@alias Keywords table<string>
+	---@description A list of keywords that describe this ANT. Each keyword must be a string, unique, and less than 32 characters. There can be up to 16 keywords
 	Keywords = Keywords or {}
+	---@alias Denomination integer
+	---@description The denomination of the ANT - this is set to 0 to denote integer values
 	Denomination = Denomination or 0
+	---@alias TotalSupply integer
+	---@description The total supply of the ANT - this is set to 1 to denote single ownership
 	TotalSupply = TotalSupply or 1
+	---@alias Initialized boolean
+	---@description Whether the ANT has been initialized with the
 	Initialized = Initialized or false
-	-- INSERT placeholder used by build script to inject the appropriate ID
+	---@alias SourceCodeTxId string
+	---@description The Arweave ID of the lua source the ANT currently uses. INSERT placeholder used by build script to inject the appropriate ID
 	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
+	---@alias AntRegistryId string
+	---@description The Arweave ID of the ANT Registry contract that this ANT is registered with
 	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
 
 	local ActionMap = {
@@ -40,6 +65,7 @@ function ant.init()
 		SetTicker = "Set-Ticker",
 		SetDescription = "Set-Description",
 		SetKeywords = "Set-Keywords",
+		SetLogo = "Set-Logo",
 		--- initialization method for bootstrapping the contract from other platforms ---
 		InitializeState = "Initialize-State",
 		-- read
@@ -145,7 +171,7 @@ function ant.init()
 		local tags = msg.Tags
 		local name, transactionId, ttlSeconds =
 			string.lower(tags["Sub-Domain"]), tags["Transaction-Id"], tonumber(tags["TTL-Seconds"])
-
+		assert(ttlSeconds, "Missing ttl seconds")
 		return records.setRecord(name, transactionId, ttlSeconds)
 	end)
 
@@ -183,6 +209,12 @@ function ant.init()
 		local success, keywords = pcall(json.decode, msg.Tags.Keywords)
 		assert(success and type(keywords) == "table", "Invalid JSON format for keywords")
 		return balances.setKeywords(keywords)
+	end)
+
+	createActionHandler(ActionMap.SetLogo, function(msg)
+		utils.assertHasPermission(msg.From)
+		utils.validateArweaveId(msg.Logo)
+		return balances.setLogo(msg.Logo)
 	end)
 
 	createActionHandler(ActionMap.InitializeState, function(msg)

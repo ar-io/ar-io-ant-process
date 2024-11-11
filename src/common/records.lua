@@ -4,13 +4,15 @@ local records = {}
 -- defaults to landing page txid
 Records = Records or { ["@"] = { transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI", ttlSeconds = 3600 } }
 
+--- Set a record in the Records of the ANT.
+---@param name string The name of the record.
+---@param transactionId string The transaction ID of the record.
+---@param ttlSeconds number The time-to-live in seconds for the record.
+---@return string The encoded JSON representation of the record.
 function records.setRecord(name, transactionId, ttlSeconds)
-	local nameValidity, nameValidityError = pcall(utils.validateUndername, name)
-	assert(nameValidity ~= false, nameValidityError)
-	local targetIdValidity, targetValidityError = pcall(utils.validateArweaveId, transactionId)
-	assert(targetIdValidity ~= false, targetValidityError)
-	local ttlSecondsValidity, ttlValidityError = pcall(utils.validateTTLSeconds, ttlSeconds)
-	assert(ttlSecondsValidity ~= false, ttlValidityError)
+	utils.validateUndername(name)
+	utils.validateArweaveId(transactionId)
+	utils.validateTTLSeconds(ttlSeconds)
 
 	local recordsCount = #Records
 
@@ -29,13 +31,18 @@ function records.setRecord(name, transactionId, ttlSeconds)
 	})
 end
 
+--- Remove a record from the ANT.
+---@param name string The name of the record to remove.
+---@return string The encoded JSON representation of the deletion message.
 function records.removeRecord(name)
-	local nameValidity, nameValidityError = pcall(utils.validateUndername, name)
-	assert(nameValidity ~= false, nameValidityError)
+	utils.validateUndername(name)
 	Records[name] = nil
 	return json.encode({ message = "Record deleted" })
 end
 
+--- Get a record from the ANT.
+---@param name string The name of the record to retrieve.
+---@return string The encoded JSON representation of the record.
 function records.getRecord(name)
 	utils.validateUndername(name)
 	assert(Records[name] ~= nil, "Record does not exist")
@@ -43,6 +50,8 @@ function records.getRecord(name)
 	return json.encode(Records[name])
 end
 
+--- Get all records from the ANT
+---@return string The encoded JSON representation of all records.
 function records.getRecords()
 	return json.encode(Records)
 end

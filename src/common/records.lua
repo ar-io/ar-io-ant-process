@@ -55,16 +55,21 @@ end
 function records.getRecords()
 	local antRecords = utils.deepCopy(Records)
 	assert(antRecords, "Failed to copy Records")
-	local recordEntries = utils.entries(antRecords)
-	-- sort the records alphabetically, ensuring "@" record is first
+	local recordEntries = {}
+
+	for undername, record in pairs(antRecords) do
+		local entry = record
+		entry.name = undername
+		table.insert(recordEntries, entry)
+	end
 	table.sort(recordEntries, function(a, b)
-		if a[1] == "@" then
+		if a.name == "@" then
 			return true
 		end
-		if b[1] == "@" then
+		if b.name == "@" then
 			return false
 		end
-		return a[1] < b[1]
+		return a.name < b.name
 	end)
 
 	return recordEntries

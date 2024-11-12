@@ -63,12 +63,9 @@ describe('aos Records', async () => {
 
     const records = await getRecords(setRecordRes3.Memory);
     assert(records);
-    const recordsMap = Object.fromEntries(records);
-    assert(recordsMap['@']);
-    // assert record order
-    const undernames = Object.keys(recordsMap);
-    assert(undernames[0] == '@');
-    assert.strictEqual(undernames.at(-1), 'test-3');
+
+    assert.strictEqual(records[0].name, '@');
+    assert.strictEqual(records.at(-1).name, 'test-3');
   });
 
   it('should get a singular record of the ant', async () => {
@@ -102,9 +99,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
-    const record = Object.fromEntries(
-      JSON.parse(recordsResult.Messages[0].Data),
-    )['@'];
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records[0];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });
@@ -157,9 +153,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
-    const record = Object.fromEntries(
-      JSON.parse(recordsResult.Messages[0].Data),
-    )['timmy'];
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records.find((r) => r.name == 'timmy');
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });

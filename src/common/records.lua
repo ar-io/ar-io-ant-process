@@ -32,11 +32,11 @@ end
 
 --- Remove a record from the ANT.
 ---@param name string The name of the record to remove.
----@return table<'message', string>
+---@return table<string, Record> Returns the records of the ANT
 function records.removeRecord(name)
 	utils.validateUndername(name)
 	Records[name] = nil
-	return { message = "Record deleted" }
+	return Records
 end
 
 --- Get a record from the ANT.

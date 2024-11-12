@@ -5,23 +5,15 @@ local utils = require(".common.utils")
 
 local balances = {}
 
---- Checks if a wallet has sufficient balance.
----@param wallet string - The wallet address to check.
----@return boolean - Returns true if the wallet has a balance greater than 0, otherwise false.
-function balances.walletHasSufficientBalance(wallet)
-	return Balances[wallet] ~= nil and Balances[wallet] > 0
-end
-
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
----@return table<string, integer>
+---@return nil
 function balances.transfer(to)
 	utils.validateArweaveId(to)
 	Balances = { [to] = 1 }
 	--luacheck: ignore Owner Controllers
 	Owner = to
 	Controllers = {}
-	return { [to] = 1 }
 end
 
 --- Retrieves the balance of a specified wallet.
@@ -45,7 +37,7 @@ end
 function balances.setName(name)
 	assert(type(name) == "string", "Name must be a string")
 	Name = name
-	return { name = Name }
+	return { Name = Name }
 end
 
 --- Sets the ticker of the ANT.
@@ -54,7 +46,7 @@ end
 function balances.setTicker(ticker)
 	assert(type(ticker) == "string", "Ticker must be a string")
 	Ticker = ticker
-	return { ticker = Ticker }
+	return { Ticker = Ticker }
 end
 
 --- Sets the description of the ANT.
@@ -64,7 +56,7 @@ function balances.setDescription(description)
 	assert(type(description) == "string", "Description must be a string")
 	assert(#description <= 512, "Description must not be longer than 512 characters")
 	Description = description
-	return { description = Description }
+	return { Description = Description }
 end
 
 --- Sets the keywords of the ANT.
@@ -74,7 +66,7 @@ function balances.setKeywords(keywords)
 	utils.validateKeywords(keywords)
 
 	Keywords = keywords
-	return { keywords = Keywords }
+	return { Keywords = Keywords }
 end
 
 --- Sets the logo of the ANT.
@@ -82,7 +74,7 @@ end
 ---@return table<string, string>
 function balances.setLogo(logo)
 	Logo = logo
-	return { logo = Logo }
+	return { Logo = Logo }
 end
 
 return balances

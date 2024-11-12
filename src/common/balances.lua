@@ -2,7 +2,6 @@
 -- @module balances
 
 local utils = require(".common.utils")
-local json = require(".common.json")
 
 local balances = {}
 
@@ -15,19 +14,19 @@ end
 
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
----@return string - Returns the encoded JSON representation of the transferred balance.
+---@return table<string, integer>
 function balances.transfer(to)
 	utils.validateArweaveId(to)
 	Balances = { [to] = 1 }
 	--luacheck: ignore Owner Controllers
 	Owner = to
 	Controllers = {}
-	return json.encode({ [to] = 1 })
+	return { [to] = 1 }
 end
 
 --- Retrieves the balance of a specified wallet.
 ---@param address string - The wallet address to retrieve the balance from.
----@return number - Returns the balance of the specified wallet.
+---@return integer - Returns the balance of the specified wallet.
 function balances.balance(address)
 	utils.validateArweaveId(address)
 	local balance = Balances[address] or 0
@@ -35,55 +34,55 @@ function balances.balance(address)
 end
 
 --- Retrieves all balances.
----@return string - Returns the encoded JSON representation of all balances.
+---@return table<string, integer> - Returns the encoded JSON representation of all balances.
 function balances.balances()
-	return json.encode(Balances)
+	return Balances
 end
 
 --- Sets the name of the ANT.
 ---@param name string - The name to set.
----@return string - Returns the encoded JSON representation of the updated name.
+---@return table<string, string>
 function balances.setName(name)
 	assert(type(name) == "string", "Name must be a string")
 	Name = name
-	return json.encode({ name = Name })
+	return { name = Name }
 end
 
 --- Sets the ticker of the ANT.
 ---@param ticker string - The ticker to set.
----@return string - Returns the encoded JSON representation of the updated ticker.
+---@return table<string, string>
 function balances.setTicker(ticker)
 	assert(type(ticker) == "string", "Ticker must be a string")
 	Ticker = ticker
-	return json.encode({ ticker = Ticker })
+	return { ticker = Ticker }
 end
 
 --- Sets the description of the ANT.
 ---@param description string - The description to set.
----@return string - Returns the encoded JSON representation of the updated description.
+---@return table<string, string>
 function balances.setDescription(description)
 	assert(type(description) == "string", "Description must be a string")
 	assert(#description <= 512, "Description must not be longer than 512 characters")
 	Description = description
-	return json.encode({ description = Description })
+	return { description = Description }
 end
 
 --- Sets the keywords of the ANT.
 ---@param keywords table - The keywords to set.
----@return string - Returns the encoded JSON representation of the updated keywords.
+---@return table<string, string>
 function balances.setKeywords(keywords)
 	utils.validateKeywords(keywords)
 
 	Keywords = keywords
-	return json.encode({ keywords = Keywords })
+	return { keywords = Keywords }
 end
 
 --- Sets the logo of the ANT.
 ---@param logo string - The Arweave transaction ID that represents the logo.
----@return string - Returns the encoded JSON representation of the updated logo.
+---@return table<string, string>
 function balances.setLogo(logo)
 	Logo = logo
-	return json.encode({ logo = Logo })
+	return { logo = Logo }
 end
 
 return balances

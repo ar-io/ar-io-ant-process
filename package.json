@@ -11,7 +11,8 @@
     "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
     "aos:spawn": "node tools/spawn-aos.mjs",
     "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "install-lua-deps": "sh tools/install-lua-deps.sh"
   },
   "devDependencies": {
     "@ardrive/turbo-sdk": "^1.19.0",

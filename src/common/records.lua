@@ -1,5 +1,4 @@
 local utils = require(".common.utils")
-local json = require(".common.json")
 local records = {}
 -- defaults to landing page txid
 Records = Records or { ["@"] = { transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI", ttlSeconds = 3600 } }
@@ -8,7 +7,7 @@ Records = Records or { ["@"] = { transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3Mn
 ---@param name string The name of the record.
 ---@param transactionId string The transaction ID of the record.
 ---@param ttlSeconds number The time-to-live in seconds for the record.
----@return string The encoded JSON representation of the record.
+---@return Record
 function records.setRecord(name, transactionId, ttlSeconds)
 	utils.validateUndername(name)
 	utils.validateArweaveId(transactionId)
@@ -25,35 +24,35 @@ function records.setRecord(name, transactionId, ttlSeconds)
 		ttlSeconds = ttlSeconds,
 	}
 
-	return json.encode({
+	return {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
-	})
+	}
 end
 
 --- Remove a record from the ANT.
 ---@param name string The name of the record to remove.
----@return string The encoded JSON representation of the deletion message.
+---@return table<'message', string>
 function records.removeRecord(name)
 	utils.validateUndername(name)
 	Records[name] = nil
-	return json.encode({ message = "Record deleted" })
+	return { message = "Record deleted" }
 end
 
 --- Get a record from the ANT.
 ---@param name string The name of the record to retrieve.
----@return string The encoded JSON representation of the record.
+---@return Record
 function records.getRecord(name)
 	utils.validateUndername(name)
 	assert(Records[name] ~= nil, "Record does not exist")
 
-	return json.encode(Records[name])
+	return Records[name]
 end
 
 --- Get all records from the ANT
----@return string The encoded JSON representation of all records.
+---@return table<string, Record>
 function records.getRecords()
-	return json.encode(Records)
+	return Records
 end
 
 return records

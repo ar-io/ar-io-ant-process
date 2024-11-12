@@ -83,8 +83,14 @@ describe("Arweave Name Token", function()
 	end)
 
 	it("gets all records", function()
-		records.setRecord("zed", string.rep("1", 43), 3600)
-		records.setRecord("@", string.rep("1", 43), 3600)
+		_G.Records["zed"] = {
+			transactionId = string.rep("1", 43),
+			ttlSeconds = 3600,
+		}
+		_G.Records["@"] = {
+			transactionId = string.rep("1", 43),
+			ttlSeconds = 3600,
+		}
 		local recordEntries = records.getRecords()
 
 		assert.are.same(recordEntries[1].name, "@")

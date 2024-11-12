@@ -213,7 +213,6 @@ function ant.init()
 
 	createActionHandler(ActionMap.SetLogo, function(msg)
 		utils.assertHasPermission(msg.From)
-		utils.validateArweaveId(msg.Logo)
 		return balances.setLogo(msg.Logo)
 	end)
 

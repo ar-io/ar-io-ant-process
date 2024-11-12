@@ -73,6 +73,7 @@ end
 ---@param logo string - The Arweave transaction ID that represents the logo.
 ---@return table<string, string>
 function balances.setLogo(logo)
+	utils.validateArweaveId(logo)
 	Logo = logo
 	return { Logo = Logo }
 end

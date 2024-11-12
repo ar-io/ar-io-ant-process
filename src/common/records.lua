@@ -51,10 +51,17 @@ function records.getRecord(name)
 end
 
 --- Get all records from the ANT
----@return table<table> The sorted records of the ANT
+---@alias RecordEntry {
+--- name: string,
+--- transactionId: string,
+--- ttlSeconds: integer,
+---}
+---@return table<RecordEntry> The sorted records of the ANT
 function records.getRecords()
 	local antRecords = utils.deepCopy(Records)
 	assert(antRecords, "Failed to copy Records")
+
+	---@type table<RecordEntry>
 	local recordEntries = {}
 
 	for undername, record in pairs(antRecords) do

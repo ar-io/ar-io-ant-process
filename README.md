@@ -17,9 +17,10 @@ This repository provides two flavours of ANT process module, AOS and a custom mo
 - [Handler Methods](#handler-methods)
   - [Read Methods](#read-methods)
     - [`Info`](#info)
-    - [`Get-Records`](#get-records)
-    - [`Get-Record`](#get-record)
-    - [`Get-Controllers`](#get-controllers)
+    - [`State`](#state)
+    - [`Records`](#records)
+    - [`Record`](#record)
+    - [`Controllers`](#controllers)
     - [`Balance`](#balance)
     - [`Balances`](#balances)
   - [Write methods](#write-methods)
@@ -28,6 +29,7 @@ This repository provides two flavours of ANT process module, AOS and a custom mo
     - [`Set-Name`](#set-name)
     - [`Set-Ticker`](#set-ticker)
     - [`Set-Description`](#set-description)
+    - [`Set-Logo`](#set-logo)
     - [`Set-Keywords`](#set-keywords)
     - [`Set-Controller`](#set-controller)
     - [`Remove-Controller`](#remove-controller)
@@ -122,30 +124,52 @@ Retrieves the Name, Ticker, Total supply, Logo, Denomination, and Owner of the A
 | -------- | ------ | ------- | -------- | --------------------------------- |
 | Action   | string | "Info"  | true     | Action tag for triggering handler |
 
-#### `Get-Records`
+#### `State`
+
+Retrieves the entire state of the ANT, which includes:
+
+- Records
+- Controllers
+- Balances
+- Owner
+- Name
+- Ticker
+- Logo
+- Description
+- Keywords
+- Denomination
+- TotalSupply
+- Initialized
+- Source-Code-TX-ID
+
+| Tag Name | Type   | Pattern | Required | Description                       |
+| -------- | ------ | ------- | -------- | --------------------------------- |
+| Action   | string | "State" | true     | Action tag for triggering handler |
+
+#### `Records`
 
 Retrieves all the records configured on the ANT
 
-| Tag Name | Type   | Pattern       | Required | Description                       |
-| -------- | ------ | ------------- | -------- | --------------------------------- |
-| Action   | string | "Get-Records" | true     | Action tag for triggering handler |
+| Tag Name | Type   | Pattern   | Required | Description                       |
+| -------- | ------ | --------- | -------- | --------------------------------- |
+| Action   | string | "Records" | true     | Action tag for triggering handler |
 
-#### `Get-Record`
+#### `Record`
 
 Retrieves and individual record by name.
 
 | Tag Name   | Type   | Pattern                   | Required | Description                       |
 | ---------- | ------ | ------------------------- | -------- | --------------------------------- |
-| Action     | string | "Get-Record"              | true     | Action tag for triggering handler |
+| Action     | string | "Record"                  | true     | Action tag for triggering handler |
 | Sub-Domain | string | "^(?:[a-zA-Z0-9_-]+\|@)$" | true     | Subdomain you which to read       |
 
-#### `Get-Controllers`
+#### `Controllers`
 
 Retrieves all the controllers on the ANT.
 
-| Tag Name | Type   | Pattern           | Required | Description                       |
-| -------- | ------ | ----------------- | -------- | --------------------------------- |
-| Action   | string | "Get-Controllers" | true     | Action tag for triggering handler |
+| Tag Name | Type   | Pattern       | Required | Description                       |
+| -------- | ------ | ------------- | -------- | --------------------------------- |
+| Action   | string | "Controllers" | true     | Action tag for triggering handler |
 
 #### `Balance`
 
@@ -212,6 +236,15 @@ Sets the description for the ANT.
 | ----------- | ------ | ------------------ | -------- | --------------------------------- |
 | Action      | string | "Set-Description"  | true     | Action tag for triggering handler |
 | Description | string | Max 512 characters | true     | New description for ANT.          |
+
+#### `Set-Logo`
+
+Sets the logo for the ANT.
+
+| Tag Name | Type   | Pattern               | Required | Description                       |
+| -------- | ------ | --------------------- | -------- | --------------------------------- |
+| Action   | string | "Set-Logo"            | true     | Action tag for triggering handler |
+| Logo     | string | "^[a-zA-Z0-9_-]{43}$" | true     | ID of new logo for ANT.           |
 
 #### `Set-Keywords`
 

@@ -1,6 +1,7 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
 local constants = require(".common.constants")
 local json = require(".common.json")
+local notices = require(".common.notices")
 local utils = { _version = "0.0.1" }
 
 --- @param t table
@@ -151,70 +152,6 @@ function utils.getState()
 	}
 end
 
-utils.notices = {}
-
---- @param oldMsg AoMessage
---- @param newMsg AoMessage
---- @description Add forwarded tags to the new message
---- @return AoMessage
-function utils.notices.addForwardedTags(oldMsg, newMsg)
-	for tagName, tagValue in pairs(oldMsg) do
-		-- Tags beginning with "X-" are forwarded
-		if string.sub(tagName, 1, 2) == "X-" then
-			newMsg[tagName] = tagValue
-		end
-	end
-	return newMsg
-end
-
---- @param msg AoMessage
---- @description Create a credit notice message
---- @return AoMessage
-function utils.notices.credit(msg)
-	return utils.notices.addForwardedTags(msg, {
-		Target = msg.Recipient,
-		Action = "Credit-Notice",
-		Sender = msg.From,
-		Quantity = tostring(1),
-	})
-end
-
---- @param msg AoMessage
---- @description Create a debit notice message
---- @return AoMessage
-function utils.notices.debit(msg)
-	return utils.notices.addForwardedTags(msg, {
-		Target = msg.From,
-		Action = "Debit-Notice",
-		Recipient = msg.Recipient,
-		Quantity = tostring(1),
-	})
-end
-
---- @param notices table<AoMessage>
-function utils.notices.sendNotices(notices)
-	for _, notice in ipairs(notices) do
-		ao.send(notice)
-	end
-end
-
---- @param msg AoMessage
---- @param target string
---- @description Notify the target of the current state
---- @return nil
-function utils.notices.notifyState(msg, target)
-	if not target then
-		print("No target specified for state notice")
-		return
-	end
-
-	ao.send(utils.notices.addForwardedTags(msg, {
-		Target = target,
-		Action = "State-Notice",
-		Data = json.encode(utils.getState()),
-	}))
-end
-
 --- @param handlers Handlers
 --- @description Get the names of all handlers
 --- @return string[]
@@ -270,7 +207,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			end, utils.errorHandler)
 
 			if not handlerStatus then
-				ao.send(utils.notices.addForwardedTags(msg, {
+				ao.send(notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = "Invalid-" .. tagValue .. "-Notice",
 					Error = tagValue .. "-Error",
@@ -278,7 +215,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 					Data = handlerRes,
 				}))
 			elseif handlerRes then
-				ao.send(utils.notices.addForwardedTags(msg, {
+				ao.send(notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = tagValue .. "-Notice",
 					Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
@@ -288,7 +225,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			local hasNewOwner = Owner ~= prevOwner
 			local hasDifferentControllers = #utils.keys(Controllers) ~= #utils.keys(prevControllers)
 			if (hasNewOwner or hasDifferentControllers) and tagValue ~= "State" then
-				utils.notices.notifyState(msg, msg.From)
+				notices.notifyState(msg, msg.From)
 			end
 
 			return handlerRes

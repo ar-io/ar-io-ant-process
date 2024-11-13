@@ -7,7 +7,7 @@ local balances = {}
 
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
----@return nil
+---@return table<string, integer>
 function balances.transfer(to)
 	utils.validateArweaveId(to)
 	Balances = { [to] = 1 }

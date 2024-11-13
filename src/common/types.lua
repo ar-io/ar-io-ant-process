@@ -36,7 +36,7 @@
 --- Name: string,
 --- Ticker: string,
 --- Description: string,
---- Keywords: string,
+--- Keywords: table<string>,
 --- Logo: string,
 --- Balances: table<string, integer>,
 --- Owner: string,

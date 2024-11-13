@@ -1,5 +1,4 @@
 local json = require("json")
-local utils = require(".common.utils")
 local notices = {}
 
 --- @param oldMsg AoMessage
@@ -40,9 +39,9 @@ function notices.debit(msg)
 	})
 end
 
---- @param notices table<AoMessage>
-function notices.sendNotices(notices)
-	for _, notice in ipairs(notices) do
+--- @param noticesToSend table<AoMessage>
+function notices.sendNotices(noticesToSend)
+	for _, notice in ipairs(noticesToSend) do
 		ao.send(notice)
 	end
 end
@@ -57,10 +56,27 @@ function notices.notifyState(msg, target)
 		return
 	end
 
+	---@type AntState
+	local state = {
+		Records = Records,
+		Controllers = Controllers,
+		Balances = Balances,
+		Owner = Owner,
+		Name = Name,
+		Ticker = Ticker,
+		Logo = Logo,
+		Description = Description,
+		Keywords = Keywords,
+		Denomination = Denomination,
+		TotalSupply = TotalSupply,
+		Initialized = Initialized,
+		["Source-Code-TX-ID"] = SourceCodeTxId,
+	}
+
 	ao.send(notices.addForwardedTags(msg, {
 		Target = target,
 		Action = "State-Notice",
-		Data = json.encode(utils.getState()),
+		Data = json.encode(state),
 	}))
 end
 

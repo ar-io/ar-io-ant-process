@@ -10,9 +10,9 @@ node_modules
 wallet.json
 .DS_Store
 luacov-html
-.luacov
 *.gz
 luacov.stats.out
 process.wasm
 dist
 publish-output.json
+luarocks-3.9.1

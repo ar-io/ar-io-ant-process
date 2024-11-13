@@ -50,9 +50,35 @@ function records.getRecord(name)
 end
 
 --- Get all records from the ANT
----@return table<string, Record>
+---@alias RecordEntry {
+--- name: string,
+--- transactionId: string,
+--- ttlSeconds: integer,
+---}
+---@return table<RecordEntry> The sorted records of the ANT
 function records.getRecords()
-	return Records
+	local antRecords = utils.deepCopy(Records)
+	assert(antRecords, "Failed to copy Records")
+
+	---@type table<RecordEntry>
+	local recordEntries = {}
+
+	for undername, record in pairs(antRecords) do
+		local entry = record
+		entry.name = undername
+		table.insert(recordEntries, entry)
+	end
+	table.sort(recordEntries, function(a, b)
+		if a.name == "@" then
+			return true
+		end
+		if b.name == "@" then
+			return false
+		end
+		return a.name < b.name
+	end)
+
+	return recordEntries
 end
 
 return records

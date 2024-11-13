@@ -4,6 +4,7 @@ import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
+  STUB_ADDRESS,
 } from '../tools/constants.mjs';
 
 describe('aos Records', async () => {
@@ -21,14 +22,50 @@ describe('aos Records', async () => {
     );
   }
 
-  it('should get the records of the ant', async () => {
-    const result = await handle({
-      Tags: [{ name: 'Action', value: 'Records' }],
-    });
+  async function setRecord(
+    { name, ttl = 3600, transactionId = STUB_ADDRESS },
+    mem,
+  ) {
+    return handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: name },
+          { name: 'TTL-Seconds', value: ttl },
+          { name: 'Transaction-Id', value: transactionId },
+        ],
+      },
+      mem,
+    );
+  }
 
-    const records = JSON.parse(result.Messages[0].Data);
+  async function getRecords(mem) {
+    const res = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Records' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(res.Messages[0].Data);
+  }
+
+  it('should get the records of the ant', async () => {
+    const setRecordRes = await setRecord({ name: 'test-1' });
+    const setRecordRes2 = await setRecord(
+      { name: 'test-2' },
+      setRecordRes.Memory,
+    );
+    const setRecordRes3 = await setRecord(
+      { name: 'test-3' },
+      setRecordRes2.Memory,
+    );
+
+    const records = await getRecords(setRecordRes3.Memory);
     assert(records);
-    assert(records['@']);
+
+    assert.strictEqual(records[0].name, '@');
+    assert.strictEqual(records.at(-1).name, 'test-3');
   });
 
   it('should get a singular record of the ant', async () => {
@@ -62,7 +99,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
-    const record = JSON.parse(recordsResult.Messages[0].Data)['@'];
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records[0];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });
@@ -115,7 +153,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
-    const record = JSON.parse(recordsResult.Messages[0].Data)['timmy'];
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records.find((r) => r.name == 'timmy');
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });

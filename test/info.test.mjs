@@ -56,6 +56,7 @@ describe('aos Info', async () => {
       'setTicker',
       'setDescription',
       'setKeywords',
+      'setLogo',
       'initializeState',
       'state',
       'releaseName',

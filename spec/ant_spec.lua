@@ -27,6 +27,7 @@ describe("Arweave Name Token", function()
 		_G.Description = "ANT's description"
 		_G.Keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" }
 		_G.Denomination = 1
+		_G.Logo = ""
 	end)
 
 	it("Initializes the state of the process", function()
@@ -80,6 +81,21 @@ describe("Arweave Name Token", function()
 		records.setRecord(name, transactionId, ttlSeconds) -- happy path
 		assert.are.same(_G.Records["@"].transactionId, fake_address)
 		assert.are.same(_G.Records["@"].ttlSeconds, 900)
+	end)
+
+	it("gets all records", function()
+		_G.Records["zed"] = {
+			transactionId = string.rep("1", 43),
+			ttlSeconds = 3600,
+		}
+		_G.Records["@"] = {
+			transactionId = string.rep("1", 43),
+			ttlSeconds = 3600,
+		}
+		local recordEntries = records.getRecords()
+
+		assert.are.same(recordEntries[1].name, "@")
+		assert.are.same(recordEntries[#recordEntries].name, "zed")
 	end)
 
 	it("removes a record", function()
@@ -166,5 +182,17 @@ describe("Arweave Name Token", function()
 		assert.has_error(function()
 			balances.setKeywords(notAnArray)
 		end, "Keywords must be an array")
+	end)
+
+	it("should set the logo", function()
+		local logo = string.rep("1", 43)
+		balances.setLogo(logo)
+		assert.are.same(logo, _G.Logo)
+	end)
+	it("should not set the logo with invalid id", function()
+		local logo = string.rep("1", 42)
+		assert.has_error(function()
+			balances.setLogo(logo)
+		end)
 	end)
 end)

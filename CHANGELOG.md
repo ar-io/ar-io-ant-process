@@ -16,6 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Allows for setting the description of the ANT
 - Set-Keywords Handler
   - Allows for setting keywords on the ANT
+- Set-Logo Handler
+  - Allows for setting the logo of the ANT
+
+### Changed
+
+- Refactored handlers to use a util that codifies responses on calls.
+- Added documentation with luadoc types for improved linting.
+- Records are now returned as an alphabetically sorted array of [{name, transactionId, ttlSeconds}] with the '@' record being the first.
+
+### Fixed
+
+- Fixed the Remove-Record api to return appropriate notices on calls.
 
 <!-- eslint-disable-next-line -->
 

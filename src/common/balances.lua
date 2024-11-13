@@ -14,6 +14,8 @@ function balances.transfer(to)
 	--luacheck: ignore Owner Controllers
 	Owner = to
 	Controllers = {}
+
+	return { [to] = 1 }
 end
 
 --- Retrieves the balance of a specified wallet.

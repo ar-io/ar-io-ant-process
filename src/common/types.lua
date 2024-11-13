@@ -40,7 +40,7 @@
 --- Logo: string,
 --- Balances: table<string, integer>,
 --- Owner: string,
---- Controllers: table<string>,
+--- Controllers: string[],
 --- Denomination: integer,
 --- TotalSupply: integer,
 --- Initialized: boolean,

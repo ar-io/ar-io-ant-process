@@ -4,7 +4,7 @@ local controllers = {}
 
 --- Set a controller.
 ---@param controller string The controller to set.
----@return table<string>
+---@return string[]
 function controllers.setController(controller)
 	utils.validateArweaveId(controller)
 
@@ -18,7 +18,7 @@ end
 
 --- Remove a controller.
 ---@param controller string The controller to remove.
----@return table<string>
+---@return string[]
 function controllers.removeController(controller)
 	utils.validateArweaveId(controller)
 	local controllerExists = false
@@ -36,7 +36,7 @@ function controllers.removeController(controller)
 end
 
 --- Get all controllers.
----@return table<string>
+---@return string[]
 function controllers.getControllers()
 	return Controllers
 end

@@ -36,7 +36,7 @@ function ant.init()
 	---@alias Description string
 	---@description A brief description of this ANT up to 255 characters
 	Description = Description or "A brief description of this ANT."
-	---@alias Keywords table<string>
+	---@alias Keywords string[]
 	---@description A list of keywords that describe this ANT. Each keyword must be a string, unique, and less than 32 characters. There can be up to 16 keywords
 	Keywords = Keywords or {}
 	---@alias Denomination integer

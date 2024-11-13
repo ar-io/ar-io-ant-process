@@ -5,6 +5,7 @@ function ant.init()
 	-- utils
 	local json = require(".common.json")
 	local utils = require(".common.utils")
+	local notices = require(".common.notices")
 	local camel = utils.camelCase
 	local createActionHandler = utils.createActionHandler
 
@@ -36,7 +37,7 @@ function ant.init()
 	---@alias Description string
 	---@description A brief description of this ANT up to 255 characters
 	Description = Description or "A brief description of this ANT."
-	---@alias Keywords table<string>
+	---@alias Keywords string[]
 	---@description A list of keywords that describe this ANT. Each keyword must be a string, unique, and less than 32 characters. There can be up to 16 keywords
 	Keywords = Keywords or {}
 	---@alias Denomination integer
@@ -96,8 +97,8 @@ function ant.init()
 		utils.validateOwner(msg.From)
 		balances.transfer(recipient)
 		if not msg.Cast then
-			ao.send(utils.notices.debit(msg))
-			ao.send(utils.notices.credit(msg))
+			ao.send(notices.debit(msg))
+			ao.send(notices.credit(msg))
 		end
 	end)
 
@@ -213,7 +214,6 @@ function ant.init()
 
 	createActionHandler(ActionMap.SetLogo, function(msg)
 		utils.assertHasPermission(msg.From)
-		utils.validateArweaveId(msg.Logo)
 		return balances.setLogo(msg.Logo)
 	end)
 
@@ -222,7 +222,7 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.State, function(msg)
-		utils.notices.notifyState(msg, msg.From)
+		notices.notifyState(msg, msg.From)
 	end)
 
 	-- IO Network Contract Handlers

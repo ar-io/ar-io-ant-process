@@ -1,11 +1,10 @@
-local json = require(".common.json")
 local utils = require(".common.utils")
 
 local controllers = {}
 
 --- Set a controller.
 ---@param controller string The controller to set.
----@return string The encoded JSON representation of the updated controllers.
+---@return string[]
 function controllers.setController(controller)
 	utils.validateArweaveId(controller)
 
@@ -14,12 +13,12 @@ function controllers.setController(controller)
 	end
 
 	table.insert(Controllers, controller)
-	return json.encode(Controllers)
+	return Controllers
 end
 
 --- Remove a controller.
 ---@param controller string The controller to remove.
----@return string The encoded JSON representation of the updated controllers.
+---@return string[]
 function controllers.removeController(controller)
 	utils.validateArweaveId(controller)
 	local controllerExists = false
@@ -33,13 +32,13 @@ function controllers.removeController(controller)
 	end
 
 	assert(controllerExists ~= nil, "Controller does not exist")
-	return json.encode(Controllers)
+	return Controllers
 end
 
 --- Get all controllers.
----@return string The encoded JSON representation of the controllers.
+---@return string[]
 function controllers.getControllers()
-	return json.encode(Controllers)
+	return Controllers
 end
 
 return controllers

@@ -27,6 +27,7 @@ describe("Arweave Name Token", function()
 		_G.Description = "ANT's description"
 		_G.Keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" }
 		_G.Denomination = 1
+		_G.Logo = ""
 	end)
 
 	it("Initializes the state of the process", function()
@@ -181,5 +182,17 @@ describe("Arweave Name Token", function()
 		assert.has_error(function()
 			balances.setKeywords(notAnArray)
 		end, "Keywords must be an array")
+	end)
+
+	it("should set the logo", function()
+		local logo = string.rep("1", 43)
+		balances.setLogo(logo)
+		assert.are.same(logo, _G.Logo)
+	end)
+	it("should not set the logo with invalid id", function()
+		local logo = string.rep("1", 42)
+		assert.has_error(function()
+			balances.setLogo(logo)
+		end)
 	end)
 end)

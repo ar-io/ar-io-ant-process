@@ -280,6 +280,7 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.CreateClaim, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to create claims
 		utils.validateOwner(msg.From)
 		utils.validateArweaveId(msg.Tags["Process-Id"])
 		utils.validateArweaveId(msg.Tags.Recipient)
@@ -290,7 +291,6 @@ function ant.init()
 		local recipient = msg.Tags.Recipient
 		local ioProcess = msg.Tags["IO-Process-Id"]
 
-		-- send the release message to the provided IO Process Id
 		ao.send({
 			Target = ioProcess,
 			Action = "Create-Primary-Name-Claim",
@@ -307,6 +307,7 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.RevokeClaims, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to revoke claims
 		utils.validateOwner(msg.From)
 		utils.validateArweaveId(msg.Tags["Process-Id"])
 
@@ -318,7 +319,6 @@ function ant.init()
 			utils.validateUndername(name)
 		end
 
-		-- send the release message to the provided IO Process Id
 		ao.send({
 			Target = ioProcess,
 			Action = "Revoke-Primary-Name-Claims",
@@ -333,6 +333,7 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.RemovePrimaryNames, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to remove primary names
 		utils.validateOwner(msg.From)
 		utils.validateArweaveId(msg.Tags["Process-Id"])
 
@@ -344,7 +345,6 @@ function ant.init()
 			utils.validateUndername(name)
 		end
 
-		-- send the release message to the provided IO Process Id
 		ao.send({
 			Target = ioProcess,
 			Action = "Remove-Primary-Names",

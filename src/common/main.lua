@@ -80,7 +80,7 @@ function ant.init()
 		ReassignName = "Reassign-Name",
 		CreateClaim = "Create-Primary-Name-Claims",
 		RevokeClaims = "Revoke-Primary-Name-Claims",
-		RemovePrimaryNames = "Remove-Primary-Name-Claims",
+		RemovePrimaryNames = "Remove-Primary-Names",
 	}
 
 	local TokenSpecActionMap = {

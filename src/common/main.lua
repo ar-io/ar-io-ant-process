@@ -314,7 +314,7 @@ function ant.init()
 		assert(msg.Tags.Names, "Names are required")
 
 		local ioProcess = msg.Tags["IO-Process-Id"]
-		local names = utils.split(msg.Tags.Names, ",")
+		local names = utils.splitString(msg.Tags.Names)
 		for _, name in ipairs(names) do
 			utils.validateUndername(name)
 		end
@@ -340,7 +340,7 @@ function ant.init()
 		assert(msg.Tags.Names, "Names are required")
 
 		local ioProcess = msg.Tags["IO-Process-Id"]
-		local names = utils.split(msg.Tags.Names, ",")
+		local names = utils.splitString(msg.Tags.Names)
 		for _, name in ipairs(names) do
 			utils.validateUndername(name)
 		end

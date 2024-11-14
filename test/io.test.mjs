@@ -115,14 +115,13 @@ describe('IO Network Updates', async () => {
     );
     assert(ioProcessMessage, 'Message to IO Process not found');
 
-    // Check if there is a message to the sender with Action 'Reassign-Name-Submit-Notice'
+    // Check if there is a message to the sender with Action 'Reassign-Name-Notice'
     const senderMessage = result.Messages.find(
       (msg) =>
         msg.Target === STUB_ADDRESS &&
         msg.Tags.some(
           (tag) =>
-            tag.name === 'Action' &&
-            tag.value === 'Reassign-Name-Submit-Notice',
+            tag.name === 'Action' && tag.value === 'Reassign-Name-Notice',
         ) &&
         msg.Tags.some(
           (tag) => tag.name === 'Initiator' && tag.value === STUB_ADDRESS,

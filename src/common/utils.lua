@@ -41,6 +41,14 @@ function utils.deepCopy(original)
 	return copy
 end
 
+--- @param str string
+--- @param delimiter string
+--- @description Splits a string by the delimiter
+--- @return string[]
+function utils.split(str, delimiter)
+	return { string.match(str, "([^" .. delimiter .. "]+)") }
+end
+
 -- NOTE: lua 5.3 has limited regex support, particularly for lookaheads and negative lookaheads or use of {n}
 ---@param name string
 ---@description Asserts that the provided name is a valid undername

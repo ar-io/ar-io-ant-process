@@ -78,9 +78,8 @@ function ant.init()
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
 		ReassignName = "Reassign-Name",
-		CreateClaim = "Create-Primary-Name-Claims",
-		RevokeClaims = "Revoke-Primary-Name-Claims",
-		RemovePrimaryNames = "Remove-Primary-Names",
+		ApproveName = "Approve-Primary-Name",
+		RemoveNames = "Remove-Primary-Names",
 	}
 
 	local TokenSpecActionMap = {
@@ -279,10 +278,10 @@ function ant.init()
 		})
 	end)
 
-	createActionHandler(ActionMap.CreateClaim, function(msg)
+	createActionHandler(ActionMap.ApproveName, function(msg)
 		--- NOTE: this could be modified to allow specific users/controllers to create claims
 		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["Process-Id"])
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
 		utils.validateArweaveId(msg.Tags.Recipient)
 
 		assert(msg.Tags.Name, "Name is required")
@@ -293,49 +292,16 @@ function ant.init()
 
 		ao.send({
 			Target = ioProcess,
-			Action = "Create-Primary-Name-Claim",
-			Name = name,
-			Recipient = recipient,
-		})
-
-		ao.send({
-			Target = msg.From,
-			Action = "Create-Primary-Name-Claim-Notice",
+			Action = "Approve-Primary-Name-Request",
 			Name = name,
 			Recipient = recipient,
 		})
 	end)
 
-	createActionHandler(ActionMap.RevokeClaims, function(msg)
-		--- NOTE: this could be modified to allow specific users/controllers to revoke claims
-		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["Process-Id"])
-
-		assert(msg.Tags.Names, "Names are required")
-
-		local ioProcess = msg.Tags["IO-Process-Id"]
-		local names = utils.splitString(msg.Tags.Names)
-		for _, name in ipairs(names) do
-			utils.validateUndername(name)
-		end
-
-		ao.send({
-			Target = ioProcess,
-			Action = "Revoke-Primary-Name-Claims",
-			Names = json.encode(names),
-		})
-
-		ao.send({
-			Target = msg.From,
-			Action = "Revoke-Primary-Name-Claims-Notice",
-			Names = json.encode(names),
-		})
-	end)
-
-	createActionHandler(ActionMap.RemovePrimaryNames, function(msg)
+	createActionHandler(ActionMap.RemoveNames, function(msg)
 		--- NOTE: this could be modified to allow specific users/controllers to remove primary names
 		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["Process-Id"])
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
 
 		assert(msg.Tags.Names, "Names are required")
 
@@ -348,12 +314,6 @@ function ant.init()
 		ao.send({
 			Target = ioProcess,
 			Action = "Remove-Primary-Names",
-			Names = json.encode(names),
-		})
-
-		ao.send({
-			Target = msg.From,
-			Action = "Remove-Primary-Names-Notice",
 			Names = json.encode(names),
 		})
 	end)

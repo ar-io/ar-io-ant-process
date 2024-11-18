@@ -70,7 +70,6 @@ function notices.notifyState(msg, target)
 		Denomination = Denomination,
 		TotalSupply = TotalSupply,
 		Initialized = Initialized,
-		["Source-Code-TX-ID"] = SourceCodeTxId,
 	}
 
 	ao.send(notices.addForwardedTags(msg, {

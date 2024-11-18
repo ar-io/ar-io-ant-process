@@ -6,7 +6,6 @@ function ant.init()
 	local json = require(".common.json")
 	local utils = require(".common.utils")
 	local notices = require(".common.notices")
-	local camel = utils.camelCase
 	local createActionHandler = utils.createActionHandler
 
 	-- spec modules
@@ -49,9 +48,6 @@ function ant.init()
 	---@alias Initialized boolean
 	---@description Whether the ANT has been initialized with the
 	Initialized = Initialized or false
-	---@alias SourceCodeTxId string
-	---@description The Arweave ID of the lua source the ANT currently uses. INSERT placeholder used by build script to inject the appropriate ID
-	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
 	---@alias AntRegistryId string
 	---@description The Arweave ID of the ANT Registry contract that this ANT is registered with
 	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
@@ -141,7 +137,6 @@ function ant.init()
 			Denomination = tostring(Denomination),
 			Owner = Owner,
 			Handlers = utils.getHandlerNames(Handlers),
-			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 		ao.send({
 			Target = msg.From,
@@ -274,41 +269,6 @@ function ant.init()
 			["Process-Id"] = antProcessIdToReassign,
 		})
 	end)
-
-	Handlers.prepend(
-		camel(ActionMap.Evolve),
-		Handlers.utils.continue(utils.hasMatchingTag("Action", "Eval")),
-		function(msg)
-			local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
-			if not srcCodeTxId then
-				return
-			end
-
-			if Owner ~= msg.From then
-				ao.send({
-					Target = msg.From,
-					Action = "Invalid-Evolve-Notice",
-					Error = "Evolve-Error",
-					["Message-Id"] = msg.Id,
-					Data = "Only the Owner [" .. Owner or "no owner set" .. "] can call Evolve",
-				})
-				return
-			end
-
-			local srcCodeTxIdStatus = pcall(utils.validateArweaveId, srcCodeTxId)
-			if not srcCodeTxIdStatus then
-				ao.send({
-					Target = msg.From,
-					Action = "Invalid-Evolve-Notice",
-					Error = "Evolve-Error",
-					["Message-Id"] = msg.Id,
-					Data = "Source-Code-TX-ID is required",
-				})
-				return
-			end
-			SourceCodeTxId = srcCodeTxId
-		end
-	)
 end
 
 return ant

@@ -149,7 +149,6 @@ Retrieves the entire state of the ANT, which includes:
 - Denomination
 - TotalSupply
 - Initialized
-- Source-Code-TX-ID
 
 | Tag Name | Type   | Pattern | Required | Description                       |
 | -------- | ------ | ------- | -------- | --------------------------------- |

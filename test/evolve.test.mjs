@@ -23,12 +23,8 @@ describe('aos Evolve', async () => {
   }
 
   it('should evolve the ant and retain eval ability', async () => {
-    const srcCodeTxIdStub = 'new-source-code-tx-id-'.padEnd(43, '-1');
     const evolveResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Eval' },
-        { name: 'Source-Code-TX-ID', value: srcCodeTxIdStub },
-      ],
+      Tags: [{ name: 'Action', value: 'Eval' }],
       Data: BUNDLED_AOS_ANT_LUA,
     });
 
@@ -40,7 +36,6 @@ describe('aos Evolve', async () => {
     );
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
-    assert(state['Source-Code-TX-ID'] === srcCodeTxIdStub);
 
     const evalResult = await handle(
       {
@@ -49,9 +44,8 @@ describe('aos Evolve', async () => {
       },
       evolveResult.Memory,
     );
-
     assert(evalResult.Output.data.output);
-    assert(evalResult.Output.data.output.includes('evolve'));
+    assert(evalResult.Output.data.output.includes('info'));
   });
 
   it('should not evolve the ant', async () => {
@@ -60,7 +54,7 @@ describe('aos Evolve', async () => {
         { name: 'Action', value: 'Eval' },
         // omit src code id
       ],
-      Data: BUNDLED_AOS_ANT_LUA,
+      Data: "Foo = 'bar'",
     });
 
     const result = await handle(
@@ -72,17 +66,27 @@ describe('aos Evolve', async () => {
 
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
-    assert(state['Source-Code-TX-ID'] === '__INSERT_SOURCE_CODE_ID__');
+
+    const fooRes = await handle(
+      {
+        Tags: [
+          {
+            name: 'Action',
+            value: 'Eval',
+          },
+        ],
+        Data: 'print(Foo)',
+      },
+      result.Memory,
+    );
+
+    assert(!fooRes.Output.output?.includes('bar'));
   });
 
   it('should not evolve the ant with correct tags called by a non owner', async () => {
-    const srcCodeTxIdStub = ''.padEnd(43, '123-test');
     const evolveResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Eval' },
-        { name: 'Source-Code-TX-ID', value: srcCodeTxIdStub },
-      ],
-      Data: BUNDLED_AOS_ANT_LUA,
+      Tags: [{ name: 'Action', value: 'Eval' }],
+      Data: "Foo = 'bar'",
       Owner: 'im-not-the-owner-'.padEnd(43, 'a'),
     });
 
@@ -95,6 +99,20 @@ describe('aos Evolve', async () => {
 
     const state = JSON.parse(result.Messages[0].Data);
     assert(state);
-    assert(state['Source-Code-TX-ID'] === '__INSERT_SOURCE_CODE_ID__');
+
+    const fooRes = await handle(
+      {
+        Tags: [
+          {
+            name: 'Action',
+            value: 'Eval',
+          },
+        ],
+        Data: 'print(Foo)',
+      },
+      result.Memory,
+    );
+
+    assert(!fooRes.Output?.output?.includes('bar'));
   });
 });

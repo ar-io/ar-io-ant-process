@@ -148,7 +148,6 @@ function utils.getState()
 		Denomination = Denomination,
 		TotalSupply = TotalSupply,
 		Initialized = Initialized,
-		["Source-Code-TX-ID"] = SourceCodeTxId,
 	}
 end
 
@@ -157,6 +156,7 @@ end
 --- @return string[]
 function utils.getHandlerNames(handlers)
 	local names = {}
+
 	for _, handler in ipairs(handlers.list) do
 		table.insert(names, handler.name)
 	end

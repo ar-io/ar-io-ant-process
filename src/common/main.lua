@@ -272,7 +272,7 @@ function ant.init()
 			["Process-Id"] = antProcessIdToReassign,
 		})
 	end)
-  
+
 	createActionHandler(ActionMap.ApproveName, function(msg)
 		--- NOTE: this could be modified to allow specific users/controllers to create claims
 		utils.validateOwner(msg.From)

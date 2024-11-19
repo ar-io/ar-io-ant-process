@@ -16,7 +16,6 @@ globals = {
 	"Description",
 	"Keywords",
 	"Denomination",
-	"SourceCodeTxId",
 	"Initialized"
 }
 max_line_length = 185

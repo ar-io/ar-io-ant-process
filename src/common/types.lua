@@ -44,6 +44,5 @@
 --- Denomination: integer,
 --- TotalSupply: integer,
 --- Initialized: boolean,
---- ["Source-Code-TX-ID"|SourceCodeTxId]: string,
 --- Records: table<string, Record>,
 ---}

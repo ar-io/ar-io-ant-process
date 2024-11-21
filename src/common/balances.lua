@@ -9,7 +9,7 @@ local balances = {}
 ---@param to string - The wallet address to transfer the balance to.
 ---@return table<string, integer>
 function balances.transfer(to)
-	utils.validateArweaveId(to)
+	assert(utils.isValidAOAddress(to), "Invalid AO Address")
 	Balances = { [to] = 1 }
 	--luacheck: ignore Owner Controllers
 	Owner = to
@@ -22,7 +22,7 @@ end
 ---@param address string - The wallet address to retrieve the balance from.
 ---@return integer - Returns the balance of the specified wallet.
 function balances.balance(address)
-	utils.validateArweaveId(address)
+	assert(utils.isValidAOAddress(address), "Invalid AO Address")
 	local balance = Balances[address] or 0
 	return balance
 end
@@ -75,7 +75,7 @@ end
 ---@param logo string - The Arweave transaction ID that represents the logo.
 ---@return table<string, string>
 function balances.setLogo(logo)
-	utils.validateArweaveId(logo)
+	assert(utils.isValidArweaveAddress(logo), "Invalid arweave ID")
 	Logo = logo
 	return { Logo = Logo }
 end

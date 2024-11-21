@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Fixed the Remove-Record api to return appropriate notices on calls.
+- Update ID checks to use appropriate regexs and check both arweave and ethereum addresses
 
 <!-- eslint-disable-next-line -->
 

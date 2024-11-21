@@ -6,7 +6,7 @@ local controllers = {}
 ---@param controller string The controller to set.
 ---@return string[]
 function controllers.setController(controller)
-	utils.validateArweaveId(controller)
+	assert(utils.isValidAOAddress(controller), "Invalid AO Address")
 
 	for _, c in ipairs(Controllers) do
 		assert(c ~= controller, "Controller already exists")
@@ -20,7 +20,7 @@ end
 ---@param controller string The controller to remove.
 ---@return string[]
 function controllers.removeController(controller)
-	utils.validateArweaveId(controller)
+	assert(utils.isValidAOAddress(controller), "Invalid AO Address")
 	local controllerExists = false
 
 	for i, v in ipairs(Controllers) do

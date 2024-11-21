@@ -68,18 +68,25 @@ function utils.validateUndername(name)
 	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 end
 
----@param id string
----@description Asserts that the provided id is a valid arweave id
----@example
----```lua
----utils.validateArweaveId("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_-")
----```
-function utils.validateArweaveId(id)
-	-- the provided id matches the regex, and is not nil
-	local validLength = #id == 43
-	local validChars = string.match(id, "^[a-zA-Z0-9_-]+$") ~= nil
-	local valid = validLength and validChars
-	assert(valid, constants.INVALID_ARWEAVE_ID_MESSAGE)
+--- Checks if an address is a valid Arweave address
+--- @param address string The address to check
+--- @return boolean isValidArweaveAddress - whether the address is a valid Arweave address
+function utils.isValidArweaveAddress(address)
+	return type(address) == "string" and #address == 43 and string.match(address, "^[%w-_]+$") ~= nil
+end
+
+--- Checks if an address is a valid Ethereum address
+--- @param address string The address to check
+--- @return boolean isValidEthAddress - whether the address is a valid Ethereum address
+function utils.isValidEthAddress(address)
+	return type(address) == "string" and #address == 42 and string.match(address, "^0x[%x]+$") ~= nil
+end
+
+--- Checks if an address is a valid AO address
+--- @param url string|nil The address to check
+--- @return boolean isValidAOAddress - whether the address is a valid AO address
+function utils.isValidAOAddress(url)
+	return url and (utils.isValidArweaveAddress(url) or utils.isValidEthAddress(url)) or false
 end
 
 ---@param ttl integer

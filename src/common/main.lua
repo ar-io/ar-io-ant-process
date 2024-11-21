@@ -222,7 +222,7 @@ function ant.init()
 
 	createActionHandler(ActionMap.ReleaseName, function(msg)
 		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
 
 		assert(msg.Tags.Name, "Name is required")
 
@@ -247,7 +247,7 @@ function ant.init()
 
 	createActionHandler(ActionMap.ReassignName, function(msg)
 		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["Process-Id"])
+		assert(utils.isValidArweaveAddress(msg.Tags["Process-Id"]), "Invalid Arweave ID")
 
 		assert(msg.Tags.Name, "Name is required")
 
@@ -276,8 +276,8 @@ function ant.init()
 	createActionHandler(ActionMap.ApproveName, function(msg)
 		--- NOTE: this could be modified to allow specific users/controllers to create claims
 		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
-		utils.validateArweaveId(msg.Tags.Recipient)
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
+		assert(utils.isValidAOAddress(msg.Tags.Recipient), "Invalid AO Address")
 
 		assert(msg.Tags.Name, "Name is required")
 
@@ -296,7 +296,7 @@ function ant.init()
 	createActionHandler(ActionMap.RemoveNames, function(msg)
 		--- NOTE: this could be modified to allow specific users/controllers to remove primary names
 		utils.validateOwner(msg.From)
-		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
 
 		assert(msg.Tags.Names, "Names are required")
 

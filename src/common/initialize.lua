@@ -26,7 +26,7 @@ function initialize.initializeANTState(state)
 	for k, v in pairs(records) do
 		utils.validateUndername(k)
 		assert(type(v) == "table", "records values must be tables")
-		utils.validateArweaveId(v.transactionId)
+		assert(utils.isValidArweaveAddress(v.transactionId), "Invalid arweave ID")
 		utils.validateTTLSeconds(v.ttlSeconds)
 	end
 

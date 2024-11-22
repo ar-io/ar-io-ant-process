@@ -135,6 +135,76 @@ describe('aos Balances', async () => {
   });
   it('should get total supply', async () => {
     const res = await getTotalSupply();
-    assert(res, 'total supply should be equal to 1');
+    assert.strictEqual(res, 1, 'total supply should be equal to 1');
+  });
+
+  for (const allowUnsafeAddresses of [false, undefined]) {
+    it(`should transfer when an invalid address is provided and \`Allow-Unsafe-Addresses\` is ${allowUnsafeAddresses}`, async () => {
+      const recipient = 'invalid-address';
+      const senderBalance = await handle({
+        Tags: [{ name: 'Action', value: 'Balance' }],
+      });
+      const senderBalanceData = JSON.parse(senderBalance.Messages[0].Data);
+      const transferResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Transfer' },
+          { name: 'Recipient', value: recipient },
+          { name: 'Cast', value: true },
+          { name: 'Allow-Unsafe-Addresses', value: allowUnsafeAddresses },
+        ],
+      });
+
+      // assert the error tag
+      const errorTag = transferResult.Messages?.[0]?.Tags?.find(
+        (tag) => tag.name === 'Error',
+      );
+      assert.ok(errorTag, 'Error tag should be present');
+
+      const result = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Balances' }],
+        },
+        transferResult.Memory,
+      );
+      const balances = JSON.parse(result.Messages[0].Data);
+
+      assert.equal(balances[recipient], undefined);
+      assert.equal(balances[STUB_ADDRESS], 1);
+    });
+  }
+
+  /**
+   * We allow transfers to addresses that may appear invalid if the `Allow-Unsafe-Addresses` tag is true for several reasons:
+   * 1. To support future address formats and signature schemes that may emerge
+   * 2. To maintain compatibility with new blockchain networks that could be integrated
+   * 3. To avoid breaking changes if address validation rules need to be updated
+   * 4. To give users flexibility in how they structure their addresses
+   * 5. To reduce protocol-level restrictions that could limit innovation
+   */
+  it('should transfer when an invalid address is provided and `Allow-Unsafe-Addresses` is true', async () => {
+    const recipient = 'invalid-address';
+    const senderBalance = await handle({
+      Tags: [{ name: 'Action', value: 'Balance' }],
+    });
+    const senderBalanceData = JSON.parse(senderBalance.Messages[0].Data);
+    const transferResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Transfer' },
+        { name: 'Recipient', value: recipient },
+        { name: 'Cast', value: true },
+        { name: 'Allow-Unsafe-Addresses', value: true },
+      ],
+    });
+
+    // get balances
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Balances' }],
+      },
+      transferResult.Memory,
+    );
+    const balances = JSON.parse(result.Messages[0].Data);
+    assert.strictEqual(balances[recipient], 1);
+    assert.strictEqual(balances[STUB_ADDRESS], undefined);
   });
 });

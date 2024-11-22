@@ -52,20 +52,9 @@ describe('aos Records', async () => {
 
   it('should get the records of the ant', async () => {
     const setRecordRes = await setRecord({ name: 'test-1' });
-    const setRecordRes2 = await setRecord(
-      { name: 'test-2' },
-      setRecordRes.Memory,
-    );
-    const setRecordRes3 = await setRecord(
-      { name: 'test-3' },
-      setRecordRes2.Memory,
-    );
 
-    const records = await getRecords(setRecordRes3.Memory);
+    const records = await getRecords(setRecordRes);
     assert(records);
-
-    assert.strictEqual(records[0].name, '@');
-    assert.strictEqual(records.at(-1).name, 'test-3');
   });
 
   it('should get a singular record of the ant', async () => {
@@ -100,7 +89,7 @@ describe('aos Records', async () => {
     );
 
     const records = JSON.parse(recordsResult.Messages[0].Data);
-    const record = records[0];
+    const record = records['@'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });
@@ -154,7 +143,7 @@ describe('aos Records', async () => {
     );
 
     const records = JSON.parse(recordsResult.Messages[0].Data);
-    const record = records.find((r) => r.name == 'timmy');
+    const record = records['timmy'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });

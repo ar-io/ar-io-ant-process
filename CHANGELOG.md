@@ -12,12 +12,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Calls the IO Network Process to release the specified ArNS name that is registered to the ANT.
 - Reassign-Name Handler
   - Calls the IO Network Process to assign a new ANT Process to the respective name - must be a name registered the the ANT in question.
-- Set-Decription Handler
+- Set-Description Handler
   - Allows for setting the description of the ANT
 - Set-Keywords Handler
   - Allows for setting keywords on the ANT
 - Set-Logo Handler
   - Allows for setting the logo of the ANT
+- Add Approve-Primary-Name handler
+  - Approves a primary name request on the specified IO process ID
+- Add Remove-Primary-Names handler
+  - Forwards a Remove-Primary-Names action to the specified IO process ID
 
 ### Changed
 

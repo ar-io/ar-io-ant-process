@@ -41,6 +41,18 @@ function utils.deepCopy(original)
 	return copy
 end
 
+--- Splits a string by a delimiter
+--- @param input string The string to split
+--- @param delimiter string|nil The delimiter to split by, defaults to ","
+--- @return table The split string
+function utils.splitString(input, delimiter)
+	delimiter = delimiter or ","
+	local result = {}
+	for token in (input or ""):gmatch(string.format("([^%s]+)", delimiter)) do
+		table.insert(result, token)
+	end
+	return result
+end
 -- NOTE: lua 5.3 has limited regex support, particularly for lookaheads and negative lookaheads or use of {n}
 ---@param name string
 ---@description Asserts that the provided name is a valid undername

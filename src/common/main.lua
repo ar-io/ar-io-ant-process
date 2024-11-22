@@ -74,6 +74,8 @@ function ant.init()
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
 		ReassignName = "Reassign-Name",
+		ApproveName = "Approve-Primary-Name",
+		RemoveNames = "Remove-Primary-Names",
 	}
 
 	local TokenSpecActionMap = {
@@ -82,10 +84,6 @@ function ant.init()
 		Balance = "Balance",
 		Transfer = "Transfer",
 		TotalSupply = "Total-Supply",
-		-- not implemented
-		-- CreditNotice = "Credit-Notice",
-		-- Mint = "Mint",
-		-- Burn = "Burn",
 	}
 
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
@@ -224,7 +222,11 @@ function ant.init()
 
 	createActionHandler(ActionMap.ReleaseName, function(msg)
 		utils.validateOwner(msg.From)
-		local name = string.lower(msg.Tags["Name"])
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+
+		assert(msg.Tags.Name, "Name is required")
+
+		local name = string.lower(msg.Tags.Name)
 		local ioProcess = msg.Tags["IO-Process-Id"]
 
 		-- send the release message to the provided IO Process Id
@@ -247,7 +249,9 @@ function ant.init()
 		utils.validateOwner(msg.From)
 		utils.validateArweaveId(msg.Tags["Process-Id"])
 
-		local name = string.lower(msg.Tags["Name"])
+		assert(msg.Tags.Name, "Name is required")
+
+		local name = string.lower(msg.Tags.Name)
 		local ioProcess = msg.Tags["IO-Process-Id"]
 		local antProcessIdToReassign = msg.Tags["Process-Id"]
 
@@ -262,11 +266,50 @@ function ant.init()
 
 		ao.send({
 			Target = msg.From,
-			-- This is out of our pattern, should be <action>-Notice
-			Action = "Reassign-Name-Submit-Notice",
+			Action = "Reassign-Name-Notice",
 			Initiator = msg.From,
 			Name = name,
 			["Process-Id"] = antProcessIdToReassign,
+		})
+	end)
+
+	createActionHandler(ActionMap.ApproveName, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to create claims
+		utils.validateOwner(msg.From)
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+		utils.validateArweaveId(msg.Tags.Recipient)
+
+		assert(msg.Tags.Name, "Name is required")
+
+		local name = string.lower(msg.Tags.Name)
+		local recipient = msg.Tags.Recipient
+		local ioProcess = msg.Tags["IO-Process-Id"]
+
+		ao.send({
+			Target = ioProcess,
+			Action = "Approve-Primary-Name-Request",
+			Name = name,
+			Recipient = recipient,
+		})
+	end)
+
+	createActionHandler(ActionMap.RemoveNames, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to remove primary names
+		utils.validateOwner(msg.From)
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+
+		assert(msg.Tags.Names, "Names are required")
+
+		local ioProcess = msg.Tags["IO-Process-Id"]
+		local names = utils.splitString(msg.Tags.Names)
+		for _, name in ipairs(names) do
+			utils.validateUndername(name)
+		end
+
+		ao.send({
+			Target = ioProcess,
+			Action = "Remove-Primary-Names",
+			Names = json.encode(names),
 		})
 	end)
 end

@@ -60,6 +60,8 @@ describe('aos Info', async () => {
       'state',
       'releaseName',
       'reassignName',
+      'approvePrimaryName',
+      'removePrimaryNames',
     ]);
   });
 

@@ -4,9 +4,10 @@ local controllers = {}
 
 --- Set a controller.
 ---@param controller string The controller to set.
+---@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
 ---@return string[]
-function controllers.setController(controller)
-	assert(utils.isValidAOAddress(controller), "Invalid AO Address")
+function controllers.setController(controller, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(controller, allowUnsafeAddresses), "Invalid AO Address")
 
 	for _, c in ipairs(Controllers) do
 		assert(c ~= controller, "Controller already exists")
@@ -18,9 +19,10 @@ end
 
 --- Remove a controller.
 ---@param controller string The controller to remove.
+---@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
 ---@return string[]
-function controllers.removeController(controller)
-	assert(utils.isValidAOAddress(controller), "Invalid AO Address")
+function controllers.removeController(controller, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(controller, allowUnsafeAddresses), "Invalid AO Address")
 	local controllerExists = false
 
 	for i, v in ipairs(Controllers) do

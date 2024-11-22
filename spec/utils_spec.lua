@@ -77,17 +77,17 @@ end)
 
 describe("utils.isValidAOAddress", function()
 	it("should throw an error for invalid Arweave IDs", function()
-		local invalid = utils.isValidAOAddress("invalid-arweave-id-123")
+		local invalid = utils.isValidAOAddress("invalid-arweave-id-123", false)
 		assert.is_false(invalid)
 	end)
 
 	it("should not throw an error for a valid Arweave ID", function()
-		local valid = pcall(utils.isValidAOAddress, "0E7Ai_rEQ326_vLtgB81XHViFsLlcwQNqlT9ap24uQI")
+		local valid = pcall(utils.isValidAOAddress, "0E7Ai_rEQ326_vLtgB81XHViFsLlcwQNqlT9ap24uQI", false)
 		assert.is_true(valid)
 	end)
 
 	it("should validate eth address", function()
-		assert.is_true(utils.isValidAOAddress(testEthAddress))
+		assert.is_true(utils.isValidAOAddress(testEthAddress, false))
 	end)
 end)
 

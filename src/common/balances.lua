@@ -7,9 +7,10 @@ local balances = {}
 
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
+---@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
 ---@return table<string, integer>
-function balances.transfer(to)
-	assert(utils.isValidAOAddress(to), "Invalid AO Address")
+function balances.transfer(to, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(to, allowUnsafeAddresses), "Invalid AO Address")
 	Balances = { [to] = 1 }
 	--luacheck: ignore Owner Controllers
 	Owner = to
@@ -20,9 +21,10 @@ end
 
 --- Retrieves the balance of a specified wallet.
 ---@param address string - The wallet address to retrieve the balance from.
+---@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
 ---@return integer - Returns the balance of the specified wallet.
-function balances.balance(address)
-	assert(utils.isValidAOAddress(address), "Invalid AO Address")
+function balances.balance(address, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(address, allowUnsafeAddresses), "Invalid AO Address")
 	local balance = Balances[address] or 0
 	return balance
 end

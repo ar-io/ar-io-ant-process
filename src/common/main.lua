@@ -89,7 +89,7 @@ function ant.init()
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
 		local recipient = msg.Tags.Recipient
 		utils.validateOwner(msg.From)
-		balances.transfer(recipient)
+		balances.transfer(recipient, msg.Tags["Allow-Unsafe-Addresses"])
 		if not msg.Cast then
 			ao.send(notices.debit(msg))
 			ao.send(notices.credit(msg))
@@ -97,7 +97,7 @@ function ant.init()
 	end)
 
 	createActionHandler(TokenSpecActionMap.Balance, function(msg)
-		local balRes = balances.balance(msg.Tags.Recipient or msg.From)
+		local balRes = balances.balance(msg.Tags.Recipient or msg.From, msg.Tags["Allow-Unsafe-Addresses"])
 
 		ao.send({
 			Target = msg.From,
@@ -148,12 +148,12 @@ function ant.init()
 
 	createActionHandler(ActionMap.AddController, function(msg)
 		utils.assertHasPermission(msg.From)
-		return controllers.setController(msg.Tags.Controller)
+		return controllers.setController(msg.Tags.Controller, msg.Tags["Allow-Unsafe-Addresses"])
 	end)
 
 	createActionHandler(ActionMap.RemoveController, function(msg)
 		utils.assertHasPermission(msg.From)
-		return controllers.removeController(msg.Tags.Controller)
+		return controllers.removeController(msg.Tags.Controller, msg.Tags["Allow-Unsafe-Addresses"])
 	end)
 
 	createActionHandler(ActionMap.Controllers, function()
@@ -276,8 +276,9 @@ function ant.init()
 	createActionHandler(ActionMap.ApproveName, function(msg)
 		--- NOTE: this could be modified to allow specific users/controllers to create claims
 		utils.validateOwner(msg.From)
+
 		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
-		assert(utils.isValidAOAddress(msg.Tags.Recipient), "Invalid AO Address")
+		assert(utils.isValidAOAddress(msg.Tags.Recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid AO Address")
 
 		assert(msg.Tags.Name, "Name is required")
 

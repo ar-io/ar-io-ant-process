@@ -84,6 +84,8 @@ describe('Registry Updates', async () => {
       From: STUB_ADDRESS,
     });
 
+    console.dir(result, { depth: null });
+
     const message = result.Messages[1]?.Tags.find(
       (tag) => tag.name === 'Action' && tag.value === 'Credit-Notice',
     );

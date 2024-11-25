@@ -85,7 +85,7 @@ describe('Primary Names', async () => {
 
     assert.strictEqual(removePrimaryNamesMsg.Target, ''.padEnd(43, '2'));
     assert.strictEqual(actionTag.value, 'Remove-Primary-Names');
-    assert.strictEqual(namesTag.value, JSON.stringify(names));
+    assert.strictEqual(namesTag.value, names.join(','));
   });
   it('should not send remove names request if caller not owner', async () => {
     const names = ['foo', 'bar', 'baz'];

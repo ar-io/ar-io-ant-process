@@ -309,7 +309,7 @@ function ant.init()
 		ao.send({
 			Target = ioProcess,
 			Action = "Remove-Primary-Names",
-			Names = json.encode(names),
+			Names = msg.Tags.Names,
 		})
 	end)
 end

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [8] - [XP9_LFTae8C0yvCb_DUJaC5LXaiZIbiGT1yY25X0JCg] - (2024-11-25)
+
 ### Added
 
 - Release-Name Handler

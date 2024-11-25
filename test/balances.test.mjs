@@ -22,6 +22,28 @@ describe('aos Balances', async () => {
     );
   }
 
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
+  }
+
+  async function getTotalSupply(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Total-Supply' }],
+      },
+      mem,
+    );
+
+    return result.Messages[0].Data;
+  }
+
   it('should fetch the owner balance', async () => {
     const result = await handle({
       Tags: [
@@ -29,7 +51,6 @@ describe('aos Balances', async () => {
         { name: 'Recipient', value: STUB_ADDRESS },
       ],
     });
-
     const ownerBalance = result.Messages[0].Data;
     assert(ownerBalance === 1);
   });
@@ -98,5 +119,22 @@ describe('aos Balances', async () => {
         (tag) => tag.name === 'Recipient' && tag.value === recipient,
       ),
     );
+  });
+
+  it('should set the logo of the ant', async () => {
+    const logo = 'my-logo-'.padEnd(43, '0');
+    const result = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Logo' },
+        { name: 'Logo', value: logo },
+      ],
+    });
+
+    const info = await getInfo(result.Memory);
+    assert(info.Logo === logo, 'Failed to set logo');
+  });
+  it('should get total supply', async () => {
+    const res = await getTotalSupply();
+    assert(res, 'total supply should be equal to 1');
   });
 });

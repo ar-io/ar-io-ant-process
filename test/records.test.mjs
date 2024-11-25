@@ -4,6 +4,7 @@ import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
+  STUB_ADDRESS,
 } from '../tools/constants.mjs';
 
 describe('aos Records', async () => {
@@ -21,14 +22,39 @@ describe('aos Records', async () => {
     );
   }
 
-  it('should get the records of the ant', async () => {
-    const result = await handle({
-      Tags: [{ name: 'Action', value: 'Records' }],
-    });
+  async function setRecord(
+    { name, ttl = 3600, transactionId = STUB_ADDRESS },
+    mem,
+  ) {
+    return handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: name },
+          { name: 'TTL-Seconds', value: ttl },
+          { name: 'Transaction-Id', value: transactionId },
+        ],
+      },
+      mem,
+    );
+  }
 
-    const records = JSON.parse(result.Messages[0].Data);
+  async function getRecords(mem) {
+    const res = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Records' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(res.Messages[0].Data);
+  }
+
+  it('should get the records of the ant', async () => {
+    const setRecordRes = await setRecord({ name: 'test-1' });
+
+    const records = await getRecords(setRecordRes);
     assert(records);
-    assert(records['@']);
   });
 
   it('should get a singular record of the ant', async () => {
@@ -62,7 +88,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
-    const record = JSON.parse(recordsResult.Messages[0].Data)['@'];
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records['@'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });
@@ -115,7 +142,8 @@ describe('aos Records', async () => {
       setRecordResult.Memory,
     );
 
-    const record = JSON.parse(recordsResult.Messages[0].Data)['timmy'];
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records['timmy'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });

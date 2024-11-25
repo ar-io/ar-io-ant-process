@@ -5,25 +5,51 @@ function ant.init()
 	-- utils
 	local json = require(".common.json")
 	local utils = require(".common.utils")
-	local camel = utils.camelCase
+	local notices = require(".common.notices")
+	local createActionHandler = utils.createActionHandler
+
 	-- spec modules
 	local balances = require(".common.balances")
 	local initialize = require(".common.initialize")
 	local records = require(".common.records")
 	local controllers = require(".common.controllers")
 
+	---@alias Owner string
+	---@description The owner of the ANT
 	Owner = Owner or ao.env.Process.Owner
+	---@alias Balances table<string, integer>
+	---@description The list of balances for the ANT
 	Balances = Balances or { [Owner] = 1 }
+	---@alias Controllers table<integer, string>
+	---@description The list of controllers for the ANT
 	Controllers = Controllers or { Owner }
 
+	---@alias Name string
+	---@description The name of the ANT
 	Name = Name or "Arweave Name Token"
+	---@alias Ticker string
+	---@description The ticker symbol of the ANT
 	Ticker = Ticker or "ANT"
+	---@alias Logo string
+	---@description Arweave transaction ID that is the logo of the ANT
 	Logo = Logo or "Sie_26dvgyok0PZD_-iQAFOhOd5YxDTkczOLoqTTL_A"
+	---@alias Description string
+	---@description A brief description of this ANT up to 255 characters
+	Description = Description or "A brief description of this ANT."
+	---@alias Keywords string[]
+	---@description A list of keywords that describe this ANT. Each keyword must be a string, unique, and less than 32 characters. There can be up to 16 keywords
+	Keywords = Keywords or {}
+	---@alias Denomination integer
+	---@description The denomination of the ANT - this is set to 0 to denote integer values
 	Denomination = Denomination or 0
+	---@alias TotalSupply integer
+	---@description The total supply of the ANT - this is set to 1 to denote single ownership
 	TotalSupply = TotalSupply or 1
+	---@alias Initialized boolean
+	---@description Whether the ANT has been initialized with the
 	Initialized = Initialized or false
-	-- INSERT placeholder used by build script to inject the appropriate ID
-	SourceCodeTxId = SourceCodeTxId or "__INSERT_SOURCE_CODE_ID__"
+	---@alias AntRegistryId string
+	---@description The Arweave ID of the ANT Registry contract that this ANT is registered with
 	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
 
 	local ActionMap = {
@@ -34,6 +60,9 @@ function ant.init()
 		RemoveRecord = "Remove-Record",
 		SetName = "Set-Name",
 		SetTicker = "Set-Ticker",
+		SetDescription = "Set-Description",
+		SetKeywords = "Set-Keywords",
+		SetLogo = "Set-Logo",
 		--- initialization method for bootstrapping the contract from other platforms ---
 		InitializeState = "Initialize-State",
 		-- read
@@ -42,6 +71,11 @@ function ant.init()
 		Records = "Records",
 		State = "State",
 		Evolve = "Evolve",
+		-- IO Network Contract Handlers
+		ReleaseName = "Release-Name",
+		ReassignName = "Reassign-Name",
+		ApproveName = "Approve-Primary-Name",
+		RemoveNames = "Remove-Primary-Names",
 	}
 
 	local TokenSpecActionMap = {
@@ -50,118 +84,57 @@ function ant.init()
 		Balance = "Balance",
 		Transfer = "Transfer",
 		TotalSupply = "Total-Supply",
-		CreditNotice = "Credit-Notice",
-		-- not implemented
-		Mint = "Mint",
-		Burn = "Burn",
 	}
 
-	Handlers.add(
-		camel(TokenSpecActionMap.Transfer),
-		utils.hasMatchingTag("Action", TokenSpecActionMap.Transfer),
-		function(msg)
-			local recipient = msg.Tags.Recipient
-			local function checkAssertions()
-				utils.validateOwner(msg.From)
-			end
-
-			local inputStatus, inputResult = pcall(checkAssertions)
-
-			if not inputStatus then
-				ao.send({
-					Target = msg.From,
-					Tags = { Action = "Invalid-Transfer-Notice", Error = "Transfer-Error" },
-					Data = tostring(inputResult),
-					["Message-Id"] = msg.Id,
-				})
-				return
-			end
-			local transferStatus, transferResult = pcall(balances.transfer, recipient)
-
-			if not transferStatus then
-				ao.send({
-					Target = msg.From,
-					Tags = { Action = "Invalid-Transfer-Notice", Error = "Transfer-Error" },
-					["Message-Id"] = msg.Id,
-					Data = tostring(transferResult),
-				})
-				return
-			elseif not msg.Cast then
-				ao.send(utils.notices.debit(msg))
-				ao.send(utils.notices.credit(msg))
-				utils.notices.notifyState(msg, AntRegistryId)
-				return
-			end
-			ao.send({
-				Target = msg.From,
-				Data = transferResult,
-			})
-			utils.notices.notifyState(msg, AntRegistryId)
+	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
+		local recipient = msg.Tags.Recipient
+		utils.validateOwner(msg.From)
+		balances.transfer(recipient)
+		if not msg.Cast then
+			ao.send(notices.debit(msg))
+			ao.send(notices.credit(msg))
 		end
-	)
+	end)
 
-	Handlers.add(
-		camel(TokenSpecActionMap.Balance),
-		utils.hasMatchingTag("Action", TokenSpecActionMap.Balance),
-		function(msg)
-			local balStatus, balRes = pcall(balances.balance, msg.Tags.Recipient or msg.From)
-			if not balStatus then
-				ao.send({
-					Target = msg.From,
-					Tags = { Action = "Invalid-Balance-Notice", Error = "Balance-Error" },
-					["Message-Id"] = msg.Id,
-					Data = tostring(balRes),
-				})
-			else
-				ao.send({
-					Target = msg.From,
-					Action = "Balance-Notice",
-					Balance = tostring(balRes),
-					Ticker = Ticker,
-					Address = msg.Tags.Recipient or msg.From,
-					Data = balRes,
-				})
-			end
-		end
-	)
+	createActionHandler(TokenSpecActionMap.Balance, function(msg)
+		local balRes = balances.balance(msg.Tags.Recipient or msg.From)
 
-	Handlers.add(
-		camel(TokenSpecActionMap.Balances),
-		utils.hasMatchingTag("Action", TokenSpecActionMap.Balances),
-		function(msg)
-			ao.send({
-				Target = msg.From,
-				Action = "Balances-Notice",
-				Data = balances.balances(),
-			})
-		end
-	)
+		ao.send({
+			Target = msg.From,
+			Action = "Balance-Notice",
+			Balance = tostring(balRes),
+			Ticker = Ticker,
+			Address = msg.Tags.Recipient or msg.From,
+			Data = balRes,
+		})
+	end)
 
-	Handlers.add(
-		camel(TokenSpecActionMap.TotalSupply),
-		utils.hasMatchingTag("Action", TokenSpecActionMap.TotalSupply),
-		function(msg)
-			assert(msg.From ~= ao.id, "Cannot call Total-Supply from the same process!")
+	createActionHandler(TokenSpecActionMap.Balances, function()
+		return balances.balances()
+	end)
 
-			ao.send({
-				Target = msg.From,
-				Action = "Total-Supply-Notice",
-				Data = TotalSupply,
-				Ticker = Ticker,
-			})
-		end
-	)
+	createActionHandler(TokenSpecActionMap.TotalSupply, function(msg)
+		assert(msg.From ~= ao.id, "Cannot call Total-Supply from the same process!")
 
-	Handlers.add(camel(TokenSpecActionMap.Info), utils.hasMatchingTag("Action", TokenSpecActionMap.Info), function(msg)
+		ao.send({
+			Target = msg.From,
+			Action = "Total-Supply-Notice",
+			Data = TotalSupply,
+			Ticker = Ticker,
+		})
+	end)
+
+	createActionHandler(TokenSpecActionMap.Info, function(msg)
 		local info = {
 			Name = Name,
 			Ticker = Ticker,
 			["Total-Supply"] = tostring(TotalSupply),
 			Logo = Logo,
+			Description = Description,
+			Keywords = Keywords,
 			Denomination = tostring(Denomination),
 			Owner = Owner,
 			Handlers = utils.getHandlerNames(Handlers),
-			["Source-Code-TX-ID"] = SourceCodeTxId,
 		}
 		ao.send({
 			Target = msg.From,
@@ -173,283 +146,172 @@ function ant.init()
 
 	-- ActionMap (ANT Spec)
 
-	Handlers.add(camel(ActionMap.AddController), utils.hasMatchingTag("Action", ActionMap.AddController), function(msg)
-		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
-		if assertHasPermission == false then
-			return ao.send({
-				Target = msg.From,
-				Action = "Invalid-Add-Controller-Notice",
-				Error = "Add-Controller-Error",
-				["Message-Id"] = msg.Id,
-				Data = permissionErr,
-			})
-		end
-		local controllerStatus, controllerRes = pcall(controllers.setController, msg.Tags.Controller)
-		if not controllerStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Add-Controller-Notice",
-				Error = "Add-Controller-Error",
-				["Message-Id"] = msg.Id,
-				Data = controllerRes,
-			})
-			return
-		end
-		ao.send({ Target = msg.From, Action = "Add-Controller-Notice", Data = controllerRes })
-		utils.notices.notifyState(msg, AntRegistryId)
+	createActionHandler(ActionMap.AddController, function(msg)
+		utils.assertHasPermission(msg.From)
+		return controllers.setController(msg.Tags.Controller)
 	end)
 
-	Handlers.add(
-		camel(ActionMap.RemoveController),
-		utils.hasMatchingTag("Action", ActionMap.RemoveController),
-		function(msg)
-			local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
-			if assertHasPermission == false then
-				return ao.send({
-					Target = msg.From,
-					Action = "Invalid-Remove-Controller-Notice",
-					Data = permissionErr,
-					Error = "Remove-Controller-Error",
-					["Message-Id"] = msg.Id,
-				})
-			end
-			local removeStatus, removeRes = pcall(controllers.removeController, msg.Tags.Controller)
-			if not removeStatus then
-				ao.send({
-					Target = msg.From,
-					Action = "Invalid-Remove-Controller-Notice",
-					Data = removeRes,
-					Error = "Remove-Controller-Error",
-					["Message-Id"] = msg.Id,
-				})
-				return
-			end
-
-			ao.send({ Target = msg.From, Action = "Remove-Controller-Notice", Data = removeRes })
-			utils.notices.notifyState(msg, AntRegistryId)
-		end
-	)
-
-	Handlers.add(camel(ActionMap.Controllers), utils.hasMatchingTag("Action", ActionMap.Controllers), function(msg)
-		ao.send({ Target = msg.From, Action = "Controllers-Notice", Data = controllers.getControllers() })
+	createActionHandler(ActionMap.RemoveController, function(msg)
+		utils.assertHasPermission(msg.From)
+		return controllers.removeController(msg.Tags.Controller)
 	end)
 
-	Handlers.add(camel(ActionMap.SetRecord), utils.hasMatchingTag("Action", ActionMap.SetRecord), function(msg)
-		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
-		if assertHasPermission == false then
-			return ao.send({
-				Target = msg.From,
-				Action = "Invalid-Set-Record-Notice",
-				Data = permissionErr,
-				Error = "Set-Record-Error",
-				["Message-Id"] = msg.Id,
-			})
-		end
+	createActionHandler(ActionMap.Controllers, function()
+		return controllers.getControllers()
+	end)
+
+	createActionHandler(ActionMap.SetRecord, function(msg)
+		utils.assertHasPermission(msg.From)
 		local tags = msg.Tags
 		local name, transactionId, ttlSeconds =
 			string.lower(tags["Sub-Domain"]), tags["Transaction-Id"], tonumber(tags["TTL-Seconds"])
-
-		local setRecordStatus, setRecordResult = pcall(records.setRecord, name, transactionId, ttlSeconds)
-		if not setRecordStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Set-Record-Notice",
-				Data = setRecordResult,
-				Error = "Set-Record-Error",
-				["Message-Id"] = msg.Id,
-			})
-			return
-		end
-
-		ao.send({ Target = msg.From, Action = "Set-Record-Notice", Data = setRecordResult })
+		assert(ttlSeconds, "Missing ttl seconds")
+		return records.setRecord(name, transactionId, ttlSeconds)
 	end)
 
-	Handlers.add(camel(ActionMap.RemoveRecord), utils.hasMatchingTag("Action", ActionMap.RemoveRecord), function(msg)
-		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
-		if assertHasPermission == false then
-			return ao.send({ Target = msg.From, Action = "Invalid-Remove-Record-Notice", Data = permissionErr })
-		end
-		local name = string.lower(msg.Tags["Sub-Domain"])
-		local removeRecordStatus, removeRecordResult = pcall(records.removeRecord, name)
-		if not removeRecordStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Remove-Record-Notice",
-				Data = removeRecordResult,
-				Error = "Remove-Record-Error",
-				["Message-Id"] = msg.Id,
-			})
-		else
-			ao.send({ Target = msg.From, Data = removeRecordResult })
-		end
+	createActionHandler(ActionMap.RemoveRecord, function(msg)
+		utils.assertHasPermission(msg.From)
+		return records.removeRecord(string.lower(msg.Tags["Sub-Domain"]))
 	end)
 
-	Handlers.add(camel(ActionMap.Record), utils.hasMatchingTag("Action", ActionMap.Record), function(msg)
+	createActionHandler(ActionMap.Record, function(msg)
 		local name = string.lower(msg.Tags["Sub-Domain"])
-		local nameStatus, nameRes = pcall(records.getRecord, name)
-		if not nameStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Record-Notice",
-				Data = nameRes,
-				Error = "Record-Error",
-				["Message-Id"] = msg.Id,
-			})
-			return
-		end
+		return records.getRecord(name)
+	end)
 
-		local recordNotice = {
-			Target = msg.From,
-			Action = "Record-Notice",
+	createActionHandler(ActionMap.Records, function()
+		return records.getRecords()
+	end)
+
+	createActionHandler(ActionMap.SetName, function(msg)
+		utils.assertHasPermission(msg.From)
+		return balances.setName(msg.Tags.Name)
+	end)
+
+	createActionHandler(ActionMap.SetTicker, function(msg)
+		utils.assertHasPermission(msg.From)
+		return balances.setTicker(msg.Tags.Ticker)
+	end)
+
+	createActionHandler(ActionMap.SetDescription, function(msg)
+		utils.assertHasPermission(msg.From)
+		return balances.setDescription(msg.Tags.Description)
+	end)
+
+	createActionHandler(ActionMap.SetKeywords, function(msg)
+		utils.assertHasPermission(msg.From)
+		local success, keywords = pcall(json.decode, msg.Tags.Keywords)
+		assert(success and type(keywords) == "table", "Invalid JSON format for keywords")
+		return balances.setKeywords(keywords)
+	end)
+
+	createActionHandler(ActionMap.SetLogo, function(msg)
+		utils.assertHasPermission(msg.From)
+		return balances.setLogo(msg.Logo)
+	end)
+
+	createActionHandler(ActionMap.InitializeState, function(msg)
+		return initialize.initializeANTState(msg.Data)
+	end)
+
+	createActionHandler(ActionMap.State, function(msg)
+		notices.notifyState(msg, msg.From)
+	end)
+
+	-- IO Network Contract Handlers
+
+	createActionHandler(ActionMap.ReleaseName, function(msg)
+		utils.validateOwner(msg.From)
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+
+		assert(msg.Tags.Name, "Name is required")
+
+		local name = string.lower(msg.Tags.Name)
+		local ioProcess = msg.Tags["IO-Process-Id"]
+
+		-- send the release message to the provided IO Process Id
+		ao.send({
+			Target = ioProcess,
+			Action = "Release-Name",
+			Initiator = msg.From,
 			Name = name,
-			Data = nameRes,
-		}
+		})
 
-		-- Add forwarded tags to the credit and debit notice messages
-		for tagName, tagValue in pairs(msg) do
-			-- Tags beginning with "X-" are forwarded
-			if string.sub(tagName, 1, 2) == "X-" then
-				recordNotice[tagName] = tagValue
-			end
-		end
-
-		-- Send Record-Notice
-		ao.send(recordNotice)
-	end)
-
-	Handlers.add(camel(ActionMap.Records), utils.hasMatchingTag("Action", ActionMap.Records), function(msg)
-		local records = records.getRecords()
-
-		-- Credit-Notice message template, that is sent to the Recipient of the transfer
-		local recordsNotice = {
+		ao.send({
 			Target = msg.From,
-			Action = "Records-Notice",
-			Data = records,
-		}
-
-		-- Add forwarded tags to the records notice messages
-		for tagName, tagValue in pairs(msg) do
-			-- Tags beginning with "X-" are forwarded
-			if string.sub(tagName, 1, 2) == "X-" then
-				recordsNotice[tagName] = tagValue
-			end
-		end
-
-		-- Send Records-Notice
-		ao.send(recordsNotice)
+			Action = "Release-Name-Notice",
+			Initiator = msg.From,
+			Name = name,
+		})
 	end)
 
-	Handlers.add(camel(ActionMap.SetName), utils.hasMatchingTag("Action", ActionMap.SetName), function(msg)
-		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
-		if assertHasPermission == false then
-			return ao.send({
-				Target = msg.From,
-				Action = "Invalid-Set-Name-Notice",
-				Data = permissionErr,
-				Error = "Set-Name-Error",
-				["Message-Id"] = msg.Id,
-			})
-		end
-		local nameStatus, nameRes = pcall(balances.setName, msg.Tags.Name)
-		if not nameStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Set-Name-Notice",
-				Data = nameRes,
-				Error = "Set-Name-Error",
-				["Message-Id"] = msg.Id,
-			})
-			return
-		end
-		ao.send({ Target = msg.From, Action = "Set-Name-Notice", Data = nameRes })
+	createActionHandler(ActionMap.ReassignName, function(msg)
+		utils.validateOwner(msg.From)
+		utils.validateArweaveId(msg.Tags["Process-Id"])
+
+		assert(msg.Tags.Name, "Name is required")
+
+		local name = string.lower(msg.Tags.Name)
+		local ioProcess = msg.Tags["IO-Process-Id"]
+		local antProcessIdToReassign = msg.Tags["Process-Id"]
+
+		-- send the release message to the provided IO Process Id
+		ao.send({
+			Target = ioProcess,
+			Action = "Reassign-Name",
+			Initiator = msg.From,
+			Name = name,
+			["Process-Id"] = antProcessIdToReassign,
+		})
+
+		ao.send({
+			Target = msg.From,
+			Action = "Reassign-Name-Notice",
+			Initiator = msg.From,
+			Name = name,
+			["Process-Id"] = antProcessIdToReassign,
+		})
 	end)
 
-	Handlers.add(camel(ActionMap.SetTicker), utils.hasMatchingTag("Action", ActionMap.SetTicker), function(msg)
-		local assertHasPermission, permissionErr = pcall(utils.assertHasPermission, msg.From)
-		if assertHasPermission == false then
-			return ao.send({
-				Target = msg.From,
-				Action = "Invalid-Set-Ticker-Notice",
-				Data = permissionErr,
-				Error = "Set-Ticker-Error",
-				["Message-Id"] = msg.Id,
-			})
-		end
-		local tickerStatus, tickerRes = pcall(balances.setTicker, msg.Tags.Ticker)
-		if not tickerStatus then
-			ao.send({
-				Target = msg.From,
-				Action = "Invalid-Set-Ticker-Notice",
-				Data = tickerRes,
-				Error = "Set-Ticker-Error",
-				["Message-Id"] = msg.Id,
-			})
-			return
-		end
+	createActionHandler(ActionMap.ApproveName, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to create claims
+		utils.validateOwner(msg.From)
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
+		utils.validateArweaveId(msg.Tags.Recipient)
 
-		ao.send({ Target = msg.From, Action = "Set-Ticker-Notice", Data = tickerRes })
+		assert(msg.Tags.Name, "Name is required")
+
+		local name = string.lower(msg.Tags.Name)
+		local recipient = msg.Tags.Recipient
+		local ioProcess = msg.Tags["IO-Process-Id"]
+
+		ao.send({
+			Target = ioProcess,
+			Action = "Approve-Primary-Name-Request",
+			Name = name,
+			Recipient = recipient,
+		})
 	end)
 
-	Handlers.add(
-		camel(ActionMap.InitializeState),
-		utils.hasMatchingTag("Action", ActionMap.InitializeState),
-		function(msg)
-			assert(msg.From == Owner, "Only the owner can initialize the state")
-			local initStatus, result = pcall(initialize.initializeANTState, msg.Data)
+	createActionHandler(ActionMap.RemoveNames, function(msg)
+		--- NOTE: this could be modified to allow specific users/controllers to remove primary names
+		utils.validateOwner(msg.From)
+		utils.validateArweaveId(msg.Tags["IO-Process-Id"])
 
-			if not initStatus then
-				ao.send({
-					Target = msg.From,
-					Action = "Invalid-Initialize-State-Notice",
-					Data = result,
-					Error = "Initialize-State-Error",
-					["Message-Id"] = msg.Id,
-				})
-				return
-			else
-				ao.send({ Target = msg.From, Action = "Initialize-State-Notice", Data = result })
-				utils.notices.notifyState(msg, AntRegistryId)
-			end
+		assert(msg.Tags.Names, "Names are required")
+
+		local ioProcess = msg.Tags["IO-Process-Id"]
+		local names = utils.splitString(msg.Tags.Names)
+		for _, name in ipairs(names) do
+			utils.validateUndername(name)
 		end
-	)
-	Handlers.add(camel(ActionMap.State), utils.hasMatchingTag("Action", ActionMap.State), function(msg)
-		utils.notices.notifyState(msg, msg.From)
+
+		ao.send({
+			Target = ioProcess,
+			Action = "Remove-Primary-Names",
+			Names = msg.Tags.Names,
+		})
 	end)
-
-	Handlers.prepend(
-		camel(ActionMap.Evolve),
-		Handlers.utils.continue(utils.hasMatchingTag("Action", "Eval")),
-		function(msg)
-			local srcCodeTxId = msg.Tags["Source-Code-TX-ID"]
-			if not srcCodeTxId then
-				return
-			end
-
-			if Owner ~= msg.From then
-				ao.send({
-					Target = msg.From,
-					Action = "Invalid-Evolve-Notice",
-					Error = "Evolve-Error",
-					["Message-Id"] = msg.Id,
-					Data = "Only the Owner [" .. Owner or "no owner set" .. "] can call Evolve",
-				})
-				return
-			end
-
-			local srcCodeTxIdStatus, srcCodeTxIdResult = pcall(utils.validateArweaveId, srcCodeTxId)
-			if srcCodeTxIdStatus and not srcCodeTxIdStatus then
-				ao.send({
-					Target = msg.From,
-					Action = "Invalid-Evolve-Notice",
-					Error = "Evolve-Error",
-					["Message-Id"] = msg.Id,
-					Data = "Source-Code-TX-ID is required",
-				})
-				return
-			end
-			SourceCodeTxId = srcCodeTxId
-		end
-	)
 end
 
 return ant

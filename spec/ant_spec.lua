@@ -6,29 +6,13 @@ local json = require("src.common.json")
 
 local fake_address = "1111111111111111111111111111111111111111111"
 
-_G.ao = {
-	send = function()
-		return true
-	end,
-	id = "test",
-}
-_G.Balances = { [fake_address] = 1 }
-_G.Records = {}
-_G.Controllers = { fake_address }
-_G.Name = "Arweave Name Token"
-_G.Ticker = "ANT"
-_G.Logo = "LOGO"
-_G.Denomination = 1
-
-os.clock = function()
-	return 0
-end
-
 local originalState = {
 	name = "Arweave Name Token",
 	ticker = "ANT",
+	description = "ANT's description",
+	keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" },
 	controllers = { fake_address },
-	records = { ["@"] = { transactionId = "test", ttlSeconds = 900 } },
+	records = { ["@"] = { transactionId = fake_address, ttlSeconds = 900 } },
 	balances = { [fake_address] = 1 },
 	owner = fake_address,
 }
@@ -40,11 +24,11 @@ describe("Arweave Name Token", function()
 		_G.Controllers = { fake_address }
 		_G.Name = "Arweave Name Token"
 		_G.Ticker = "ANT"
+		_G.Description = "ANT's description"
+		_G.Keywords = { "KEYWORD-1", "KEYWORD-2", "KEYWORD-3" }
+		_G.Denomination = 1
+		_G.Logo = ""
 	end)
-
-	setup(function() end)
-
-	teardown(function() end)
 
 	it("Initializes the state of the process", function()
 		initialize.initializeANTState(json.encode(originalState)) -- happy
@@ -54,6 +38,8 @@ describe("Arweave Name Token", function()
 		assert.are.same(_G.Controllers, originalState.controllers)
 		assert.are.same(_G.Name, originalState.name)
 		assert.are.same(_G.Ticker, originalState.ticker)
+		assert.are.same(_G.Description, originalState.description)
+		assert.are.same(_G.Keywords, originalState.keywords)
 	end)
 
 	it("Transfers tokens between accounts", function()
@@ -97,6 +83,16 @@ describe("Arweave Name Token", function()
 		assert.are.same(_G.Records["@"].ttlSeconds, 900)
 	end)
 
+	it("gets all records", function()
+		_G.Records["@"] = {
+			transactionId = string.rep("1", 43),
+			ttlSeconds = 3600,
+		}
+		local recordEntries = records.getRecords()
+
+		assert(recordEntries["@"])
+	end)
+
 	it("removes a record", function()
 		local name = "@"
 		records.removeRecord(name) -- happy path
@@ -116,5 +112,82 @@ describe("Arweave Name Token", function()
 		balances.setTicker(newTicker) -- happy path
 
 		assert.are.same(_G.Ticker, newTicker)
+	end)
+
+	it("sets the description", function()
+		local newDescription = "NEW DESCRIPTION"
+		balances.setDescription(newDescription) -- happy path
+
+		assert.are.same(_G.Description, newDescription)
+	end)
+
+	it("sets the keywords", function()
+		local newKeywords = { "NEW-KEYWORD-1", "NEW-KEYWORD-2", "NEW-KEYWORD-3" }
+		balances.setKeywords(newKeywords) -- setKeywords now handles JSON string
+
+		assert.are.same(_G.Keywords, newKeywords)
+	end)
+
+	-- Test when too many keywords are provided
+	it("throws an error if keywords exceed 16 elements", function()
+		local tooManyKeywords = {}
+		for i = 1, 17 do -- 17 keywords, exceeds limit
+			table.insert(tooManyKeywords, "keyword" .. i)
+		end
+		assert.has_error(function()
+			balances.setKeywords(tooManyKeywords)
+		end, "There must not be more than 16 keywords")
+	end)
+
+	-- Test when any keyword is too long
+	it("throws an error if any keyword is too long", function()
+		local keywordsWithLongEntry = { "valid", string.rep("a", 33) } -- Second keyword is 33 characters long
+		assert.has_error(function()
+			balances.setKeywords(keywordsWithLongEntry)
+		end, "Each keyword must not be longer than 32 characters")
+	end)
+
+	-- Test when any keyword contains spaces
+	it("throws an error if any keyword contains spaces", function()
+		local keywordsWithSpace = { "valid", "invalid keyword" } -- Contains a space
+		assert.has_error(function()
+			balances.setKeywords(keywordsWithSpace)
+		end, "Keywords must not contain spaces")
+	end)
+
+	-- Test when keywords contain invalid characters
+	it("throws an error if keywords contain invalid characters", function()
+		local keywordsWithSpecialChars = { "valid", "inva!lid" } -- Contains special character '!'
+		assert.has_error(function()
+			balances.setKeywords(keywordsWithSpecialChars)
+		end, "Keywords must only contain alphanumeric characters, dashes, underscores, #, or @")
+	end)
+
+	-- Test when any keyword is duplicated
+	it("throws an error if any keyword is duplicated", function()
+		local keywordsWithDuplicates = { "keyword", "keyword" } -- Duplicate keyword
+		assert.has_error(function()
+			balances.setKeywords(keywordsWithDuplicates)
+		end, "Duplicate keyword detected: keyword")
+	end)
+
+	-- Test when the keywords array is not actually an array
+	it("throws an error if the keywords array is not actually an array", function()
+		local notAnArray = "not-an-array"
+		assert.has_error(function()
+			balances.setKeywords(notAnArray)
+		end, "Keywords must be an array")
+	end)
+
+	it("should set the logo", function()
+		local logo = string.rep("1", 43)
+		balances.setLogo(logo)
+		assert.are.same(logo, _G.Logo)
+	end)
+	it("should not set the logo with invalid id", function()
+		local logo = string.rep("1", 42)
+		assert.has_error(function()
+			balances.setLogo(logo)
+		end)
 	end)
 end)

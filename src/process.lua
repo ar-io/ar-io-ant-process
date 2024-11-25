@@ -29,21 +29,6 @@ function Send(msg)
 	_ao.send(msg)
 	return "message added to outbox"
 end
-
-function Spawn(module, msg)
-	if not msg then
-		msg = {}
-	end
-
-	_ao.spawn(module, msg)
-	return "spawn process request"
-end
-
-function Assign(assignment)
-	_ao.assign(assignment)
-	return "assignment added to outbox"
-end
-
 function Tab(msg)
 	local inputs = {}
 	for _, o in ipairs(msg.Tags) do

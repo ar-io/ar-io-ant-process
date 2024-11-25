@@ -29,15 +29,16 @@ describe('aos Info', async () => {
     const processInfo = JSON.parse(result.Messages[0].Data);
     assert(processInfo.Name);
     assert(processInfo.Ticker);
+    assert(processInfo.Description);
+    assert(processInfo.Keywords);
     assert(processInfo['Total-Supply']);
     assert(processInfo.Denomination !== undefined);
     assert(processInfo.Logo);
     assert(processInfo.Owner);
     assert(processInfo.Handlers);
     assert.deepStrictEqual(processInfo.Handlers, [
-      'evolve',
       '_eval',
-      '_default',
+    '_default',
       'transfer',
       'balance',
       'balances',
@@ -52,8 +53,15 @@ describe('aos Info', async () => {
       'records',
       'setName',
       'setTicker',
+      'setDescription',
+      'setKeywords',
+      'setLogo',
       'initializeState',
       'state',
+      'releaseName',
+      'reassignName',
+      'approvePrimaryName',
+      'removePrimaryNames',
     ]);
   });
 
@@ -93,6 +101,51 @@ describe('aos Info', async () => {
     assert(info.Ticker === 'TEST');
   });
 
+  it('should set the description of the process', async () => {
+    const setDescriptionResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Description' },
+        { name: 'Description', value: 'NEW DESCRIPTION' },
+      ],
+    });
+
+    const infoResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      setDescriptionResult.Memory,
+    );
+    const info = JSON.parse(infoResult.Messages[0].Data);
+    assert(info.Description === 'NEW DESCRIPTION');
+  });
+
+  it('should set the keywords of the process', async () => {
+    const setKeywordsResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Keywords' },
+        {
+          name: 'Keywords',
+          value: JSON.stringify(['keyword1', 'keyword2', 'keyword3']),
+        },
+      ],
+    });
+
+    // Assuming an 'Info' action retrieves the current state of the process
+    const infoResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      setKeywordsResult.Memory, // Use the updated memory from the setKeywordsResult
+    );
+
+    const info = JSON.parse(infoResult.Messages[0].Data);
+    assert.deepEqual(
+      info.Keywords,
+      ['keyword1', 'keyword2', 'keyword3'],
+      'Keywords do not match expected values',
+    );
+  });
+
   it('should get state', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'State' }],
@@ -105,6 +158,8 @@ describe('aos Info', async () => {
     assert(state.Controllers);
     assert(state.Owner);
     assert(state.Ticker);
+    assert(state.Description);
+    assert(state.Keywords);
     assert(state.Name);
   });
 });

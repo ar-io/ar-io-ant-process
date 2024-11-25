@@ -4,6 +4,50 @@ This repository contains the source code used for Arweave Name Tokens used to re
 
 This repository provides two flavours of ANT process module, AOS and a custom module.
 
+<!-- toc -->
+
+- [Setup](#setup)
+  - [Install](#install)
+  - [Testing](#testing)
+  - [Building the AOS code](#building-the-aos-code)
+    - [Build](#build)
+    - [Publish](#publish)
+    - [Load](#load)
+    - [Spawn](#spawn)
+- [Handler Methods](#handler-methods)
+  - [Read Methods](#read-methods)
+    - [`Info`](#info)
+    - [`Total-Supply`](#total-supply)
+    - [`State`](#state)
+    - [`Records`](#records)
+    - [`Record`](#record)
+    - [`Controllers`](#controllers)
+    - [`Balance`](#balance)
+    - [`Balances`](#balances)
+  - [Write methods](#write-methods)
+    - [`Transfer`](#transfer)
+    - [`Set-Record`](#set-record)
+    - [`Set-Name`](#set-name)
+    - [`Set-Ticker`](#set-ticker)
+    - [`Set-Description`](#set-description)
+    - [`Set-Logo`](#set-logo)
+    - [`Set-Keywords`](#set-keywords)
+    - [`Add-Controller`](#add-controller)
+    - [`Remove-Controller`](#remove-controller)
+    - [`Remove-Record`](#remove-record)
+    - [`Release-Name`](#release-name)
+    - [`Reassign-Name`](#reassign-name)
+- [Developers](#developers)
+  - [Requirements](#requirements)
+  - [Lua Setup (MacOS)](#lua-setup-macos)
+  - [LuaRocks Setup](#luarocks-setup)
+  - [aos](#aos)
+  - [Code Formatting](#code-formatting)
+  - [Testing](#testing-1)
+  - [Dependencies](#dependencies)
+
+<!-- tocstop -->
+
 ## Setup
 
 ### Install
@@ -67,44 +111,6 @@ yarn aos:spawn
 
 This will deploy the bundled lua file to arweave as an L1 transaction, so your wallet will need AR to pay the gas.
 
-### Building the custom module
-
-Using the ao-dev-cli.
-
-#### Build
-
-This will compile the standalone ANT module to wasm, as a file named `process.wasm` and loads the module in [AO Loader](https://github.com/permaweb/ao/tree/main/loader) to validate the WASM program is valid.
-
-```bash
-yarn module:build
-```
-
-#### Publish
-
-Publishes the custom ANT module to arweave - requires you placed your JWK in the `tools` directory. May require AR in the wallet to pay gas.
-
-```sh
-yarn module:publish
-```
-
-#### Load
-
-Loads the module in [AO Loader](https://github.com/permaweb/ao/tree/main/loader) to validate the WASM program is valid.
-
-```bash
-yarn module:load
-```
-
-Requires `module:build` to have been called so that `process.wasm` exists.
-
-#### Spawn
-
-Spawns a process with the `process.wasm` file.
-
-```bash
-yarn module:spawn
-```
-
 ## Handler Methods
 
 For interacting with handlers please refer to the [AO Cookbook]
@@ -119,30 +125,59 @@ Retrieves the Name, Ticker, Total supply, Logo, Denomination, and Owner of the A
 | -------- | ------ | ------- | -------- | --------------------------------- |
 | Action   | string | "Info"  | true     | Action tag for triggering handler |
 
-#### `Get-Records`
+#### `Total-Supply`
+
+Retrieves total supply of the ANT.
+
+| Tag Name | Type   | Pattern        | Required | Description                       |
+| -------- | ------ | -------------- | -------- | --------------------------------- |
+| Action   | string | "Total-Supply" | true     | Action tag for triggering handler |
+
+#### `State`
+
+Retrieves the entire state of the ANT, which includes:
+
+- Records
+- Controllers
+- Balances
+- Owner
+- Name
+- Ticker
+- Logo
+- Description
+- Keywords
+- Denomination
+- TotalSupply
+- Initialized
+
+| Tag Name | Type   | Pattern | Required | Description                       |
+| -------- | ------ | ------- | -------- | --------------------------------- |
+| Action   | string | "State" | true     | Action tag for triggering handler |
+
+#### `Records`
 
 Retrieves all the records configured on the ANT
 
-| Tag Name | Type   | Pattern       | Required | Description                       |
-| -------- | ------ | ------------- | -------- | --------------------------------- |
-| Action   | string | "Get-Records" | true     | Action tag for triggering handler |
+| Tag Name | Type   | Pattern   | Required | Description                       |
+| -------- | ------ | --------- | -------- | --------------------------------- |
+| Action   | string | "Records" | true     | Action tag for triggering handler |
 
-#### `Get-Record`
+#### `Record`
 
 Retrieves and individual record by name.
 
 | Tag Name   | Type   | Pattern                   | Required | Description                       |
 | ---------- | ------ | ------------------------- | -------- | --------------------------------- |
-| Action     | string | "Get-Record"              | true     | Action tag for triggering handler |
+| Action     | string | "Record"                  | true     | Action tag for triggering handler |
 | Sub-Domain | string | "^(?:[a-zA-Z0-9_-]+\|@)$" | true     | Subdomain you which to read       |
 
-#### `Get-Controllers`
+#### `Controllers`
 
 Retrieves all the controllers on the ANT.
 
-| Tag Name | Type   | Pattern           | Required | Description                       |
-| -------- | ------ | ----------------- | -------- | --------------------------------- |
-| Action   | string | "Get-Controllers" | true     | Action tag for triggering handler |
+| Tag Name | Type   | Pattern       | Required | Description                       |
+| -------- | ------ | ------------- | -------- | --------------------------------- |
+| Action   | string | "Controllers" | true     | Action tag for triggering handler |
 
 #### `Balance`
 
@@ -201,13 +236,40 @@ Sets the ticker symbol for the ANT.
 | Action   | string | "Set-Ticker" | true     | Action tag for triggering handler |
 | Ticker   | string | N/A          | true     | New ticker symbol for ANT.        |
 
-#### `Set-Controller`
+#### `Set-Description`
+
+Sets the description for the ANT.
+
+| Tag Name    | Type   | Pattern            | Required | Description                       |
+| ----------- | ------ | ------------------ | -------- | --------------------------------- |
+| Action      | string | "Set-Description"  | true     | Action tag for triggering handler |
+| Description | string | Max 512 characters | true     | New description for ANT.          |
+
+#### `Set-Logo`
+
+Sets the logo for the ANT.
+
+| Tag Name | Type   | Pattern               | Required | Description                       |
+| -------- | ------ | --------------------- | -------- | --------------------------------- |
+| Action   | string | "Set-Logo"            | true     | Action tag for triggering handler |
+| Logo     | string | "^[a-zA-Z0-9_-]{43}$" | true     | ID of new logo for ANT.           |
+
+#### `Set-Keywords`
+
+Sets the keywords for the ANT.
+
+| Tag Name | Type   | Pattern                                                          | Required | Description                       |
+| -------- | ------ | ---------------------------------------------------------------- | -------- | --------------------------------- |
+| Action   | string | "Set-Keywords"                                                   | true     | Action tag for triggering handler |
+| Keywords | table  | "^[%w-_#@]+$", max 32 characters, max 16 keywords, min 1 keyword | true     | New keywords for ANT.             |
+
+#### `Add-Controller`
 
 Adds a new controller to the ANT.
 
 | Tag Name   | Type   | Pattern               | Required | Description                       |
 | ---------- | ------ | --------------------- | -------- | --------------------------------- |
-| Action     | string | "Set-Controller"      | true     | Action tag for triggering handler |
+| Action     | string | "Add-Controller"      | true     | Action tag for triggering handler |
 | Controller | string | "^[a-zA-Z0-9_-]{43}$" | true     | Address of the new controller.    |
 
 #### `Remove-Controller`
@@ -227,6 +289,26 @@ Removes a record from the ANT.
 | ---------- | ------ | ------------------------- | -------- | ---------------------------------- |
 | Action     | string | "Remove-Record"           | true     | Action tag for triggering handler  |
 | Sub-Domain | string | "^(?:[a-zA-Z0-9_-]+\|@)$" | true     | Subdomain of the record to remove. |
+
+#### `Release-Name`
+
+Calls the IO Network process to release the given ArNS name if that name is associated with the ANT.
+
+| Tag Name | Type   | Pattern             | Required | Description                       |
+| -------- | ------ | ------------------- | -------- | --------------------------------- |
+| Action   | string | "Release-Name"      | true     | Action tag for triggering handler |
+| Name     | string | "^([a-zA-Z0-9_-])$" | true     | ArNS name to release              |
+
+#### `Reassign-Name`
+
+Calls the IO Network process to reassign the given ArNS name to a new ANT ID if that name is associated with the ANT.
+
+| Tag Name      | Type   | Pattern               | Required | Description                                          |
+| ------------- | ------ | --------------------- | -------- | ---------------------------------------------------- |
+| Action        | string | "Reassign-Name"       | true     | Action tag for triggering handler                    |
+| IO-Process-Id | string | "^[a-zA-Z0-9_-]{43}$" | true     | ID of the IO Network Process to reassign the name on |
+| Process-Id    | string | "^[a-zA-Z0-9_-]{43}$" | true     | ID of the new ANT to assign to the ArNS name         |
+| Name          | string | "^([a-zA-Z0-9_-])$"   | true     | Subdomain of the record to remove.                   |
 
 ## Developers
 

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [8] - [XP9_LFTae8C0yvCb_DUJaC5LXaiZIbiGT1yY25X0JCg] - (2024-11-25)
+
 ### Added
 
 - Release-Name Handler
@@ -27,7 +29,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Refactored handlers to use a util that codifies responses on calls.
 - Added documentation with luadoc types for improved linting.
-- Records are now returned as an alphabetically sorted array of [{name, transactionId, ttlSeconds}] with the '@' record being the first.
 - Removed `Evolve` handler and SourceCodeTxId from state and state responses.
 
 ### Fixed

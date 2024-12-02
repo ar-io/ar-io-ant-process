@@ -309,8 +309,8 @@ function utils.createHandler(tagName, tagValue, handler, position)
 
 			local hasNewOwner = Owner ~= prevOwner
 			local hasDifferentControllers = #utils.keys(Controllers) ~= #utils.keys(prevControllers)
-			if (hasNewOwner or hasDifferentControllers) and tagValue ~= "State" then
-				notices.notifyState(msg, msg.From)
+			if (hasNewOwner or hasDifferentControllers) and tagValue ~= "State" and AntRegistryId ~= nil then
+				notices.notifyState(msg, AntRegistryId)
 			end
 
 			return handlerRes

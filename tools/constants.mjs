@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 const STUB_PROCESS_ID = 'process-id-'.padEnd(43, '1');
 const STUB_ADDRESS = 'arweave-address-'.padEnd(43, '1');
+export const STUB_ANT_REGISTRY_ID = 'ant-registry-'.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
 const AO_LOADER_HANDLER_ENV = {
   Process: {
@@ -14,7 +15,7 @@ const AO_LOADER_HANDLER_ENV = {
     Owner: STUB_ADDRESS,
     Tags: [
       { name: 'Authority', value: 'XXXXXX' },
-      { name: 'ANT-Registry-Id', value: 'ant-registry-'.padEnd(43, '1') },
+      { name: 'ANT-Registry-Id', value: STUB_ANT_REGISTRY_ID },
     ],
   },
   Module: {

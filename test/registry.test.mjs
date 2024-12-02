@@ -5,6 +5,7 @@ import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
   STUB_ADDRESS,
+  STUB_ANT_REGISTRY_ID,
 } from '../tools/constants.mjs';
 
 describe('Registry Updates', async () => {
@@ -94,5 +95,6 @@ describe('Registry Updates', async () => {
     );
 
     assert(notifyMessage, 'State-Notice message not found');
+    assert.strictEqual(result.Messages[2]?.Target, STUB_ANT_REGISTRY_ID);
   });
 });

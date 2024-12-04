@@ -5,6 +5,7 @@ import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
   STUB_ADDRESS,
+  STUB_ETH_ADDRESS,
 } from '../tools/constants.mjs';
 
 describe('aos Controllers', async () => {
@@ -22,6 +23,15 @@ describe('aos Controllers', async () => {
     );
   }
 
+  async function getControllers(mem = startMemory) {
+    return handle(
+      {
+        Tags: [{ name: 'Action', value: 'Controllers' }],
+      },
+      mem,
+    );
+  }
+
   it('should get the controllers', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Controllers' }],
@@ -31,40 +41,68 @@ describe('aos Controllers', async () => {
     assert(controllers);
     assert(controllers.includes(STUB_ADDRESS));
   });
-
-  it('should add the controller', async () => {
-    const controller = ''.padEnd(43, '2');
-    const result = await handle({
-      Tags: [
-        { name: 'Action', value: 'Add-Controller' },
-        { name: 'Controller', value: controller },
-      ],
-    });
-
-    assert(JSON.parse(result.Messages[0].Data).includes(controller), true);
-  });
-
-  it('should remove the controller', async () => {
-    const result = await handle({
-      Tags: [
-        { name: 'Action', value: 'Remove-Controller' },
-        { name: 'Controller', value: STUB_ADDRESS },
-      ],
-    });
-    assert(result);
-
-    const addControllerResult = await handle(
-      {
+  const stubController = ''.padEnd(43, 'controller');
+  for (const [target_address, allowUnsafe, shouldPass] of [
+    [stubController, undefined, true],
+    [stubController, true, true],
+    [stubController, false, true],
+    [STUB_ETH_ADDRESS, undefined, true],
+    [STUB_ETH_ADDRESS, true, true],
+    [STUB_ETH_ADDRESS, false, true],
+    ['invalid-address', true, true],
+    ['invalid-address', false, false],
+    ['invalid-address', false, false],
+  ]) {
+    it(`should ${shouldPass ? 'add' : 'not add'} the controller ${target_address}`, async () => {
+      const result = await handle({
         Tags: [
           { name: 'Action', value: 'Add-Controller' },
-          { name: 'Controller', value: STUB_ADDRESS },
+          { name: 'Controller', value: target_address },
+          { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
         ],
-      },
-      result.Memory,
-    );
-    assert.equal(
-      JSON.parse(addControllerResult.Messages[0].Data).includes(STUB_ADDRESS),
-      true,
-    );
-  });
+      });
+
+      if (shouldPass === true) {
+        assert(
+          JSON.parse(result.Messages[0].Data).includes(target_address),
+          shouldPass,
+        );
+      } else {
+        assert.strictEqual(
+          result.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
+          'Add-Controller-Error',
+        );
+      }
+    });
+
+    it(`should remove the controller ${target_address}`, async () => {
+      const addControllerResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Add-Controller' },
+          { name: 'Controller', value: target_address },
+          { name: 'Allow-Unsafe-Addresses', value: true },
+        ],
+      });
+
+      const removeControllerResult = await handle(
+        {
+          Tags: [
+            { name: 'Action', value: 'Remove-Controller' },
+            { name: 'Controller', value: target_address },
+          ],
+        },
+        addControllerResult.Memory,
+      );
+
+      const controllersRes = await getControllers(
+        removeControllerResult.Memory,
+      );
+      if (shouldPass) {
+        assert.strictEqual(
+          !JSON.parse(controllersRes.Messages[0].Data).includes(target_address),
+          shouldPass,
+        );
+      }
+    });
+  }
 });

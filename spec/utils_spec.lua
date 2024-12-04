@@ -1,6 +1,8 @@
 -- spec/utils_spec.lua
 local utils = require(".common.utils")
 
+local testEthAddress = "0xFCAd0B19bB29D4674531d6f115237E16AfCE377c"
+
 describe("utils.camelCase", function()
 	it("should convert snake_case to camelCase", function()
 		assert.are.equal(utils.camelCase("start_end"), "startEnd")
@@ -42,17 +44,50 @@ describe("utils.camelCase", function()
 	end)
 end)
 
-describe("utils.validateArweaveId", function()
+describe("isValidEthAddress", function()
+	it("should validate eth address", function()
+		assert.is_true(utils.isValidEthAddress(testEthAddress))
+	end)
+
+	it("should fail on non-hexadecimal character ", function()
+		-- invalid non-hexadecimal G character
+		assert.is_false(utils.isValidEthAddress("0xFCAd0B19bB29D4674531d6f115237E16AfCE377G"))
+	end)
+
+	it("should return false on an an invalid-length address", function()
+		assert.is_false(utils.isValidEthAddress("0xFCAd0B19bB29D4674531d6f115237E16AfCE37"))
+	end)
+
+	it("should return false on passing in non-string value", function()
+		assert.is_false(utils.isValidEthAddress(3))
+	end)
+end)
+
+describe("utils.isValidArweaveAddress", function()
 	it("should throw an error for invalid Arweave IDs", function()
-		local invalid, error = pcall(utils.validateArweaveId, "invalid-arweave-id-123")
+		local invalid = utils.isValidArweaveAddress("invalid-arweave-id-123")
 		assert.is_false(invalid)
-		assert.is_not_nil(error)
 	end)
 
 	it("should not throw an error for a valid Arweave ID", function()
-		local valid, error = pcall(utils.validateArweaveId, "0E7Ai_rEQ326_vLtgB81XHViFsLlcwQNqlT9ap24uQI")
+		local valid = utils.isValidArweaveAddress("0E7Ai_rEQ326_vLtgB81XHViFsLlcwQNqlT9ap24uQI")
 		assert.is_true(valid)
-		assert.is_nil(error)
+	end)
+end)
+
+describe("utils.isValidAOAddress", function()
+	it("should throw an error for invalid Arweave IDs", function()
+		local invalid = utils.isValidAOAddress("invalid-arweave-id-123", false)
+		assert.is_false(invalid)
+	end)
+
+	it("should not throw an error for a valid Arweave ID", function()
+		local valid = pcall(utils.isValidAOAddress, "0E7Ai_rEQ326_vLtgB81XHViFsLlcwQNqlT9ap24uQI", false)
+		assert.is_true(valid)
+	end)
+
+	it("should validate eth address", function()
+		assert.is_true(utils.isValidAOAddress(testEthAddress, false))
 	end)
 end)
 

@@ -5,11 +5,14 @@ local utils = require(".common.utils")
 
 local balances = {}
 
+---@alias AllowUnsafeAddresses boolean Whether to allow unsafe addresses
+
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
+---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return table<string, integer>
-function balances.transfer(to)
-	utils.validateArweaveId(to)
+function balances.transfer(to, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(to, allowUnsafeAddresses), "Invalid AO Address")
 	Balances = { [to] = 1 }
 	--luacheck: ignore Owner Controllers
 	Owner = to
@@ -20,9 +23,10 @@ end
 
 --- Retrieves the balance of a specified wallet.
 ---@param address string - The wallet address to retrieve the balance from.
+---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return integer - Returns the balance of the specified wallet.
-function balances.balance(address)
-	utils.validateArweaveId(address)
+function balances.balance(address, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(address, allowUnsafeAddresses), "Invalid AO Address")
 	local balance = Balances[address] or 0
 	return balance
 end
@@ -75,7 +79,7 @@ end
 ---@param logo string - The Arweave transaction ID that represents the logo.
 ---@return table<string, string>
 function balances.setLogo(logo)
-	utils.validateArweaveId(logo)
+	assert(utils.isValidArweaveAddress(logo), "Invalid arweave ID")
 	Logo = logo
 	return { Logo = Logo }
 end

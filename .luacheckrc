@@ -1,6 +1,7 @@
 allow_defined = true
 exclude_files = {
 	"dist/",
+	"src/common/crypto"
 }
 globals = {
 	"Handlers",

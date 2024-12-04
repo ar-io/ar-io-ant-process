@@ -19,10 +19,9 @@ end
 
 --- Remove a controller.
 ---@param controller string The controller to remove.
----@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
 ---@return string[]
-function controllers.removeController(controller, allowUnsafeAddresses)
-	assert(utils.isValidAOAddress(controller, allowUnsafeAddresses), "Invalid AO Address")
+function controllers.removeController(controller)
+	assert(type(controller) == "string", "Controller must be a string")
 	local controllerExists = false
 
 	for i, v in ipairs(Controllers) do
@@ -33,7 +32,7 @@ function controllers.removeController(controller, allowUnsafeAddresses)
 		end
 	end
 
-	assert(controllerExists ~= nil, "Controller does not exist")
+	assert(controllerExists ~= false, "Controller does not exist")
 	return Controllers
 end
 

@@ -75,12 +75,12 @@ describe('aos Controllers', async () => {
       }
     });
 
-    it(`should ${shouldPass ? 'remove' : 'not remove'} the controller ${target_address}`, async () => {
+    it(`should remove the controller ${target_address}`, async () => {
       const addControllerResult = await handle({
         Tags: [
           { name: 'Action', value: 'Add-Controller' },
           { name: 'Controller', value: target_address },
-          { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
+          { name: 'Allow-Unsafe-Addresses', value: true },
         ],
       });
 
@@ -89,26 +89,18 @@ describe('aos Controllers', async () => {
           Tags: [
             { name: 'Action', value: 'Remove-Controller' },
             { name: 'Controller', value: target_address },
-            { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
           ],
         },
         addControllerResult.Memory,
       );
 
-      if (shouldPass === true) {
-        const controllersRes = await getControllers(
-          removeControllerResult.Memory,
-        );
+      const controllersRes = await getControllers(
+        removeControllerResult.Memory,
+      );
+      if (shouldPass) {
         assert.strictEqual(
           !JSON.parse(controllersRes.Messages[0].Data).includes(target_address),
           shouldPass,
-        );
-      } else {
-        assert.strictEqual(
-          removeControllerResult.Messages[0].Tags.find(
-            (t) => t.name === 'Error',
-          )?.value,
-          'Remove-Controller-Error',
         );
       }
     });

@@ -153,7 +153,7 @@ function ant.init()
 
 	createActionHandler(ActionMap.RemoveController, function(msg)
 		utils.assertHasPermission(msg.From)
-		return controllers.removeController(msg.Tags.Controller, msg.Tags["Allow-Unsafe-Addresses"])
+		return controllers.removeController(msg.Tags.Controller)
 	end)
 
 	createActionHandler(ActionMap.Controllers, function()

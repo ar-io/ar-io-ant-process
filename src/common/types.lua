@@ -46,3 +46,5 @@
 --- Initialized: boolean,
 --- Records: table<string, Record>,
 ---}
+
+---@alias AllowUnsafeAddresses boolean Whether to allow unsafe addresses

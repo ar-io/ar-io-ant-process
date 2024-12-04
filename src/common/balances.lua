@@ -5,9 +5,11 @@ local utils = require(".common.utils")
 
 local balances = {}
 
+---@alias AllowUnsafeAddresses boolean Whether to allow unsafe addresses
+
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
----@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
+---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return table<string, integer>
 function balances.transfer(to, allowUnsafeAddresses)
 	assert(utils.isValidAOAddress(to, allowUnsafeAddresses), "Invalid AO Address")
@@ -21,7 +23,7 @@ end
 
 --- Retrieves the balance of a specified wallet.
 ---@param address string - The wallet address to retrieve the balance from.
----@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
+---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return integer - Returns the balance of the specified wallet.
 function balances.balance(address, allowUnsafeAddresses)
 	assert(utils.isValidAOAddress(address, allowUnsafeAddresses), "Invalid AO Address")

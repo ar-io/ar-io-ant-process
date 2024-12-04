@@ -4,7 +4,7 @@ local controllers = {}
 
 --- Set a controller.
 ---@param controller string The controller to set.
----@param allowUnsafeAddresses boolean Whether to allow unsafe addresses
+---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return string[]
 function controllers.setController(controller, allowUnsafeAddresses)
 	assert(utils.isValidAOAddress(controller, allowUnsafeAddresses), "Invalid AO Address")

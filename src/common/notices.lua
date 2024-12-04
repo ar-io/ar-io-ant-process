@@ -6,6 +6,9 @@ local notices = {}
 --- @description Add forwarded tags to the new message
 --- @return AoMessage
 function notices.addForwardedTags(oldMsg, newMsg)
+	if oldMsg.Cast then
+		return newMsg
+	end
 	for tagName, tagValue in pairs(oldMsg) do
 		-- Tags beginning with "X-" are forwarded
 		if string.sub(tagName, 1, 2) == "X-" then

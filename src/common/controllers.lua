@@ -4,9 +4,10 @@ local controllers = {}
 
 --- Set a controller.
 ---@param controller string The controller to set.
+---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return string[]
-function controllers.setController(controller)
-	utils.validateArweaveId(controller)
+function controllers.setController(controller, allowUnsafeAddresses)
+	assert(utils.isValidAOAddress(controller, allowUnsafeAddresses), "Invalid AO Address")
 
 	for _, c in ipairs(Controllers) do
 		assert(c ~= controller, "Controller already exists")
@@ -20,7 +21,7 @@ end
 ---@param controller string The controller to remove.
 ---@return string[]
 function controllers.removeController(controller)
-	utils.validateArweaveId(controller)
+	assert(type(controller) == "string", "Controller must be a string")
 	local controllerExists = false
 
 	for i, v in ipairs(Controllers) do
@@ -31,7 +32,7 @@ function controllers.removeController(controller)
 		end
 	end
 
-	assert(controllerExists ~= nil, "Controller does not exist")
+	assert(controllerExists ~= false, "Controller does not exist")
 	return Controllers
 end
 

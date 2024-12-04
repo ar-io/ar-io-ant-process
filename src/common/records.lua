@@ -10,7 +10,7 @@ Records = Records or { ["@"] = { transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3Mn
 ---@return Record
 function records.setRecord(name, transactionId, ttlSeconds)
 	utils.validateUndername(name)
-	utils.validateArweaveId(transactionId)
+	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
 
 	local recordsCount = #Records

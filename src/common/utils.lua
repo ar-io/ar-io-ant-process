@@ -1,4 +1,5 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
+local crypto = require(".common.crypto.init")
 local constants = require(".common.constants")
 local json = require(".common.json")
 local notices = require(".common.notices")
@@ -68,18 +69,77 @@ function utils.validateUndername(name)
 	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 end
 
----@param id string
----@description Asserts that the provided id is a valid arweave id
----@example
----```lua
----utils.validateArweaveId("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_-")
----```
-function utils.validateArweaveId(id)
-	-- the provided id matches the regex, and is not nil
-	local validLength = #id == 43
-	local validChars = string.match(id, "^[a-zA-Z0-9_-]+$") ~= nil
-	local valid = validLength and validChars
-	assert(valid, constants.INVALID_ARWEAVE_ID_MESSAGE)
+--- Checks if an address is a valid Arweave address
+--- @param address string The address to check
+--- @return boolean isValidArweaveAddress - whether the address is a valid Arweave address
+function utils.isValidArweaveAddress(address)
+	return type(address) == "string" and #address == 43 and string.match(address, "^[%w-_]+$") ~= nil
+end
+
+--- Checks if an address is a valid Ethereum address
+--- @param address string The address to check
+--- @return boolean isValidEthAddress - whether the address is a valid Ethereum address
+function utils.isValidEthAddress(address)
+	return type(address) == "string" and #address == 42 and string.match(address, "^0x[%x]+$") ~= nil
+end
+
+function utils.isValidUnsafeAddress(address)
+	if not address then
+		return false
+	end
+	local match = string.match(address, "^[%w_-]+$")
+	return match ~= nil and #address >= 1 and #address <= 128
+end
+
+--- Checks if an address is a valid AO address
+--- @param address string|nil The address to check
+--- @param allowUnsafe boolean Whether to allow unsafe addresses, defaults to false
+--- @return boolean isValidAddress - whether the address is valid, depending on the allowUnsafe flag
+function utils.isValidAOAddress(address, allowUnsafe)
+	allowUnsafe = allowUnsafe or false -- default to false, only allow unsafe addresses if explicitly set
+	if not address then
+		return false
+	end
+	if allowUnsafe then
+		return utils.isValidUnsafeAddress(address)
+	end
+	return utils.isValidArweaveAddress(address) or utils.isValidEthAddress(address)
+end
+
+--- Converts an address to EIP-55 checksum format
+--- Assumes address has been validated as a valid Ethereum address (see utils.isValidEthAddress)
+--- Reference: https://eips.ethereum.org/EIPS/eip-55
+--- @param address string The address to convert
+--- @return string formattedAddress - the EIP-55 checksum formatted address
+function utils.formatEIP55Address(address)
+	local hex = string.lower(string.sub(address, 3))
+
+	local hash = crypto.digest.keccak256(hex)
+	local hashHex = hash.asHex()
+
+	local checksumAddress = "0x"
+
+	for i = 1, #hashHex do
+		local hexChar = string.sub(hashHex, i, i)
+		local hexCharValue = tonumber(hexChar, 16)
+		local char = string.sub(hex, i, i)
+		if hexCharValue > 7 then
+			char = string.upper(char)
+		end
+		checksumAddress = checksumAddress .. char
+	end
+
+	return checksumAddress
+end
+
+--- Formats an address to EIP-55 checksum format if it is a valid Ethereum address
+--- @param address string The address to format
+--- @return string formattedAddress - the EIP-55 checksum formatted address
+function utils.formatAddress(address)
+	if utils.isValidEthAddress(address) then
+		return utils.formatEIP55Address(address)
+	end
+	return address
 end
 
 ---@param ttl integer
@@ -208,7 +268,20 @@ function utils.createHandler(tagName, tagValue, handler, position)
 		utils.camelCase(tagValue),
 		Handlers.utils.continue(Handlers.utils.hasMatchingTag(tagName, tagValue)),
 		function(msg)
-			-- sometimes the message id is not present on dryrun
+			-- handling for eth EIP-55 format, returns address if is not eth address
+			msg.From = utils.formatAddress(msg.From)
+			local knownAddressTags = {
+				"Recipient",
+				"Controller",
+			}
+			for _, tName in ipairs(knownAddressTags) do
+				-- Format all incoming addresses
+				msg.Tags[tName] = msg.Tags[tName] and utils.formatAddress(msg.Tags[tName]) or nil
+				-- aos assigns tag values to the base message level as well
+				msg[tName] = msg[tName] and utils.formatAddress(msg[tName]) or nil
+			end
+
+			-- sometimes the message id is not present on dryrun so we add a stub string to prevent issues with concat string
 			print("Handling Action [" .. msg.Id or "no-msg-id" .. "]: " .. tagValue)
 			local prevOwner = tostring(Owner)
 			local prevControllers = utils.deepCopy(Controllers)

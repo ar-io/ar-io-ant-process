@@ -5,11 +5,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const STUB_PROCESS_ID = 'process-id-'.padEnd(43, '1');
-const STUB_ADDRESS = 'arweave-address-'.padEnd(43, '1');
+export const STUB_PROCESS_ID = 'process-id-'.padEnd(43, '1');
+export const STUB_ADDRESS = 'arweave-address-'.padEnd(43, '1');
+export const STUB_ETH_ADDRESS = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c';
 export const STUB_ANT_REGISTRY_ID = 'ant-registry-'.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
-const AO_LOADER_HANDLER_ENV = {
+export const AO_LOADER_HANDLER_ENV = {
   Process: {
     Id: STUB_PROCESS_ID,
     Owner: STUB_ADDRESS,
@@ -24,7 +25,7 @@ const AO_LOADER_HANDLER_ENV = {
   },
 };
 
-const AO_LOADER_OPTIONS = {
+export const AO_LOADER_OPTIONS = {
   format: 'wasm64-unknown-emscripten-draft_2024_02_15',
   inputEncoding: 'JSON-1',
   outputEncoding: 'JSON-1',
@@ -33,19 +34,19 @@ const AO_LOADER_OPTIONS = {
   extensions: [],
 };
 
-const AOS_WASM = fs.readFileSync(
+export const AOS_WASM = fs.readFileSync(
   path.join(
     __dirname,
     'fixtures/aos-cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk.wasm',
   ),
 );
 
-const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
+export const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
   path.join(__dirname, '../dist/aos-bundled.lua'),
   'utf-8',
 );
 
-const DEFAULT_ANT_STATE = JSON.stringify({
+export const DEFAULT_ANT_STATE = JSON.stringify({
   balances: { [STUB_ADDRESS]: 1 },
   controllers: [STUB_ADDRESS],
   name: 'ANT-ARDRIVE',
@@ -61,7 +62,7 @@ const DEFAULT_ANT_STATE = JSON.stringify({
   keywords: ['KEYWORD-1', 'KEYWORD-2', 'KEYWORD-3'],
 });
 
-const DEFAULT_HANDLE_OPTIONS = {
+export const DEFAULT_HANDLE_OPTIONS = {
   Id: ''.padEnd(43, '1'),
   ['Block-Height']: '1',
   // important to set the address so that that `Authority` check passes. Else the `isTrusted` with throw an error.
@@ -72,23 +73,11 @@ const DEFAULT_HANDLE_OPTIONS = {
   Timestamp: Date.now(),
 };
 
-const ANT_EVAL_OPTIONS = {
+export const ANT_EVAL_OPTIONS = {
   ...DEFAULT_HANDLE_OPTIONS,
   Tags: [
     { name: 'Action', value: 'Eval' },
     { name: 'Module', value: ''.padEnd(43, '1') },
   ],
   Data: BUNDLED_AOS_ANT_LUA,
-};
-
-export {
-  BUNDLED_AOS_ANT_LUA,
-  DEFAULT_ANT_STATE,
-  AOS_WASM,
-  AO_LOADER_OPTIONS,
-  AO_LOADER_HANDLER_ENV,
-  STUB_ADDRESS,
-  STUB_PROCESS_ID,
-  DEFAULT_HANDLE_OPTIONS,
-  ANT_EVAL_OPTIONS,
 };

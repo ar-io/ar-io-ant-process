@@ -5,6 +5,7 @@ import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
   STUB_ADDRESS,
+  STUB_ETH_ADDRESS,
 } from '../tools/constants.mjs';
 
 describe('aos Balances', async () => {
@@ -44,16 +45,105 @@ describe('aos Balances', async () => {
     return result.Messages[0].Data;
   }
 
-  it('should fetch the owner balance', async () => {
-    const result = await handle({
-      Tags: [
-        { name: 'Action', value: 'Balance' },
-        { name: 'Recipient', value: STUB_ADDRESS },
-      ],
+  const STUB_RECIPIENT = 'recipient-'.padEnd(43, '1');
+
+  for (const [target_address, allowUnsafe, shouldPass] of [
+    [STUB_RECIPIENT, undefined, true],
+    [STUB_RECIPIENT, true, true],
+    [STUB_RECIPIENT, false, true],
+    [STUB_ETH_ADDRESS, undefined, true],
+    [STUB_ETH_ADDRESS, true, true],
+    [STUB_ETH_ADDRESS, false, true],
+    ['invalid-address', true, true],
+    ['invalid-address', false, false],
+    ['invalid-address', false, false],
+  ]) {
+    it(`should ${shouldPass ? '' : 'not'} fetch the target balance`, async () => {
+      const result = await handle({
+        Tags: [
+          { name: 'Action', value: 'Balance' },
+          { name: 'Recipient', value: target_address },
+          { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
+        ],
+      });
+
+      if (shouldPass === true) {
+        const targetBalance = result.Messages[0].Data;
+        assert.equal(typeof targetBalance === 'number', shouldPass);
+      } else {
+        assert.strictEqual(
+          result.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
+          'Balance-Error',
+        );
+      }
     });
-    const ownerBalance = result.Messages[0].Data;
-    assert(ownerBalance === 1);
-  });
+
+    it(`should ${allowUnsafe ? '' : 'not'} transfer the ANT`, async () => {
+      const transferResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Transfer' },
+          { name: 'Recipient', value: target_address },
+          { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
+        ],
+      });
+
+      if (shouldPass === true) {
+        const balancesResult = await handle(
+          {
+            Tags: [{ name: 'Action', value: 'Balances' }],
+          },
+          transferResult.Memory,
+        );
+        const balances = JSON.parse(balancesResult.Messages[0].Data);
+        assert.equal(balances[target_address] === 1, shouldPass);
+      } else {
+        assert.strictEqual(
+          transferResult.Messages[0].Tags.find((t) => t.name === 'Error')
+            ?.value,
+          'Transfer-Error',
+        );
+      }
+    });
+
+    it(`should ${shouldPass ? '' : 'not'} send credit and debit notice on transfer`, async () => {
+      const transferResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Transfer' },
+          { name: 'Recipient', value: target_address },
+          { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
+        ],
+      });
+
+      if (shouldPass === true) {
+        const creditNotice = transferResult.Messages.find((msg) =>
+          msg.Tags.find(
+            (tag) => tag.name === 'Action' && tag.value === 'Credit-Notice',
+          ),
+        );
+        const sender = creditNotice.Tags.find(
+          (tag) => tag.name === 'Sender' && tag.value === STUB_ADDRESS,
+        ).value;
+        assert.equal(sender === STUB_ADDRESS, shouldPass);
+        const debitNotice = transferResult.Messages.find((msg) =>
+          msg.Tags.find(
+            (tag) => tag.name === 'Action' && tag.value === 'Debit-Notice',
+          ),
+        );
+        const recipient = debitNotice.Tags.find(
+          (tag) => tag.name === 'Recipient' && tag.value === target_address,
+        ).value;
+        assert.equal(recipient === target_address, shouldPass);
+      } else {
+        assert.strictEqual(
+          transferResult.Messages[0].Tags.find((t) => t.name === 'Error')
+            ?.value,
+          'Transfer-Error',
+        );
+      }
+    });
+    // for end
+  }
+
   it('should fetch the balances of the ANT', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Balances' }],
@@ -66,59 +156,6 @@ describe('aos Balances', async () => {
     assert(Object.entries(balances).length === 1);
     assert(ownerAddress === STUB_ADDRESS);
     assert(ownerBalance === 1);
-  });
-
-  it('should transfer the ANT', async () => {
-    const recipient = ''.padEnd(43, '2');
-    const transferResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Transfer' },
-        { name: 'Recipient', value: recipient },
-      ],
-    });
-
-    const balancesResult = await handle(
-      {
-        Tags: [{ name: 'Action', value: 'Balances' }],
-      },
-      transferResult.Memory,
-    );
-
-    const balances = JSON.parse(balancesResult.Messages[0].Data);
-    assert(balances[recipient] === 1);
-  });
-
-  it('should send credit and debit notice on transfer', async () => {
-    const recipient = ''.padEnd(43, '2');
-    const transferResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Transfer' },
-        { name: 'Recipient', value: recipient },
-      ],
-    });
-
-    const creditNotice = transferResult.Messages.find((msg) =>
-      msg.Tags.find(
-        (tag) => tag.name === 'Action' && tag.value === 'Credit-Notice',
-      ),
-    );
-    assert(creditNotice);
-    assert(
-      creditNotice.Tags.find(
-        (tag) => tag.name === 'Sender' && tag.value === STUB_ADDRESS,
-      ),
-    );
-    const debitNotice = transferResult.Messages.find((msg) =>
-      msg.Tags.find(
-        (tag) => tag.name === 'Action' && tag.value === 'Debit-Notice',
-      ),
-    );
-    assert(debitNotice);
-    assert(
-      debitNotice.Tags.find(
-        (tag) => tag.name === 'Recipient' && tag.value === recipient,
-      ),
-    );
   });
 
   it('should set the logo of the ant', async () => {
@@ -136,75 +173,5 @@ describe('aos Balances', async () => {
   it('should get total supply', async () => {
     const res = await getTotalSupply();
     assert.strictEqual(res, 1, 'total supply should be equal to 1');
-  });
-
-  for (const allowUnsafeAddresses of [false, undefined]) {
-    it(`should transfer when an invalid address is provided and \`Allow-Unsafe-Addresses\` is ${allowUnsafeAddresses}`, async () => {
-      const recipient = 'invalid-address';
-      const senderBalance = await handle({
-        Tags: [{ name: 'Action', value: 'Balance' }],
-      });
-      const senderBalanceData = JSON.parse(senderBalance.Messages[0].Data);
-      const transferResult = await handle({
-        Tags: [
-          { name: 'Action', value: 'Transfer' },
-          { name: 'Recipient', value: recipient },
-          { name: 'Cast', value: true },
-          { name: 'Allow-Unsafe-Addresses', value: allowUnsafeAddresses },
-        ],
-      });
-
-      // assert the error tag
-      const errorTag = transferResult.Messages?.[0]?.Tags?.find(
-        (tag) => tag.name === 'Error',
-      );
-      assert.ok(errorTag, 'Error tag should be present');
-
-      const result = await handle(
-        {
-          Tags: [{ name: 'Action', value: 'Balances' }],
-        },
-        transferResult.Memory,
-      );
-      const balances = JSON.parse(result.Messages[0].Data);
-
-      assert.equal(balances[recipient], undefined);
-      assert.equal(balances[STUB_ADDRESS], 1);
-    });
-  }
-
-  /**
-   * We allow transfers to addresses that may appear invalid if the `Allow-Unsafe-Addresses` tag is true for several reasons:
-   * 1. To support future address formats and signature schemes that may emerge
-   * 2. To maintain compatibility with new blockchain networks that could be integrated
-   * 3. To avoid breaking changes if address validation rules need to be updated
-   * 4. To give users flexibility in how they structure their addresses
-   * 5. To reduce protocol-level restrictions that could limit innovation
-   */
-  it('should transfer when an invalid address is provided and `Allow-Unsafe-Addresses` is true', async () => {
-    const recipient = 'invalid-address';
-    const senderBalance = await handle({
-      Tags: [{ name: 'Action', value: 'Balance' }],
-    });
-    const senderBalanceData = JSON.parse(senderBalance.Messages[0].Data);
-    const transferResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Transfer' },
-        { name: 'Recipient', value: recipient },
-        { name: 'Cast', value: true },
-        { name: 'Allow-Unsafe-Addresses', value: true },
-      ],
-    });
-
-    // get balances
-    const result = await handle(
-      {
-        Tags: [{ name: 'Action', value: 'Balances' }],
-      },
-      transferResult.Memory,
-    );
-    const balances = JSON.parse(result.Messages[0].Data);
-    assert.strictEqual(balances[recipient], 1);
-    assert.strictEqual(balances[STUB_ADDRESS], undefined);
   });
 });

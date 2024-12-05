@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+<<<<<<< Updated upstream
+=======
+## [9] - [ezS3Z57rq_0skoG0WYmIqJ33mJiu0HbYNn9vEu12Mc4] - (2024-12-4)
+
+### Changed
+
+- Added Ethereum address support.
+- Added Allow-Unsafe-Addresses flag to allow skipping of address validation for future compatibility with different signature algorithms for the following API methods:
+  - Transfer
+  - Add-Controller
+  - Balance
+  - Approve-Primary-Name
+
+>>>>>>> Stashed changes
 ## [8] - [XP9_LFTae8C0yvCb_DUJaC5LXaiZIbiGT1yY25X0JCg] - (2024-11-25)
 
 ### Added
@@ -13,7 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Release-Name Handler
   - Calls the IO Network Process to release the specified ArNS name that is registered to the ANT.
 - Reassign-Name Handler
-  - Calls the IO Network Process to assign a new ANT Process to the respective name - must be a name registered the the ANT in question.
+  - Calls the IO Network Process to assign a new ANT Process to the respective name - must be a name registered the ANT in question.
 - Set-Description Handler
   - Allows for setting the description of the ANT
 - Set-Keywords Handler

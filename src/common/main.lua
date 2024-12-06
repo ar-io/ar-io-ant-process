@@ -1,4 +1,4 @@
-local ant = {}
+local ant = { _version = "0.0.1" }
 
 function ant.init()
 	-- main.lua
@@ -13,6 +13,7 @@ function ant.init()
 	local initialize = require(".common.initialize")
 	local records = require(".common.records")
 	local controllers = require(".common.controllers")
+	local validate = require(".common.validate")
 
 	---@alias Owner string
 	---@description The owner of the ANT
@@ -70,7 +71,7 @@ function ant.init()
 		Record = "Record",
 		Records = "Records",
 		State = "State",
-		Evolve = "Evolve",
+		ValidateHandlers = "Validate-Handlers",
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
 		ReassignName = "Reassign-Name",
@@ -312,6 +313,10 @@ function ant.init()
 			Action = "Remove-Primary-Names",
 			Names = msg.Tags.Names,
 		})
+	end)
+
+	createActionHandler(ActionMap.ValidateHandlers, function(msg)
+		return validate.validateHandlers(msg, ao)
 	end)
 end
 

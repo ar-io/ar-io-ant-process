@@ -19,10 +19,11 @@ function utils.hasMatchingTag(tag, value)
 	return Handlers.utils.hasMatchingTag(tag, value)
 end
 
---- Deep copies a table
+--- Deep copies a table, handling circular references
 --- @param original table The table to copy
+--- @param seen table|nil Internal table to track already copied references
 --- @return table|nil The deep copy of the table or nil if the original is nil
-function utils.deepCopy(original)
+function utils.deepCopy(original, seen)
 	if not original then
 		return nil
 	end
@@ -31,14 +32,23 @@ function utils.deepCopy(original)
 		return original
 	end
 
+	-- Use the `seen` table to track circular references
+	seen = seen or {}
+	if seen[original] then
+		return seen[original] -- Return the already copied table for circular references
+	end
+
 	local copy = {}
+	seen[original] = copy -- Track the copy of this table
+
 	for key, value in pairs(original) do
 		if type(value) == "table" then
-			copy[key] = utils.deepCopy(value) -- Recursively copy the nested table
+			copy[key] = utils.deepCopy(value, seen) -- Recursively copy the nested table
 		else
 			copy[key] = value
 		end
 	end
+
 	return copy
 end
 

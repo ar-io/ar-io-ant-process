@@ -2,7 +2,7 @@ local ant = {}
 
 function ant.init()
 	-- main.lua
-	local json = require(".modules.json")
+	local json = require(".deps.json")
 	local utils = require(".utils")
 	local notices = require(".notices")
 	local createActionHandler = utils.createActionHandler

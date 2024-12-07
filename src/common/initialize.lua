@@ -1,5 +1,5 @@
 local utils = require(".utils")
-local json = require(".modules.json")
+local json = require(".deps.json")
 local initialize = {}
 
 function initialize.initializeANTState(state)

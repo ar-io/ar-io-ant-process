@@ -1,4 +1,4 @@
-local SHA3 = require(".crypto.digest.sha3")
+local SHA3 = require(".deps.crypto.digest.sha3")
 
 local digest = {
 	_version = "0.0.1",

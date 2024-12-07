@@ -2,12 +2,12 @@
 -- @module process
 
 -- @dependencies
-Handlers = require(".modules.handlers")
-ao = require(".modules.ao")
+Handlers = require(".deps.handlers")
+ao = require(".deps.ao")
 utils = require(".utils")
 local coroutine = require("coroutine")
-local json = require(".modules.json")
-local assignment = require(".modules.assignment")
+local json = require(".deps.json")
+local assignment = require(".deps.assignment")
 
 local ant = require(".main")
 
@@ -220,15 +220,12 @@ function process.handle(msg, _)
 		local response = ao.result({
 			Output = {
 				data = table.concat(HANDLER_PRINT_LOGS, "\n"),
-				prompt = Prompt(),
-				print = true,
 			},
 		})
 		HANDLER_PRINT_LOGS = {} -- clear logs
 		return response
 	else
-		local response =
-			ao.result({ Output = { data = table.concat(HANDLER_PRINT_LOGS, "\n"), prompt = Prompt(), print = true } })
+		local response = ao.result({ Output = { data = table.concat(HANDLER_PRINT_LOGS, "\n") } })
 		HANDLER_PRINT_LOGS = {} -- clear logs
 		return response
 	end

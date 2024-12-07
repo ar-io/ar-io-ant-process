@@ -1,4 +1,4 @@
-local json = require(".modules.json")
+local json = require(".deps.json")
 local notices = {}
 
 --- @param oldMsg AoMessage

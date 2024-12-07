@@ -1,7 +1,7 @@
 --- Module for managing balances and transactions.
 -- @module balances
 
-local utils = require(".common.utils")
+local utils = require(".utils")
 
 local balances = {}
 

@@ -2,17 +2,16 @@ local ant = {}
 
 function ant.init()
 	-- main.lua
-	-- utils
-	local json = require(".common.json")
-	local utils = require(".common.utils")
-	local notices = require(".common.notices")
+	local json = require(".modules.json")
+	local utils = require(".utils")
+	local notices = require(".notices")
 	local createActionHandler = utils.createActionHandler
 
 	-- spec modules
-	local balances = require(".common.balances")
-	local initialize = require(".common.initialize")
-	local records = require(".common.records")
-	local controllers = require(".common.controllers")
+	local balances = require(".balances")
+	local initialize = require(".initialize")
+	local records = require(".records")
+	local controllers = require(".controllers")
 
 	---@alias Owner string
 	---@description The owner of the ANT

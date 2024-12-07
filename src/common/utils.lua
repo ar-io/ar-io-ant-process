@@ -1,8 +1,8 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
-local crypto = require(".common.crypto.init")
-local constants = require(".common.constants")
-local json = require(".common.json")
-local notices = require(".common.notices")
+local crypto = require(".modules.crypto.init")
+local constants = require(".constants")
+local json = require(".modules.json")
+local notices = require(".notices")
 local utils = { _version = "0.0.1" }
 
 --- @param t table

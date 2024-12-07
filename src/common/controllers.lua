@@ -1,4 +1,4 @@
-local utils = require(".common.utils")
+local utils = require(".utils")
 
 local controllers = {}
 

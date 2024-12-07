@@ -19,6 +19,8 @@ export async function createAosLoader(params) {
     AO_LOADER_HANDLER_ENV,
   );
 
+  console.dir(evalRes, { depth: null });
+
   return {
     handle,
     memory: evalRes.Memory,

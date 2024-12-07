@@ -2,7 +2,7 @@
   "type": "module",
   "scripts": {
     "module:build": "cd src/common && ao build && mv process.wasm ../../tools/fixtures/process.wasm && cd ../..",
-    "module:publish": "cd src && ao publish process.wasm -w ../tools/key.json --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
+    "module:publish": "ao publish tools/fixtures/process.wasm -w tools/key.json --tag=\"Memory-Limit\" --value=\"2-mb\" --tag=\"Compute-Limit\" --value=\"9000000000000\"",
     "module:load": "node tools/load-module.mjs",
     "module:spawn": "node tools/spawn-module.mjs",
     "lint": "luacheck .",

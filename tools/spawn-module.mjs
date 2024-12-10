@@ -2,6 +2,10 @@ import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 import fs from 'fs';
 import path from 'path';
 import Arweave from 'arweave';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const arweave = Arweave.init({
   host: 'arweave.net',
@@ -12,7 +16,7 @@ const arweave = Arweave.init({
 const ao = connect({
   GATEWAY_URL: 'https://arweave.net',
 });
-const moduleId = 'ZUEIijxJlV3UgZS9c7to5cgW5EhyPdAndHqVZxig7vE';
+const moduleId = 'jKPXUTVEjn-CIvTXvoRA9yibc1BjAZbC4tuxQjZBxS0';
 const scheduler = '_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA';
 // with logo process: dcodF0DbVdzvRPE5nDTULn4aagHYruKnW3ulFkPkQC0
 
@@ -21,14 +25,12 @@ async function main() {
   const address = await arweave.wallets.jwkToAddress(JSON.parse(wallet));
   const signer = createDataItemSigner(JSON.parse(wallet));
 
-  // const processId = await ao.spawn({
-  //   module: moduleId,
-  //   scheduler,
-  //   signer,
-  // });
-  //const processId = 'AxHXaiKg7c4FAYZ5eo4OPAaEhmB0I0PRxLqzW6ZNHXk';
-  // aos process
-  const processId = 'YD1XXiKJq-R-ruODJk7u_c5dMtZEVsV_Nh687ZmSvDQ';
+  const processId = await ao.spawn({
+    module: moduleId,
+    scheduler,
+    signer,
+  });
+
   //---------------
   console.log('Process ID:', processId);
   console.log('Waiting 20 seconds to ensure process is readied.');

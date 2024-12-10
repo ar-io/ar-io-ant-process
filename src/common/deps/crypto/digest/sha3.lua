@@ -1,4 +1,4 @@
-local Hex = require(".crypto.util.hex");
+local Hex = require(".deps.crypto.util.hex")
 
 local ROUNDS = 24
 
@@ -206,7 +206,7 @@ local function keccakHash(rate, length, data, algorithm)
 	state.permuted = { {}, {}, {}, {}, {}, }
 	state.parities = {0,0,0,0,0}
 	absorb(state, data, algorithm)
-	local encoded = squeeze(state):sub(1,length/8);
+	local encoded = squeeze(state):sub(1,length/8)
 
 	local public = {}
 

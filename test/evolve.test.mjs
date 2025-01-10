@@ -44,8 +44,9 @@ describe('aos Evolve', async () => {
       },
       evolveResult.Memory,
     );
-    assert(evalResult.Output.data.output);
-    assert(evalResult.Output.data.output.includes('info'));
+
+    assert(evalResult.Output.data);
+    assert(evalResult.Output.data.includes('info'));
   });
 
   it('should not evolve the ant', async () => {

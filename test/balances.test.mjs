@@ -37,6 +37,8 @@ describe('aos Balances', async () => {
   async function getTotalSupply(mem) {
     const result = await handle(
       {
+        From: 'random-dude'.padEnd(43, '1'),
+        Owner: 'random-dude'.padEnd(43, '1'),
         Tags: [{ name: 'Action', value: 'Total-Supply' }],
       },
       mem,
@@ -154,6 +156,7 @@ describe('aos Balances', async () => {
     const ownerEntry = Object.entries(balances)[0];
     const [ownerAddress, ownerBalance] = ownerEntry;
     assert(Object.entries(balances).length === 1);
+
     assert(ownerAddress === STUB_ADDRESS);
     assert(ownerBalance === 1);
   });

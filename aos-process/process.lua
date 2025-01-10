@@ -302,7 +302,6 @@ end
 -- @tparam {table} msg The message to handle
 -- @tparam {table} _ The environment to handle the message in
 function process.handle(msg, _)
-    require('.ant').init()
   local env = nil
   if _.Process then
     env = _
@@ -370,6 +369,7 @@ function process.handle(msg, _)
   )
 
   Handlers.append("_default", function () return true end, require('.default')(insertInbox))
+require('.aos-bundled')
 
   -- call evaluate from handlers passing env
   msg.reply =

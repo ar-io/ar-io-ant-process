@@ -12,7 +12,7 @@ export const STUB_ANT_REGISTRY_ID = 'ant-registry-'.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
 export const AO_LOADER_HANDLER_ENV = {
   Process: {
-    Id: STUB_PROCESS_ID,
+    Id: STUB_ADDRESS,
     Owner: STUB_ADDRESS,
     Tags: [
       { name: 'Authority', value: 'XXXXXX' },
@@ -39,6 +39,10 @@ export const AOS_WASM = fs.readFileSync(
     __dirname,
     'fixtures/aos-cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk.wasm',
   ),
+);
+
+export const AOS_ANT_WASM = fs.readFileSync(
+  path.join(__dirname, '../dist/aos-ant.wasm'),
 );
 
 export const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
@@ -68,7 +72,7 @@ export const DEFAULT_HANDLE_OPTIONS = {
   // important to set the address so that that `Authority` check passes. Else the `isTrusted` with throw an error.
   Owner: STUB_ADDRESS,
   Module: 'ANT',
-  Target: ''.padEnd(43, '1'),
+  Target: STUB_ADDRESS,
   From: STUB_ADDRESS,
   Timestamp: Date.now(),
 };

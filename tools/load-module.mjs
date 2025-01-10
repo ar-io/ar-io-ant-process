@@ -1,4 +1,4 @@
-import { AoLoader } from '@permaweb/ao-loader';
+import AoLoader from '@permaweb/ao-loader';
 import fs from 'fs';
 import path from 'path';
 
@@ -16,11 +16,11 @@ const env = {
 
 async function main() {
   const wasmBinary = fs.readFileSync(
-    path.join(__dirname, '../src/process.wasm'),
+    path.join(__dirname, '../dist/aos-ant.wasm'),
   );
   // Create the handle function that executes the Wasm
   const handle = await AoLoader(wasmBinary, {
-    format: 'wasm32-unknown-emscripten',
+    format: 'wasm32-unknown-emscripten-metering',
     inputEncoding: 'JSON-1',
     outputEncoding: 'JSON-1',
     memoryLimit: '524288000', // in bytes

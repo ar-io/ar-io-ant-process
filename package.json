@@ -1,8 +1,10 @@
 {
   "type": "module",
   "scripts": {
-    "module:build": "cd src && ao build && cd .. && yarn module:load",
-    "module:publish": "cd src && ao publish process.wasm -w ../tools/key.mjson --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
+    "copy-aos-process": "rm -rf aos-process && git clone https://github.com/permaweb/aos.git temp-repo && cd temp-repo && git checkout 15dd81ee596518e2f44521e973b8ad1ce3ee9945 && cd .. && mv temp-repo/process ./aos-process && rm -rf temp-repo && cp ao-build-config.yml aos-process/config.yml",
+    "setup-aos-ant": "mkdir -p aos-process/ant && cp -r src/common/* aos-process/ant/ && node tools/inject-ant-init.mjs && && cp ao-build-config.yml aos-process/config.yml",
+    "module:build": "yarn setup-aos-ant && cd aos-process && ao build && cp process.wasm ../dist/aos-ant.wasm && cd .. && yarn module:load",
+    "module:publish": "ao publish -w tools/key.json dist/aos-ant.wasm -t Compute-Limit -v 9000000000000 -t AOS-Version -v 2.0.1 -t Name -v ARIO-AOS-ANT-0.0.1 -t Module-Format -v wasm32-unknown-emscripten-metering",
     "module:load": "node tools/load-module.mjs",
     "module:spawn": "node tools/spawn-module.mjs",
     "lint": "luacheck .",

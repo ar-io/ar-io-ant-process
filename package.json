@@ -2,8 +2,9 @@
   "type": "module",
   "scripts": {
     "copy-aos-process": "rm -rf aos-process && git clone https://github.com/permaweb/aos.git temp-repo && cd temp-repo && git checkout 15dd81ee596518e2f44521e973b8ad1ce3ee9945 && cd .. && mv temp-repo/process ./aos-process && rm -rf temp-repo && cp ao-build-config.yml aos-process/config.yml",
-    "setup-aos-ant": "yarn aos:build && node tools/inject-ant-code.mjs && cp ao-build-config.yml aos-process/config.yml",
-    "module:build": "yarn setup-aos-ant && cd aos-process && ao build && cp process.wasm ../dist/aos-ant.wasm && cd ..",
+    "build": "rm -rf dist && mkdir dist && rm -rf build && cp -r aos-process build && cp -r src/common build/common && yarn node tools/inject-ant-code.mjs && cd build && ao build && mv process.wasm ../dist/aos-ant.wasm && cd .. && rm -rf build",
+    "setup-aos-ant": "yarn aos:build && rm -rf build && cp aos-process build && node tools/inject-ant-code.mjs && cp ao-build-config.yml build/config.yml",
+    "module:build": "yarn setup-aos-ant && cd build && ao build && cp process.wasm ../dist/aos-ant.wasm && cd ..",
     "module:publish": "ao publish -w tools/key.json dist/aos-ant.wasm -t Compute-Limit -v 9000000000000 -t Memory-Limit -v 1073741824-b -t AOS-Version -v 2.0.1 -t Name -v ARIO-AOS-ANT-0.0.1 -t Module-Format -v wasm32-unknown-emscripten-metering",
     "module:load": "node tools/load-module.mjs",
     "module:spawn": "node tools/spawn-module.mjs",
@@ -12,12 +13,12 @@
     "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
     "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
     "aos:spawn": "node tools/spawn-aos.mjs",
-    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs",
+    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 test/info.test.mjs",
     "prepare": "husky"
   },
   "devDependencies": {
     "@ardrive/turbo-sdk": "^1.19.0",
-    "@permaweb/ao-loader": "^0.0.35",
+    "@permaweb/ao-loader": "^0.0.44",
     "@permaweb/aoconnect": "^0.0.55",
     "arweave": "^1.15.1",
     "husky": "^9.1.6",

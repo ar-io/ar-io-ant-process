@@ -40,6 +40,7 @@ export async function createAntAosLoader() {
 
     AO_LOADER_HANDLER_ENV,
   );
+  console.dir(evalRes, { depth: null });
 
   return {
     handle,

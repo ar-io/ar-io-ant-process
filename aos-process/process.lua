@@ -369,7 +369,7 @@ function process.handle(msg, _)
   )
 
   Handlers.append("_default", function () return true end, require('.default')(insertInbox))
-require('.aos-bundled')
+
 
   -- call evaluate from handlers passing env
   msg.reply =

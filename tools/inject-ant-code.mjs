@@ -6,10 +6,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const filePath = path.join(__dirname, '../build', 'process.lua');
 
-// Read the file
 let fileContent = fs.readFileSync(filePath, 'utf-8');
 
-// Match all occurrences of Handlers.append
+// List of require statements to remove
+// these are unused in the current AOS version, and crypto specifically blow up memory on load
+// we remove these unused imports to prevent that from happening.
+const requiresToDelete = [
+  "local pretty = require('.pretty')",
+  "local base64 = require('.base64')",
+  "local json = require('json')",
+  "local crypto = require('.crypto.init')",
+];
+
+requiresToDelete.forEach((requireStatement) => {
+  const requireRegex = new RegExp(
+    `^\\s*${requireStatement.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')};?\\n?`,
+    'gm',
+  );
+  fileContent = fileContent.replace(requireRegex, '');
+});
+
+console.log(
+  `Removed specific require statements: ${requiresToDelete.join(', ')}`,
+);
+
 const handlersAppendRegex = /(Handlers\.append.*)/g;
 
 // Find the last occurrence of Handlers.append
@@ -20,20 +40,19 @@ while ((match = handlersAppendRegex.exec(fileContent)) !== null) {
 }
 
 // Inject the require line after the last Handlers.append
-if (lastMatch && !fileContent.includes("require('.common.main').init()")) {
+if (lastMatch && !fileContent.includes("require('.ant')")) {
   const position = lastMatch.index + lastMatch[0].length;
   fileContent =
     fileContent.slice(0, position) +
-    "\nrequire('.common.main').init();" +
+    "\nrequire('.ant');" +
     fileContent.slice(position);
 
-  // Write the updated content back to the file
-  fs.writeFileSync(filePath, fileContent);
-  console.log(
-    "Injected  require('.common.main').init() after the last Handlers.append.",
-  );
+  console.log("Injected require('.ant') after the last Handlers.append.");
 } else if (!lastMatch) {
   console.log('No Handlers.append found in process.lua.');
 } else {
-  console.log("The require('.common.main').init() line is already present.");
+  console.log("The require('.ant') line is already present.");
 }
+
+// Write the updated content back to the file
+fs.writeFileSync(filePath, fileContent);

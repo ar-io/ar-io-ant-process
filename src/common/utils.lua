@@ -1,5 +1,5 @@
 -- the majority of this file came from https://github.com/permaweb/aos/blob/main/process/utils.lua
-local crypto = require(".common.crypto.init")
+local crypto = require(".common.crypto_bundled")
 local constants = require(".common.constants")
 local json = require(".common.json")
 local notices = require(".common.notices")

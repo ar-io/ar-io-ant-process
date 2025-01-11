@@ -1,11 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "copy-aos-process": "rm -rf aos-process && git clone https://github.com/permaweb/aos.git temp-repo && cd temp-repo && git checkout 15dd81ee596518e2f44521e973b8ad1ce3ee9945 && cd .. && mv temp-repo/process ./aos-process && rm -rf temp-repo && cp ao-build-config.yml aos-process/config.yml",
-    "build": "rm -rf dist && mkdir dist && rm -rf build && cp -r aos-process build && cp -r src/common build/common && yarn node tools/inject-ant-code.mjs && cd build && ao build && mv process.wasm ../dist/aos-ant.wasm && cd .. && rm -rf build",
-    "setup-aos-ant": "yarn aos:build && rm -rf build && cp aos-process build && node tools/inject-ant-code.mjs && cp ao-build-config.yml build/config.yml",
-    "module:build": "yarn setup-aos-ant && cd build && ao build && cp process.wasm ../dist/aos-ant.wasm && cd ..",
-    "module:publish": "ao publish -w tools/key.json dist/aos-ant.wasm -t Compute-Limit -v 9000000000000 -t Memory-Limit -v 1073741824-b -t AOS-Version -v 2.0.1 -t Name -v ARIO-AOS-ANT-0.0.1 -t Module-Format -v wasm32-unknown-emscripten-metering",
+    "copy-aos-process": "rm -rf tools/fixtures/aos-process && git clone https://github.com/permaweb/aos.git temp-repo && cd temp-repo && git checkout 15dd81ee596518e2f44521e973b8ad1ce3ee9945 && cd .. && mv temp-repo/process tools/fixtures/aos-process && rm -rf temp-repo && cp ao-build-config.yml tools/fixtures/aos-process/config.yml",
+    "module:build": "rm -rf dist && yarn aos:build && rm -rf build && cp -r tools/fixtures/aos-process build && cp dist/aos-bundled.lua build/ant.lua && yarn node tools/inject-ant-code.mjs && cd build && ao build && mv process.wasm ../dist/aos-ant.wasm && cd .. && rm -rf build && yarn module:load",
+    "module:publish": "node tools/publish-module.mjs",
     "module:load": "node tools/load-module.mjs",
     "module:spawn": "node tools/spawn-module.mjs",
     "lint": "luacheck .",
@@ -22,6 +20,7 @@
     "@permaweb/aoconnect": "^0.0.55",
     "arweave": "^1.15.1",
     "husky": "^9.1.6",
+    "js-yaml": "^4.1.0",
     "lint-staged": "^15.2.10",
     "markdown-toc-gen": "^1.1.0",
     "prettier": "^3.3.2"

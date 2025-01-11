@@ -26,8 +26,6 @@ describe('aos Info', async () => {
       Tags: [{ name: 'Action', value: 'Info' }],
     });
 
-    console.dir(result, { depth: null });
-
     const processInfo = JSON.parse(result.Messages[0].Data);
     assert(processInfo.Name);
     assert(processInfo.Ticker);

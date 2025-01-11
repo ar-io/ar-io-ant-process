@@ -156,7 +156,6 @@ describe('aos Balances', async () => {
     const ownerEntry = Object.entries(balances)[0];
     const [ownerAddress, ownerBalance] = ownerEntry;
     assert(Object.entries(balances).length === 1);
-
     assert(ownerAddress === STUB_ADDRESS);
     assert(ownerBalance === 1);
   });
@@ -171,7 +170,6 @@ describe('aos Balances', async () => {
     });
 
     const info = await getInfo(result.Memory);
-    console.log('module memory: ', result.Memory.length);
     assert(info.Logo === logo, 'Failed to set logo');
   });
   it('should get total supply', async () => {

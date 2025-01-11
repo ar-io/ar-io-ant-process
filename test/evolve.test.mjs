@@ -44,7 +44,6 @@ describe('aos Evolve', async () => {
       },
       evolveResult.Memory,
     );
-
     assert(evalResult.Output.data);
     assert(evalResult.Output.data.includes('info'));
   });

@@ -11,7 +11,7 @@
     "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
     "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
     "aos:spawn": "node tools/spawn-aos.mjs",
-    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 test/info.test.mjs",
+    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -4,7 +4,6 @@
 	load the process memory blows up. Putting the deps in one file here fixes this, and allows us to maintain 
 	a small memory footprint.
 ]]
-
 --- Converts a string to its hexadecimal representation.
 --- @param s string The input string.
 --- @param ln? number - The number of characters per line. If not provided, the output will be a single line.

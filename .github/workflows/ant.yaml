@@ -57,6 +57,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn --frozen-lockfile
+      - run: curl -L https://install_ao.g8way.io | sh
       - run: yarn aos:build
       - run: yarn test
 
@@ -76,6 +77,7 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'yarn'
       - run: yarn --frozen-lockfile
+      - run: curl -L https://install_ao.g8way.io | sh
       - name: Publish Lua Code
         id: publish-lua-code
         env:

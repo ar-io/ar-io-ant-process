@@ -57,8 +57,9 @@ jobs:
           cache: 'yarn'
 
       - run: yarn --frozen-lockfile
-      - run: curl -L https://install_ao.g8way.io | sh
-      - run: yarn aos:build
+      - run: curl -L https://install_ao.g8way.io | sh && ao -V
+      - run: yarn copy-aos-process
+      - run: yarn module:build
       - run: yarn test
 
   publish:

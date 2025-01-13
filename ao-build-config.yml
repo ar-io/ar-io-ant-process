@@ -6,3 +6,4 @@ target: 32 # wasm32 or wasm 64
 # extra info
 aos_git_hash: '15dd81ee596518e2f44521e973b8ad1ce3ee9945' # used to pull in the 'process' folder at a specific git hash
 compute_limit: '9000000000000' # used in publishing
+module_format: 'wasm32-unknown-emscripten-metering'

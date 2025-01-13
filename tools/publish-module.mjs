@@ -40,12 +40,13 @@ const publishingTags = Object.entries({
   // ao tags
   'Data-Protocol': 'ao',
   Variant: 'ao.TN.1',
+  Type: 'Module',
   'Input-Encoding': 'JSON-1',
   'Output-Encoding': 'JSON-1',
   'Content-Type': 'application/wasm',
   'Compute-Limit': config.compute_limit.toString(),
   'Memory-Limit': config.maximum_memory.toString() + '-b',
-  'Module-Format': `wasm${config.target}-unknown-emscripten-metering`,
+  'Module-Format': config.module_format,
   // extra tags
   'App-Name': 'AR-IO-ANT-Deploy',
   'App-Version': '0.0.1',

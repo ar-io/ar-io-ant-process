@@ -29,20 +29,13 @@ export const AO_LOADER_OPTIONS = {
   format: 'wasm32-unknown-emscripten-metering',
   inputEncoding: 'JSON-1',
   outputEncoding: 'JSON-1',
-  memoryLimit: '1073741824', // in bytes
+  memoryLimit: '1073741824', // 1 GiB in bytes
   computeLimit: (9e12).toString(),
   extensions: [],
 };
 
-export const AOS_WASM = fs.readFileSync(
-  path.join(
-    __dirname,
-    'fixtures/aos-cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk.wasm',
-  ),
-);
-
 export const AOS_ANT_WASM = fs.readFileSync(
-  path.join(__dirname, '../dist/aos-ant.wasm'),
+  path.join(__dirname, '../dist/aos-ant.wasm'), // MUST load as binary (note no utf-8 flag)
 );
 
 export const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
@@ -75,13 +68,4 @@ export const DEFAULT_HANDLE_OPTIONS = {
   Target: STUB_ADDRESS,
   From: STUB_ADDRESS,
   Timestamp: Date.now(),
-};
-
-export const ANT_EVAL_OPTIONS = {
-  ...DEFAULT_HANDLE_OPTIONS,
-  Tags: [
-    { name: 'Action', value: 'Eval' },
-    { name: 'Module', value: ''.padEnd(43, '1') },
-  ],
-  Data: BUNDLED_AOS_ANT_LUA,
 };

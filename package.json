@@ -1,8 +1,9 @@
 {
   "type": "module",
   "scripts": {
-    "module:build": "cd src && ao build && cd .. && yarn module:load",
-    "module:publish": "cd src && ao publish process.wasm -w ../tools/key.mjson --tag=\"Memory-Limit\" --value=\"1-gb\" --tag=\"Compute-Limit\" --value=\"9000000000000\" && cd ..",
+    "copy-aos-process": "node tools/copy-aos-process.mjs",
+    "module:build": "rm -rf dist && yarn aos:build && rm -rf build && cp -r tools/fixtures/aos-process build && cp dist/aos-bundled.lua build/ant.lua && yarn node tools/inject-ant-code.mjs && cd build && ao build && mv process.wasm ../dist/aos-ant.wasm && cd .. && rm -rf build && yarn module:load",
+    "module:publish": "node tools/publish-module.mjs",
     "module:load": "node tools/load-module.mjs",
     "module:spawn": "node tools/spawn-module.mjs",
     "lint": "luacheck .",
@@ -15,10 +16,11 @@
   },
   "devDependencies": {
     "@ardrive/turbo-sdk": "^1.19.0",
-    "@permaweb/ao-loader": "^0.0.35",
+    "@permaweb/ao-loader": "^0.0.44",
     "@permaweb/aoconnect": "^0.0.55",
     "arweave": "^1.15.1",
     "husky": "^9.1.6",
+    "js-yaml": "^4.1.0",
     "lint-staged": "^15.2.10",
     "markdown-toc-gen": "^1.1.0",
     "prettier": "^3.3.2"

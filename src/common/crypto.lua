@@ -1,7 +1,7 @@
 --[[
 	Why is this file here?
 	Answer: for some reason when bundling the crypto deps when nested dependencies and loading them, during
-	load the process memory blows up. Putting the deps in one file here fixes this, and allows us to maintain 
+	load the process memory blows up. Putting the deps in one file here fixes this, and allows us to maintain
 	a small memory footprint.
 ]]
 --- Converts a string to its hexadecimal representation.

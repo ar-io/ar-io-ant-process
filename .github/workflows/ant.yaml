@@ -57,7 +57,15 @@ jobs:
           cache: 'yarn'
 
       - run: yarn --frozen-lockfile
-      - run: curl -L https://install_ao.g8way.io | sh && ao -V
+      - name: Install AO Tool
+        run: |
+          curl -L https://install_ao.g8way.io | sh
+          export AO_INSTALL=/home/runner/.ao
+          export PATH="$AO_INSTALL/bin:$PATH"
+          echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Verify AO Installation
+        run: ao -V
       - run: yarn copy-aos-process
       - run: yarn module:build
       - run: yarn test

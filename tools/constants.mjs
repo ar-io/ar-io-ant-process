@@ -29,7 +29,7 @@ export const AO_LOADER_OPTIONS = {
   format: 'wasm32-unknown-emscripten-metering',
   inputEncoding: 'JSON-1',
   outputEncoding: 'JSON-1',
-  memoryLimit: '524288000', // in bytes
+  memoryLimit: '1073741824', // in bytes
   computeLimit: (9e12).toString(),
   extensions: [],
 };

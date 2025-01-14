@@ -1,9 +1,9 @@
 import { AoLoader } from '@permaweb/ao-loader';
+import { AOS_ANT_WASM } from './constants.mjs';
 
 const {
   BUNDLED_AOS_ANT_LUA,
   DEFAULT_ANT_STATE,
-  AOS_WASM,
   AO_LOADER_OPTIONS,
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
@@ -18,7 +18,7 @@ async function main() {
     ['Transfer', { Recipient: 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA' }],
   ];
 
-  const handle = await AoLoader(AOS_WASM, AO_LOADER_OPTIONS);
+  const handle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
   // memory dump of the evaluated program
   let programState = undefined;
 

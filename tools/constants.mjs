@@ -12,7 +12,7 @@ export const STUB_ANT_REGISTRY_ID = 'ant-registry-'.padEnd(43, '1');
 /* ao READ-ONLY Env Variables */
 export const AO_LOADER_HANDLER_ENV = {
   Process: {
-    Id: STUB_PROCESS_ID,
+    Id: STUB_ADDRESS,
     Owner: STUB_ADDRESS,
     Tags: [
       { name: 'Authority', value: 'XXXXXX' },
@@ -26,19 +26,16 @@ export const AO_LOADER_HANDLER_ENV = {
 };
 
 export const AO_LOADER_OPTIONS = {
-  format: 'wasm64-unknown-emscripten-draft_2024_02_15',
+  format: 'wasm32-unknown-emscripten-metering',
   inputEncoding: 'JSON-1',
   outputEncoding: 'JSON-1',
-  memoryLimit: '524288000', // in bytes
+  memoryLimit: '1073741824', // 1 GiB in bytes
   computeLimit: (9e12).toString(),
   extensions: [],
 };
 
-export const AOS_WASM = fs.readFileSync(
-  path.join(
-    __dirname,
-    'fixtures/aos-cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk.wasm',
-  ),
+export const AOS_ANT_WASM = fs.readFileSync(
+  path.join(__dirname, '../dist/aos-ant.wasm'), // MUST load as binary (note no utf-8 flag)
 );
 
 export const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
@@ -68,16 +65,7 @@ export const DEFAULT_HANDLE_OPTIONS = {
   // important to set the address so that that `Authority` check passes. Else the `isTrusted` with throw an error.
   Owner: STUB_ADDRESS,
   Module: 'ANT',
-  Target: ''.padEnd(43, '1'),
+  Target: STUB_ADDRESS,
   From: STUB_ADDRESS,
   Timestamp: Date.now(),
-};
-
-export const ANT_EVAL_OPTIONS = {
-  ...DEFAULT_HANDLE_OPTIONS,
-  Tags: [
-    { name: 'Action', value: 'Eval' },
-    { name: 'Module', value: ''.padEnd(43, '1') },
-  ],
-  Data: BUNDLED_AOS_ANT_LUA,
 };

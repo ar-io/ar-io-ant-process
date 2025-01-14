@@ -1,117 +1,34 @@
-import { AoLoader } from '@permaweb/ao-loader';
+import AoLoader from '@permaweb/ao-loader';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import {
+  AO_LOADER_HANDLER_ENV,
+  AO_LOADER_OPTIONS,
+  DEFAULT_HANDLE_OPTIONS,
+} from './constants.mjs';
 
-/* ao READ-ONLY Env Variables */
-const env = {
-  Process: {
-    Id: '2',
-    Tags: [{ name: 'Authority', value: 'XXXXXX' }],
-  },
-  Module: {
-    Id: '1',
-    Tags: [{ name: 'Authority', value: 'YYYYYY' }],
-  },
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function main() {
   const wasmBinary = fs.readFileSync(
-    path.join(__dirname, '../src/process.wasm'),
+    path.join(__dirname, '../dist/aos-ant.wasm'),
   );
   // Create the handle function that executes the Wasm
-  const handle = await AoLoader(wasmBinary, {
-    format: 'wasm32-unknown-emscripten',
-    inputEncoding: 'JSON-1',
-    outputEncoding: 'JSON-1',
-    memoryLimit: '524288000', // in bytes
-    computeLimit: (9e12).toString(),
-    extensions: [],
-  });
+  const handle = await AoLoader(wasmBinary, AO_LOADER_OPTIONS);
 
-  const address = '7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk';
-  const testCases = [
-    ['Info', {}],
-    ['Set-Controller', { Controller: ''.padEnd(43, '1') }],
-    ['Remove-Controller', { Controller: ''.padEnd(43, '1') }],
-    ['Set-Name', { Name: 'Test Name' }],
-    ['Set-Ticker', { Ticker: 'TEST' }],
-    ['Set-Description', { Description: 'TEST DESCRIPTION' }],
-    [
-      'Set-Keywords',
-      {
-        Keywords: JSON.stringify([
-          'TEST-KEYWORD-1',
-          'TEST-KEYWORD-2',
-          'TEST-KEYWORD-3',
-        ]),
-      },
-    ], // Test for Set-Keywords
-    [
-      'Set-Record',
-      {
-        'Transaction-Id': ''.padEnd(43, '1'),
-        'TTL-Seconds': '1000',
-        'Sub-Domain': '@',
-      },
-    ],
-    [
-      'Set-Record',
-      {
-        'Transaction-Id': ''.padEnd(43, '1'),
-        'TTL-Seconds': '1000',
-        'Sub-Domain': 'bob',
-      },
-    ],
-    ['Remove-Record', { 'Sub-Domain': 'bob' }],
-    ['Balance', {}],
-    ['Balance', { Recipient: address }],
-    ['Balances', {}],
-    ['Get-Controllers', {}],
-    ['Get-Records', {}],
-    ['Get-Record', { 'Sub-Domain': '@' }],
-    ['Initialize-State', {}],
-    ['Transfer', { Recipient: 'iKryOeZQMONi2965nKz528htMMN_sBcjlhc-VncoRjA' }],
-    ['Total-Supply', {}],
-  ];
+  const result = await handle(
+    null,
+    {
+      ...DEFAULT_HANDLE_OPTIONS,
+      Tags: [{ name: 'Action', value: 'Info' }],
+    },
+    AO_LOADER_HANDLER_ENV,
+  );
 
-  for (const [method, args] of testCases) {
-    const tags = args
-      ? Object.entries(args).map(([key, value]) => ({ name: key, value }))
-      : [];
-    // To spawn a process, pass null as the buffer
-    const result = await handle(
-      null,
-      {
-        Id: '3',
-        ['Block-Height']: '1',
-        // TEST INDICATES NOT TO RUN AUTHORITY CHECKS
-        Owner: '7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk',
-        Target: 'XXXXX',
-        From: '7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk',
-        Tags: [...tags, { name: 'Action', value: method }],
-        Data: JSON.stringify({
-          balances: { '7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk': 1 },
-          controllers: ['7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk'],
-          name: 'ANT-ARDRIVE',
-          owner: '7waR8v4STuwPnTck1zFVkQqJh5K9q9Zik4Y5-5dV7nk',
-          records: {
-            '@': {
-              transactionId: 'UyC5P5qKPZaltMmmZAWdakhlDXsBF6qmyrbWYFchRTk',
-              ttlSeconds: 3600,
-            },
-          },
-          ticker: 'ANT',
-          description: 'Description of this ANT.',
-          keywords: ['KEYWORD-1', 'KEYWORD-2', 'KEYWORD-3'],
-        }),
-      },
-      env,
-    );
-    delete result.Memory;
-    delete result.Assignments;
-    delete result.Spawns;
-    console.log(method);
-    console.dir(result, { depth: null });
-  }
+  console.log(
+    `\nModule initial memory: ${result.Memory.length / 1024 / 1024} MB`,
+  );
 }
 main();

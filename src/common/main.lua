@@ -313,6 +313,34 @@ function ant.init()
 			Names = msg.Tags.Names,
 		})
 	end)
+
+	Handlers.prepend("_bootAnt", function(msg)
+		return msg.Tags.Type == "Process" and msg.Tags["ANT-Registry-Id"] and Owner == msg.From
+	end, function(msg)
+		if msg.Data and msg.Tags["Initialize-State"] then
+			local status, res = xpcall(function()
+				initialize.initializeANTState(msg.Data)
+			end, utils.errorHandler)
+			if not status then
+				ao.send(notices.addForwardedTags(msg, {
+					Target = Owner,
+					Error = res or "",
+					Data = res or "",
+					Action = "Invalid-Boot-Ant-Notice",
+					["Message-Id"] = msg.Id,
+				}))
+			end
+		end
+
+		ao.send(notices.credit({
+			From = ao.id,
+			Sender = Owner,
+			Recipient = Owner,
+		}))
+		if AntRegistryId then
+			notices.notifyState(msg, AntRegistryId)
+		end
+	end, 1)
 end
 
 return ant

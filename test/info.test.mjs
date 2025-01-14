@@ -37,6 +37,7 @@ describe('aos Info', async () => {
     assert(processInfo.Owner);
     assert(processInfo.Handlers);
     assert.deepStrictEqual(processInfo.Handlers, [
+      '_bootAnt',
       '_boot',
       '_eval',
       '_default',

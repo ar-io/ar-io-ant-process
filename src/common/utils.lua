@@ -291,20 +291,29 @@ function utils.createHandler(tagName, tagValue, handler, position)
 				return handler(msg)
 			end, utils.errorHandler)
 
+			local resultNotice = nil
 			if not handlerStatus then
-				ao.send(notices.addForwardedTags(msg, {
+				resultNotice = notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = "Invalid-" .. tagValue .. "-Notice",
 					Error = tagValue .. "-Error",
 					["Message-Id"] = msg.Id,
 					Data = handlerRes,
-				}))
+				})
 			elseif handlerRes then
-				ao.send(notices.addForwardedTags(msg, {
+				resultNotice = notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = tagValue .. "-Notice",
 					Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
-				}))
+				})
+			end
+
+			if resultNotice then
+				if msg.reply then
+					msg.reply(resultNotice)
+				else
+					ao.send(resultNotice)
+				end
 			end
 
 			local hasNewOwner = Owner ~= prevOwner

@@ -98,6 +98,12 @@ describe("utils.validateUndername", function()
 		assert.is_not_nil(error)
 	end)
 
+	it("should work for single character undernames", function()
+		local valid, error = pcall(utils.validateUndername, "a")
+		assert.is_true(valid)
+		assert.is_nil(error)
+	end)
+
 	it("should not throw an error for a valid undername", function()
 		local valid, error = pcall(utils.validateUndername, "valid-undername-123")
 		assert.is_true(valid)

@@ -64,6 +64,7 @@ end
 function utils.validateUndername(name)
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
 	local validRegex = string.match(name, "^@$") ~= nil
+		or string.match(name, "^[a-zA-Z0-9]$") ~= nil -- Allow single-character names
 		or string.match(name, "^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$") ~= nil
 	local valid = validLength and validRegex
 	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)

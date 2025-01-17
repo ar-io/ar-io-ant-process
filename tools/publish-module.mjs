@@ -11,7 +11,6 @@ const __dirname = dirname(__filename);
 
 const wasmBinary = fs.readFileSync(
   path.join(__dirname, '../dist/aos-ant.wasm'),
-  'utf-8',
 );
 
 // Read the file

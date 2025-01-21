@@ -92,31 +92,53 @@ describe("utils.isValidAOAddress", function()
 end)
 
 describe("utils.validateUndername", function()
-	it("should validate undernames of all lengths from 1 to 61", function()
-		for length = 1, 61 do
-			local name = string.rep("a", length) -- Generate a name of the current length
-			local valid, error = pcall(utils.validateUndername, name)
-			assert.is_true(valid, "Expected name of length " .. length .. " to be valid")
-			assert.is_nil(error, "Unexpected error for name of length " .. length)
+	it("should allow valid undernames", function()
+		local validNames = {
+			"@",
+			"a",
+			"aA",
+			"Z_",
+			"z-",
+			"1",
+			"1-",
+			string.rep("a", 61),
+			string.rep("z", 60) .. "_",
+			string.rep("0", 60) .. "-",
+		}
+
+		for _, name in ipairs(validNames) do
+			local success, error = pcall(utils.validateUndername, name)
+			assert.is_true(success)
+			assert.is_nil(error)
 		end
 	end)
 
-	it("should throw an error for names longer than 61 characters", function()
-		local name = string.rep("a", 62) -- Generate a name of length 62
-		local valid, error = pcall(utils.validateUndername, name)
-		assert.is_false(valid, "Expected name of length 62 to be invalid")
-		assert.is_not_nil(error, "Expected an error for name of length 62")
-	end)
+	it("should not allow invalid undernames", function()
+		local invalidNames = {
+			"",
+			"_",
+			"-",
+			"_a",
+			"-a",
+			string.rep("a", 62), -- overlength
+			"-" .. string.rep("a", 60),
+			"_" .. string.rep("a", 60),
+			"@@",
+			"a@",
+			".",
+			"#",
+			"&",
+			":",
+			"a.",
+			"a#",
+			"a&",
+			"a:",
+		}
 
-	it("should throw an error for invalid undernames", function()
-		local invalid, error = pcall(utils.validateUndername, "_invalid_undername_")
-		assert.is_false(invalid)
-		assert.is_not_nil(error)
-	end)
-
-	it("should allow '@' as a valid undername", function()
-		local valid, error = pcall(utils.validateUndername, "@")
-		assert.is_true(valid)
-		assert.is_nil(error)
+		for _, name in ipairs(invalidNames) do
+			local invalid, error = pcall(utils.validateUndername, name)
+			assert.is_true(invalid)
+			assert.is_not_nil(error)
+		end
 	end)
 end)

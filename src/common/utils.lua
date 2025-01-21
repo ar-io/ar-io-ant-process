@@ -62,10 +62,13 @@ end
 ---utils.validateUndername("my-undername")
 ---```
 function utils.validateUndername(name)
+	--- RULES FOR UNDERNAMES
+	--- min 1 char
+	--- max 51 chars
+	--- no starting dashes or underscores
+	--- alphanumeric, dashes, underscores OR one '@' sign
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
-	local validRegex = string.match(name, "^@$") ~= nil
-		or string.match(name, "^[a-zA-Z0-9]$") ~= nil -- Allow single-character names
-		or string.match(name, "^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$") ~= nil
+	local validRegex = string.match(name, "^@$") ~= nil or string.match(name, "^[a-zA-Z0-9]+[a-zA-Z0-9_-]*$") ~= nil
 	local valid = validLength and validRegex
 	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 end

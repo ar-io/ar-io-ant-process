@@ -67,6 +67,7 @@ function utils.validateUndername(name)
 	--- max 61 chars
 	--- no starting dashes or underscores
 	--- alphanumeric, dashes, underscores OR one '@' sign
+
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
 	local validRegex = string.match(name, "^@$") ~= nil or string.match(name, "^[a-zA-Z0-9]+[a-zA-Z0-9_-]*$") ~= nil
 	local valid = validLength and validRegex

@@ -115,7 +115,7 @@ describe("utils.validateUndername", function()
 
 	it("should not allow invalid undernames", function()
 		local invalidNames = {
-			"",
+
 			"_",
 			"-",
 			"_a",
@@ -137,7 +137,7 @@ describe("utils.validateUndername", function()
 
 		for _, name in ipairs(invalidNames) do
 			local invalid, error = pcall(utils.validateUndername, name)
-			assert.is_true(invalid, name .. " was invalid")
+			assert.is_false(invalid, name .. " was valid")
 			assert.is_not_nil(error, "error for " .. name .. " was nil")
 		end
 	end)

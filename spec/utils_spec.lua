@@ -1,5 +1,6 @@
 -- spec/utils_spec.lua
 local utils = require(".common.utils")
+local constants = require("src.common.constants")
 
 local testEthAddress = "0xFCAd0B19bB29D4674531d6f115237E16AfCE377c"
 
@@ -141,6 +142,7 @@ describe("utils.validateUndername", function()
 			local invalid, error = pcall(utils.validateUndername, name)
 			assert.is_false(invalid, name .. " should be invalid")
 			assert.is_not_nil(error, "error for " .. name .. " was nil: " .. tostring(error))
+			assert.equal(constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE, tostring(error))
 		end
 	end)
 end)

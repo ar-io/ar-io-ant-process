@@ -108,8 +108,8 @@ describe("utils.validateUndername", function()
 
 		for _, name in ipairs(validNames) do
 			local success, error = pcall(utils.validateUndername, name)
-			assert.is_true(success)
-			assert.is_nil(error)
+			assert.is_true(success, name .. " was invalid")
+			assert.is_nil(error, name .. " got an error")
 		end
 	end)
 
@@ -137,8 +137,8 @@ describe("utils.validateUndername", function()
 
 		for _, name in ipairs(invalidNames) do
 			local invalid, error = pcall(utils.validateUndername, name)
-			assert.is_true(invalid)
-			assert.is_not_nil(error)
+			assert.is_true(invalid, name .. " was invalid")
+			assert.is_not_nil(error, "error for " .. name .. " was nil")
 		end
 	end)
 end)

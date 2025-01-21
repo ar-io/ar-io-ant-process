@@ -115,7 +115,7 @@ describe("utils.validateUndername", function()
 
 	it("should not allow invalid undernames", function()
 		local invalidNames = {
-
+			"",
 			"_",
 			"-",
 			"_a",

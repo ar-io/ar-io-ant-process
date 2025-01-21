@@ -64,7 +64,7 @@ end
 function utils.validateUndername(name)
 	--- RULES FOR UNDERNAMES
 	--- min 1 char
-	--- max 51 chars
+	--- max 61 chars
 	--- no starting dashes or underscores
 	--- alphanumeric, dashes, underscores OR one '@' sign
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH

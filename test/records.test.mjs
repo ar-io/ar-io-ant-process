@@ -39,6 +39,18 @@ describe('aos Records', async () => {
     );
   }
 
+  async function removeRecord(name, mem) {
+    return handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Remove-Record' },
+          { name: 'Sub-Domain', value: name },
+        ],
+      },
+      mem,
+    );
+  }
+
   async function getRecords(mem) {
     const res = await handle(
       {

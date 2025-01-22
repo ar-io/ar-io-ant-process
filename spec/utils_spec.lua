@@ -1,5 +1,6 @@
 -- spec/utils_spec.lua
 local utils = require(".common.utils")
+local constants = require("src.common.constants")
 
 local testEthAddress = "0xFCAd0B19bB29D4674531d6f115237E16AfCE377c"
 
@@ -92,15 +93,56 @@ describe("utils.isValidAOAddress", function()
 end)
 
 describe("utils.validateUndername", function()
-	it("should throw an error for invalid undernames", function()
-		local invalid, error = pcall(utils.validateUndername, "_invalid_undername_")
-		assert.is_false(invalid)
-		assert.is_not_nil(error)
+	it("should allow valid undernames", function()
+		local validNames = {
+			"@",
+			"a",
+			"aA",
+			"Z_",
+			"z-",
+			"1",
+			"1-",
+			string.rep("a", 61),
+			string.rep("z", 60) .. "_",
+			string.rep("0", 60) .. "-",
+		}
+
+		for _, name in ipairs(validNames) do
+			local success, error = pcall(utils.validateUndername, name)
+			assert.is_true(success, name .. " should be valid")
+			assert.is_nil(error, name .. " got an error: " .. tostring(error))
+		end
 	end)
 
-	it("should not throw an error for a valid undername", function()
-		local valid, error = pcall(utils.validateUndername, "valid-undername-123")
-		assert.is_true(valid)
-		assert.is_nil(error)
+	it("should not allow invalid undernames", function()
+		local invalidNames = {
+			nil,
+
+			"",
+			"_",
+			"-",
+			"_a",
+			"-a",
+			string.rep("a", 62), -- overlength
+			"-" .. string.rep("a", 60),
+			"_" .. string.rep("a", 60),
+			"@@",
+			"a@",
+			".",
+			"#",
+			"&",
+			":",
+			"a.",
+			"a#",
+			"a&",
+			"a:",
+		}
+
+		for _, name in ipairs(invalidNames) do
+			local invalid, error = pcall(utils.validateUndername, name)
+			assert.is_false(invalid, name .. " should be invalid")
+			assert.is_not_nil(error, "error for " .. name .. " was nil: " .. tostring(error))
+			assert.equal(constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE, tostring(error))
+		end
 	end)
 end)

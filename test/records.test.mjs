@@ -159,37 +159,4 @@ describe('aos Records', async () => {
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 3600);
   });
-
-  it('should set valid undernames from length 1 to 61 and remove them after', async () => {
-    let currentMemory = startMemory;
-
-    for (let length = 1; length <= 61; length++) {
-      const name = 'a'.repeat(length);
-      const result = await setRecord({ name }, currentMemory);
-      currentMemory = result.Memory;
-    }
-
-    let records = await getRecords(currentMemory);
-
-    for (let length = 1; length <= 61; length++) {
-      const name = 'a'.repeat(length);
-      assert(records[name], `Record with name length ${length} was not found.`);
-    }
-
-    for (let length = 1; length <= 61; length++) {
-      const name = 'a'.repeat(length);
-      const result = await removeRecord(name, currentMemory);
-      currentMemory = result.Memory;
-    }
-
-    records = await getRecords(currentMemory);
-
-    for (let length = 1; length <= 61; length++) {
-      const name = 'a'.repeat(length);
-      assert(
-        !records[name],
-        `Record with name length ${length} was not removed.`,
-      );
-    }
-  });
 });

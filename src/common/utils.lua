@@ -309,11 +309,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			end
 
 			if resultNotice then
-				if msg.reply then
-					msg.reply(resultNotice)
-				else
-					ao.send(resultNotice)
-				end
+				utils.Send(msg, resultNotice)
 			end
 
 			local hasNewOwner = Owner ~= prevOwner
@@ -359,6 +355,17 @@ function utils.validateKeywords(keywords)
 		-- Check for duplicates
 		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
 		seenKeywords[keyword] = true
+	end
+end
+
+--- @param msg AoMessage
+--- @param response table
+function utils.Send(msg, response)
+	if msg.reply then
+		--- Reference: https://github.com/permaweb/aos/blob/main/blueprints/patch-legacy-reply.lua
+		msg.reply(response)
+	else
+		ao.send(response)
 	end
 end
 

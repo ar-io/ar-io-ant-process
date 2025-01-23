@@ -89,31 +89,17 @@ function ant.init()
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
 		local recipient = msg.Tags.Recipient
 		if msg.From ~= Owner then
-			if msg.reply then
-				msg.reply({
-					Action = "Transfer-Error",
-					["Message-Id"] = msg.Id,
-					Error = "Insufficient Balance!",
-				})
-			else
-				ao.send({
-					Target = msg.From,
-					Action = "Transfer-Error",
-					["Message-Id"] = msg.Id,
-					Error = "Insufficient Balance!",
-				})
-			end
+			utils.Send(msg, {
+				Action = "Transfer-Error",
+				["Message-Id"] = msg.Id,
+				Error = "Insufficient Balance!",
+			})
 		end
 		balances.transfer(recipient, msg.Tags["Allow-Unsafe-Addresses"])
 
 		if not msg.Cast then
-			if msg.reply then
-				msg.reply(notices.debit(msg))
-				msg.reply(notices.credit(msg))
-			else
-				ao.send(notices.debit(msg))
-				ao.send(notices.credit(msg))
-			end
+			utils.Send(msg, notices.debit(msg))
+			utils.Send(msg, notices.credit(msg))
 		end
 	end)
 
@@ -121,25 +107,14 @@ function ant.init()
 		local addressToCheck = msg.Tags.Recipient or msg.Tags.Target or msg.From
 		local balRes = balances.balance(addressToCheck, msg.Tags["Allow-Unsafe-Addresses"])
 
-		if msg.reply then
-			msg.reply({
-				Action = "Balance-Notice",
-				Balance = tostring(balRes),
-				Ticker = Ticker,
-				Account = addressToCheck,
-				Address = addressToCheck,
-				Data = tostring(balRes),
-			})
-		else
-			ao.send({
-				Target = msg.From,
-				Action = "Balance-Notice",
-				Balance = tostring(balRes),
-				Ticker = Ticker,
-				Address = msg.Tags.Recipient or msg.From,
-				Data = tostring(balRes),
-			})
-		end
+		utils.Send(msg, {
+			Action = "Balance-Notice",
+			Balance = tostring(balRes),
+			Ticker = Ticker,
+			Account = addressToCheck,
+			Address = addressToCheck,
+			Data = tostring(balRes),
+		})
 	end)
 
 	createActionHandler(TokenSpecActionMap.Balances, function(msg)
@@ -148,32 +123,17 @@ function ant.init()
 			bals[k] = tostring(v)
 		end
 
-		if msg.reply then
-			msg.reply({
-				Data = json.encode(bals),
-			})
-		else
-			ao.send({ Target = msg.From, Data = json.encode(bals) })
-		end
+		utils.Send(msg, { Data = json.encode(bals) })
 	end)
 
 	createActionHandler(TokenSpecActionMap.TotalSupply, function(msg)
 		assert(msg.From ~= ao.id, "Cannot call Total-Supply from the same process!")
 
-		if msg.reply then
-			msg.reply({
-				Action = "Total-Supply",
-				Data = tostring(TotalSupply),
-				Ticker = Ticker,
-			})
-		else
-			ao.send({
-				Target = msg.From,
-				Action = "Total-Supply",
-				Data = tostring(TotalSupply),
-				Ticker = Ticker,
-			})
-		end
+		utils.Send(msg, {
+			Action = "Total-Supply",
+			Data = tostring(TotalSupply),
+			Ticker = Ticker,
+		})
 	end)
 
 	createActionHandler(TokenSpecActionMap.Info, function(msg)
@@ -188,20 +148,11 @@ function ant.init()
 			Owner = Owner,
 			Handlers = utils.getHandlerNames(Handlers),
 		}
-		if msg.reply then
-			msg.reply({
-				Action = "Info-Notice",
-				Tags = info,
-				Data = json.encode(info),
-			})
-		else
-			ao.send({
-				Target = msg.From,
-				Action = "Info-Notice",
-				Tags = info,
-				Data = json.encode(info),
-			})
-		end
+		utils.Send(msg, {
+			Action = "Info-Notice",
+			Tags = info,
+			Data = json.encode(info),
+		})
 	end)
 
 	-- ActionMap (ANT Spec)

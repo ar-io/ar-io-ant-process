@@ -315,7 +315,7 @@ function ant.init()
 	end)
 
 	Handlers.prepend("_bootAnt", function(msg)
-		return msg.Tags.Type == "Process" and msg.Tags["ANT-Registry-Id"] and Owner == msg.From
+		return msg.Tags.Type == "Process" and Owner == msg.From
 	end, function(msg)
 		if msg.Data and msg.Tags["Initialize-State"] then
 			local status, res = xpcall(function()

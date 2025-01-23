@@ -39,7 +39,9 @@ This repository provides two flavours of ANT process module, AOS and a custom mo
     - [`Reassign-Name`](#reassign-name)
 - [Developers](#developers)
   - [Requirements](#requirements)
-  - [Lua Setup (MacOS)](#lua-setup-macos)
+  - [Lua Setup](#lua-setup)
+    - [With local script (MacOS and Linux only)](#with-local-script-macos-and-linux-only)
+    - [Manually](#manually)
   - [aos](#aos)
   - [Code Formatting](#code-formatting)
   - [Testing](#testing-1)
@@ -316,13 +318,42 @@ Calls the IO Network process to reassign the given ArNS name to a new ANT ID if 
 - Lua 5.3 - [Download](https://www.lua.org/download.html)
 - Luarocks - [Download](https://luarocks.org/)
 
-### Lua Setup (MacOS)
+### Lua Setup
+
+#### With local script (MacOS and Linux only)
+
+Note that we use lua 5.3 because that is what the [ao-dev-cli](https://github.com/permaweb/ao/tree/main/dev-cli) uses
 
 1. Clone the repository and navigate to the project directory.
 2. run the following:
 
 ```shell
 yarn install-lua-deps
+```
+
+#### Manually
+
+1. Build and install lua
+
+```shell
+curl -R -O https://lua.org/ftp/lua-5.3.1.tar.gz
+tar -xzvf lua-5.3.1.tar.gz
+cd lua-5.3.1
+make
+make install
+```
+
+2. Build and install LuaRocks
+
+Note that we do not specify the lua version, it will discover it.
+
+```shell
+curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.1.tar.gz
+tar zxpf luarocks-3.9.1.tar.gz
+cd luarocks-3.9.1
+./configure --with-lua=/usr/local --with-lua-include=/usr/local/include
+make build
+sudo make install
 ```
 
 If you ever need to refresh .luarocks, run the following command:

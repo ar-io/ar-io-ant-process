@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# Exit on error and enable debug mode
 set -e
-set -x
 
 # Detect operating system
 OS=$(uname -s)
@@ -11,31 +9,31 @@ OS=$(uname -s)
 LUA_VERSION="5.3.1"
 LUAROCKS_VERSION="3.9.1"
 
-install_dependencies() {
+# Function to provide dependency links
+provide_dependency_links() {
     case "$OS" in
         Darwin*)
-            echo "Installing dependencies on macOS..."
-            if ! command -v brew &> /dev/null; then
-                echo "Homebrew not found. Installing Homebrew..."
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            fi
-            brew install gcc make curl readline
+            echo " Please ensure you have the following installed on macOS:\n"
+            echo "- Homebrew: https://brew.sh/"
+            echo "Run these commands to install dependencies on macOS:"
+            echo "  brew install gcc make curl readline\n\n"
             ;;
         Linux*)
-            echo "Installing dependencies on Linux..."
-            if command -v apt-get &> /dev/null; then
-                echo "Using apt-get to install dependencies..."
-                sudo dpkg --remove-architecture i386 || true
-                sudo apt-get update
-                sudo apt-get install -y build-essential curl libreadline-dev
-            elif command -v yum &> /dev/null; then
-                echo "Using yum to install dependencies..."
-                sudo yum groupinstall -y "Development Tools"
-                sudo yum install -y curl readline-devel
-            else
-                echo "Unsupported Linux package manager. Please install build tools and curl manually."
-                exit 1
-            fi
+            echo " Please ensure you have the following installed on Linux:\n"
+            echo "- GCC, Make, and Curl: Typically included in build-essential."
+            echo "- Readline development libraries."
+            echo "For Ubuntu/Debian, run:"
+            echo "  sudo apt-get install -y build-essential curl libreadline-dev"
+            echo "For CentOS/RHEL, run:"
+            echo "  sudo yum groupinstall -y 'Development Tools' && sudo yum install -y readline-devel curl"
+            echo "For Arch Linux, run:"
+            echo "  sudo pacman -Syu --noconfirm base-devel curl readline\n\n"
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            echo " Please ensure you have the following installed on Windows:"
+            echo "- MSYS2: https://www.msys2.org/"
+            echo "Once MSYS2 is installed, use pacman to install dependencies:"
+            echo "  pacman -Syu --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-curl mingw-w64-x86_64-readline"
             ;;
         *)
             echo "Unsupported operating system: $OS"
@@ -68,10 +66,7 @@ download_with_retry() {
 install_lua() {
     echo "Installing Lua $LUA_VERSION..."
 
-    # Download Lua
     download_with_retry "https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz" "lua-${LUA_VERSION}.tar.gz"
-
-    # Extract and build
     tar -xzf "lua-${LUA_VERSION}.tar.gz"
     cd "lua-${LUA_VERSION}"
 
@@ -84,6 +79,10 @@ install_lua() {
             make linux
             sudo make install
             ;;
+        MINGW*|MSYS*|CYGWIN*)
+            make mingw
+            make install
+            ;;
     esac
 
     cd ..
@@ -95,14 +94,19 @@ install_lua() {
 install_luarocks() {
     echo "Installing LuaRocks $LUAROCKS_VERSION..."
 
-    # Download LuaRocks
     download_with_retry "https://luarocks.org/releases/luarocks-${LUAROCKS_VERSION}.tar.gz" "luarocks-${LUAROCKS_VERSION}.tar.gz"
-
-    # Extract and configure
     tar -xzf "luarocks-${LUAROCKS_VERSION}.tar.gz"
     cd "luarocks-${LUAROCKS_VERSION}"
 
-    ./configure --with-lua=/usr/local --with-lua-include=/usr/local/include
+    case "$OS" in
+        Darwin*|Linux*)
+            ./configure --with-lua=/usr/local --with-lua-include=/usr/local/include
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            ./configure --with-lua=/mingw64 --with-lua-include=/mingw64/include
+            ;;
+    esac
+
     make build
     sudo make install
 
@@ -123,10 +127,10 @@ is_luarocks_installed() {
 
 # Main function
 main() {
-    echo "Starting installation process..."
+    echo "Starting installation process...\n\n"
 
-    # Install dependencies
-    install_dependencies
+    # Provide dependency links
+    provide_dependency_links
 
     # Install Lua if not already installed
     if ! is_lua_installed; then
@@ -142,8 +146,8 @@ main() {
         echo "LuaRocks $LUAROCKS_VERSION is already installed."
     fi
 
-    echo "All installations completed successfully!"
+    echo "\nAll installations completed successfully!"
 }
 
-# Run the main function
+# Run main
 main

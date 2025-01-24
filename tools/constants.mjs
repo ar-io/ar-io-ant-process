@@ -68,4 +68,6 @@ export const DEFAULT_HANDLE_OPTIONS = {
   Target: STUB_ADDRESS,
   From: STUB_ADDRESS,
   Timestamp: Date.now(),
+  // for msg.reply
+  Reference: '1',
 };

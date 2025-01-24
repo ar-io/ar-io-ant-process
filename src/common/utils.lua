@@ -62,9 +62,14 @@ end
 ---utils.validateUndername("my-undername")
 ---```
 function utils.validateUndername(name)
+	--- RULES FOR UNDERNAMES
+	--- min 1 char
+	--- max 61 chars
+	--- no starting dashes or underscores
+	--- alphanumeric, dashes, underscores OR one '@' sign
+
 	local validLength = #name <= constants.MAX_UNDERNAME_LENGTH
-	local validRegex = string.match(name, "^@$") ~= nil
-		or string.match(name, "^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$") ~= nil
+	local validRegex = string.match(name, "^@$") ~= nil or string.match(name, "^[a-zA-Z0-9]+[a-zA-Z0-9_-]*$") ~= nil
 	local valid = validLength and validRegex
 	assert(valid, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 end
@@ -291,20 +296,25 @@ function utils.createHandler(tagName, tagValue, handler, position)
 				return handler(msg)
 			end, utils.errorHandler)
 
+			local resultNotice = nil
 			if not handlerStatus then
-				ao.send(notices.addForwardedTags(msg, {
+				resultNotice = notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = "Invalid-" .. tagValue .. "-Notice",
 					Error = tagValue .. "-Error",
 					["Message-Id"] = msg.Id,
 					Data = handlerRes,
-				}))
+				})
 			elseif handlerRes then
-				ao.send(notices.addForwardedTags(msg, {
+				resultNotice = notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = tagValue .. "-Notice",
 					Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
-				}))
+				})
+			end
+
+			if resultNotice then
+				utils.Send(msg, resultNotice)
 			end
 
 			local hasNewOwner = Owner ~= prevOwner
@@ -350,6 +360,17 @@ function utils.validateKeywords(keywords)
 		-- Check for duplicates
 		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
 		seenKeywords[keyword] = true
+	end
+end
+
+--- @param msg AoMessage
+--- @param response table
+function utils.Send(msg, response)
+	if msg.reply then
+		--- Reference: https://github.com/permaweb/aos/blob/main/blueprints/patch-legacy-reply.lua
+		msg.reply(response)
+	else
+		ao.send(response)
 	end
 end
 

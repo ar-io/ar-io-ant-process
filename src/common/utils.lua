@@ -296,20 +296,25 @@ function utils.createHandler(tagName, tagValue, handler, position)
 				return handler(msg)
 			end, utils.errorHandler)
 
+			local resultNotice = nil
 			if not handlerStatus then
-				ao.send(notices.addForwardedTags(msg, {
+				resultNotice = notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = "Invalid-" .. tagValue .. "-Notice",
 					Error = tagValue .. "-Error",
 					["Message-Id"] = msg.Id,
 					Data = handlerRes,
-				}))
+				})
 			elseif handlerRes then
-				ao.send(notices.addForwardedTags(msg, {
+				resultNotice = notices.addForwardedTags(msg, {
 					Target = msg.From,
 					Action = tagValue .. "-Notice",
 					Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
-				}))
+				})
+			end
+
+			if resultNotice then
+				utils.Send(msg, resultNotice)
 			end
 
 			local hasNewOwner = Owner ~= prevOwner
@@ -355,6 +360,17 @@ function utils.validateKeywords(keywords)
 		-- Check for duplicates
 		assert(not seenKeywords[keyword], "Duplicate keyword detected: " .. keyword)
 		seenKeywords[keyword] = true
+	end
+end
+
+--- @param msg AoMessage
+--- @param response table
+function utils.Send(msg, response)
+	if msg.reply then
+		--- Reference: https://github.com/permaweb/aos/blob/main/blueprints/patch-legacy-reply.lua
+		msg.reply(response)
+	else
+		ao.send(response)
 	end
 end
 

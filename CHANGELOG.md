@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [11] - [_wSmbjfSlX3dZNcqE8JqKmj-DKum9uQ_jB08LwOKCyw] - (2024-12-4)
+
+## [10] - [BRyNPIJWZaQ4IudfNnsfvMrZBO2YDPjgKqg_wCYT2U8] - (2024-12-4)
+
 ## [9] - [16_FyX-V2QU0RPSh1GIaEETSaUjNb0oVjCFpVbAfQq4] - (2024-12-4)
 
 ### Changed

@@ -71,7 +71,7 @@ describe('aos Balances', async () => {
 
       if (shouldPass === true) {
         const targetBalance = result.Messages[0].Data;
-        assert.equal(typeof targetBalance === 'number', shouldPass);
+        assert.equal(typeof targetBalance === 'string', shouldPass);
       } else {
         assert.strictEqual(
           result.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
@@ -97,7 +97,7 @@ describe('aos Balances', async () => {
           transferResult.Memory,
         );
         const balances = JSON.parse(balancesResult.Messages[0].Data);
-        assert.equal(balances[target_address] === 1, shouldPass);
+        assert.equal(balances[target_address] === '1', shouldPass);
       } else {
         assert.strictEqual(
           transferResult.Messages[0].Tags.find((t) => t.name === 'Error')
@@ -157,7 +157,7 @@ describe('aos Balances', async () => {
     const [ownerAddress, ownerBalance] = ownerEntry;
     assert(Object.entries(balances).length === 1);
     assert(ownerAddress === STUB_ADDRESS);
-    assert(ownerBalance === 1);
+    assert(ownerBalance === '1');
   });
 
   it('should set the logo of the ant', async () => {
@@ -174,6 +174,6 @@ describe('aos Balances', async () => {
   });
   it('should get total supply', async () => {
     const res = await getTotalSupply();
-    assert.strictEqual(res, 1, 'total supply should be equal to 1');
+    assert.strictEqual(res, '1', 'total supply should be equal to 1');
   });
 });

@@ -88,38 +88,50 @@ function ant.init()
 
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
 		local recipient = msg.Tags.Recipient
-		utils.validateOwner(msg.From)
+		if msg.From ~= Owner then
+			utils.Send(msg, {
+				Action = "Transfer-Error",
+				["Message-Id"] = msg.Id,
+				Error = "Insufficient Balance!",
+			})
+		end
 		balances.transfer(recipient, msg.Tags["Allow-Unsafe-Addresses"])
+
 		if not msg.Cast then
-			ao.send(notices.debit(msg))
-			ao.send(notices.credit(msg))
+			utils.Send(msg, notices.debit(msg))
+			utils.Send(msg, notices.credit(msg))
 		end
 	end)
 
 	createActionHandler(TokenSpecActionMap.Balance, function(msg)
-		local balRes = balances.balance(msg.Tags.Recipient or msg.From, msg.Tags["Allow-Unsafe-Addresses"])
+		local addressToCheck = msg.Tags.Recipient or msg.Tags.Target or msg.From
+		local balRes = balances.balance(addressToCheck, msg.Tags["Allow-Unsafe-Addresses"])
 
-		ao.send({
-			Target = msg.From,
+		utils.Send(msg, {
 			Action = "Balance-Notice",
 			Balance = tostring(balRes),
 			Ticker = Ticker,
-			Address = msg.Tags.Recipient or msg.From,
-			Data = balRes,
+			Account = addressToCheck,
+			Address = addressToCheck,
+			Data = tostring(balRes),
 		})
 	end)
 
-	createActionHandler(TokenSpecActionMap.Balances, function()
-		return balances.balances()
+	createActionHandler(TokenSpecActionMap.Balances, function(msg)
+		local bals = {}
+		for k, v in pairs(balances.balances()) do
+			bals[k] = tostring(v)
+		end
+
+		utils.Send(msg, { Data = json.encode(bals) })
 	end)
 
 	createActionHandler(TokenSpecActionMap.TotalSupply, function(msg)
 		assert(msg.From ~= ao.id, "Cannot call Total-Supply from the same process!")
 
-		ao.send({
-			Target = msg.From,
-			Action = "Total-Supply-Notice",
-			Data = TotalSupply,
+		utils.Send(msg, {
+			Action = "Total-Supply",
+			Data = tostring(TotalSupply),
 			Ticker = Ticker,
 		})
 	end)
@@ -136,8 +148,7 @@ function ant.init()
 			Owner = Owner,
 			Handlers = utils.getHandlerNames(Handlers),
 		}
-		ao.send({
-			Target = msg.From,
+		utils.Send(msg, {
 			Action = "Info-Notice",
 			Tags = info,
 			Data = json.encode(info),

@@ -352,14 +352,17 @@ function ant.init()
 			end
 		end
 
-		utils.Send(
-			msg,
-			notices.credit({
-				From = msg.From,
-				Sender = Owner,
-				Recipient = Owner,
-			})
-		)
+		if Owner then
+			utils.Send(
+				msg,
+				notices.credit({
+					From = msg.From,
+					Sender = Owner,
+					Recipient = Owner,
+				})
+			)
+		end
+
 		if AntRegistryId then
 			notices.notifyState(msg, AntRegistryId)
 		end

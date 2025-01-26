@@ -325,33 +325,45 @@ function ant.init()
 		})
 	end)
 
-	Handlers.prepend("_bootAnt", function(msg)
+	--[[
+	AOS provides a _boot handler that is designed to load Lua code on boot.
+	This handler OVERRIDES this and replaces it with our ANT state initialization handler.
+
+	]]
+	Handlers.once("_boot", function(msg)
 		return msg.Tags.Type == "Process" and Owner == msg.From
 	end, function(msg)
-		if msg.Data and msg.Tags["Initialize-State"] then
+		if type(msg.Data) == "string" then
+			-- If data is present assume its an attempt to initialize the state
 			local status, res = xpcall(function()
 				initialize.initializeANTState(msg.Data)
 			end, utils.errorHandler)
 			if not status then
-				ao.send(notices.addForwardedTags(msg, {
-					Target = Owner,
-					Error = res or "",
-					Data = res or "",
-					Action = "Invalid-Boot-Ant-Notice",
-					["Message-Id"] = msg.Id,
-				}))
+				utils.Send(
+					msg,
+					notices.addForwardedTags(msg, {
+						Target = Owner,
+						Error = res or "",
+						Data = res or "",
+						Action = "Invalid-Boot-Notice",
+						["Message-Id"] = msg.Id,
+					})
+				)
 			end
 		end
 
-		ao.send(notices.credit({
-			From = ao.id,
-			Sender = Owner,
-			Recipient = Owner,
-		}))
+		utils.Send(
+			msg,
+			notices.credit({
+				From = msg.From,
+				Sender = Owner,
+				Recipient = Owner,
+			})
+		)
 		if AntRegistryId then
 			notices.notifyState(msg, AntRegistryId)
 		end
-	end, 1)
+	end)
 end
 
 return ant

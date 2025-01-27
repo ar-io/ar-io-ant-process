@@ -4,6 +4,10 @@ return {
     default = {
         root = "src",
         pattern = "**/*_spec.lua$",
+        exclude = {
+            "**/luarocks-3.9.1/**",
+            "**/lua-5.3.1/**"
+        },
         helper = "spec/setup.lua",
         verbose = true,
         coverage = true,

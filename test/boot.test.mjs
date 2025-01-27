@@ -12,6 +12,17 @@ import AoLoader from '@permaweb/ao-loader';
 
 describe('BOOT ANT', async () => {
   it('should boot the process with ANT state', async () => {
+    const handle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
+    async function getState(mem) {
+      return handle(
+        mem,
+        {
+          ...DEFAULT_HANDLE_OPTIONS,
+          Tags: [{ name: 'Action', value: 'State' }],
+        },
+        AO_LOADER_HANDLER_ENV,
+      );
+    }
     const antState = {
       name: 'Test Process',
       ticker: 'TEST',
@@ -28,21 +39,7 @@ describe('BOOT ANT', async () => {
       },
     };
 
-    const tempHandle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
-    // just to get the mem buffer originally
-
-    async function getState(mem) {
-      return tempHandle(
-        mem,
-        {
-          ...DEFAULT_HANDLE_OPTIONS,
-          Tags: [{ name: 'Action', value: 'State' }],
-        },
-        AO_LOADER_HANDLER_ENV,
-      );
-    }
-
-    const result = await tempHandle(
+    const result = await handle(
       null,
       {
         ...DEFAULT_HANDLE_OPTIONS,
@@ -62,7 +59,11 @@ describe('BOOT ANT', async () => {
     );
 
     const messages = result.Messages;
-    const stateNotice = messages.find((m) => m.Target === STUB_ANT_REGISTRY_ID);
+    const stateNotice = messages.find(
+      (m) =>
+        m.Target === STUB_ANT_REGISTRY_ID &&
+        m.Tags.find((t) => t.name == 'Action' && t.value == 'State-Notice'),
+    );
     const creditNotice = messages.find((m) => m.Target === STUB_ADDRESS);
 
     assert(stateNotice, 'no state notice found');
@@ -87,11 +88,9 @@ describe('BOOT ANT', async () => {
   });
 
   it('should not initialize state with invalid data', async () => {
-    const tempHandle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
-    // just to get the mem buffer originally
-
+    const handle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
     async function getState(mem) {
-      return tempHandle(
+      return handle(
         mem,
         {
           ...DEFAULT_HANDLE_OPTIONS,
@@ -100,12 +99,65 @@ describe('BOOT ANT', async () => {
         AO_LOADER_HANDLER_ENV,
       );
     }
-
-    const result = await tempHandle(
+    const result = await handle(
       null,
       {
         ...DEFAULT_HANDLE_OPTIONS,
         Data: 'not valid json',
+        Tags: [
+          {
+            name: 'Type',
+            value: 'Process',
+          },
+          {
+            name: 'ANT-Registry-Id',
+            value: STUB_ANT_REGISTRY_ID,
+          },
+        ],
+      },
+      AO_LOADER_HANDLER_ENV,
+    );
+
+    const messages = result.Messages;
+    const stateNotice = messages.find(
+      (m) =>
+        m.Target === STUB_ANT_REGISTRY_ID &&
+        m.Tags.find((t) => t.name == 'Action' && t.value == 'State-Notice'),
+    );
+    const creditNotice = messages.find((m) => m.Target === STUB_ADDRESS);
+
+    const errorNotice = messages.find((m) =>
+      m.Tags.find((tag) => tag.name == 'Error'),
+    );
+
+    assert(errorNotice, 'no error notice');
+
+    assert(stateNotice, 'no state notice found');
+    assert(creditNotice, 'no credit notice found');
+
+    const stateRes = await getState(result.Memory);
+
+    const state = JSON.parse(stateRes.Messages[0].Data);
+    assert(state, 'Unable to get ANT state');
+  });
+
+  it('should boot ant with no data', async () => {
+    const handle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
+    async function getState(mem) {
+      return handle(
+        mem,
+        {
+          ...DEFAULT_HANDLE_OPTIONS,
+          Tags: [{ name: 'Action', value: 'State' }],
+        },
+        AO_LOADER_HANDLER_ENV,
+      );
+    }
+    const result = await handle(
+      null,
+      {
+        ...DEFAULT_HANDLE_OPTIONS,
+
         Tags: [
           {
             name: 'Type',
@@ -128,7 +180,7 @@ describe('BOOT ANT', async () => {
       m.Tags.find((tag) => tag.name == 'Error'),
     );
 
-    assert(errorNotice, 'no error notice');
+    assert(!errorNotice, 'There was an error notice');
 
     assert(stateNotice, 'no state notice found');
     assert(creditNotice, 'no credit notice found');

@@ -49,8 +49,9 @@ This repository provides two flavours of ANT process module, AOS and a custom mo
     - [`Reassign-Name`](#reassign-name)
 - [Developers](#developers)
   - [Requirements](#requirements)
-  - [Lua Setup (MacOS)](#lua-setup-macos)
-  - [LuaRocks Setup](#luarocks-setup)
+  - [Lua Setup](#lua-setup)
+    - [With local script (MacOS and Linux only)](#with-local-script-macos-and-linux-only)
+    - [Manually](#manually)
   - [aos](#aos)
   - [Code Formatting](#code-formatting)
   - [Testing](#testing-1)
@@ -391,38 +392,43 @@ Calls the IO Network process to reassign the given ArNS name to a new ANT ID if 
 - Lua 5.3 - [Download](https://www.lua.org/download.html)
 - Luarocks - [Download](https://luarocks.org/)
 
-### Lua Setup (MacOS)
+### Lua Setup
+
+#### With local script (MacOS and Linux only)
+
+Note that we use lua 5.3 because that is what the [ao-dev-cli](https://github.com/permaweb/ao/tree/main/dev-cli) uses
 
 1. Clone the repository and navigate to the project directory.
-1. Install `lua`
-   - `brew install lua@5.3`
-1. Add the following to your `.zshrc` or `.bashrc` file:
+2. run the following:
 
-   ```bash
-   echo 'export LDFLAGS="-L/usr/local/opt/lua@5.3/lib"' >> ~/.zshrc
-   echo 'export CPPFLAGS="-I/usr/local/opt/lua@5.3/include"' >> ~/.zshrc
-   echo 'export PKG_CONFIG_PATH="/usr/local/opt/lua@5.3/lib/pkgconfig"' >> ~/.zshrc
-   echo 'export PATH="/usr/local/opt/lua@5.3/bin:$PATH"' >> ~/.zshrc
-   ```
+```shell
+yarn install-lua-deps
+```
 
-1. Run `source ~/.zshrc` or `source ~/.bashrc` to apply the changes.
-1. Run `lua -v` to verify the installation.
+#### Manually
 
-### LuaRocks Setup
+1. Build and install lua
 
-1. Install `luarocks`
+```shell
+curl -R -O https://lua.org/ftp/lua-5.3.1.tar.gz
+tar -xzvf lua-5.3.1.tar.gz
+cd lua-5.3.1
+make
+make install
+```
 
-   ```bash
-   curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.1.tar.gz
-   tar zxpf luarocks-3.9.1.tar.gz
-   cd luarocks-3.9.1
-   ./configure --with-lua=/usr/local/opt/lua@5.3 --with-lua-include=/usr/local/opt/lua@5.3/include
-   make build
-   sudo make install
-   ```
+2. Build and install LuaRocks
 
-1. Check the installation by running `luarocks --version`.
-1. Check the LuaRocks configuration by running `luarocks config | grep LUA`
+Note that we do not specify the lua version, it will discover it.
+
+```shell
+curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.1.tar.gz
+tar zxpf luarocks-3.9.1.tar.gz
+cd luarocks-3.9.1
+./configure --with-lua=/usr/local --with-lua-include=/usr/local/include
+make build
+sudo make install
+```
 
 If you ever need to refresh .luarocks, run the following command:
 

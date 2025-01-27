@@ -16,6 +16,7 @@ process.wasm
 dist
 publish-output.json
 luarocks-3.9.1
+lua-5.3.1
 temp-build
 build
 aos-process

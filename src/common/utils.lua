@@ -151,7 +151,7 @@ end
 ---@description Asserts that the ttl is a valid number
 ---@example
 ---```lua
----utils.validateTTLSeconds(3600)
+---utils.validateTTLSeconds(900)
 ---```
 function utils.validateTTLSeconds(ttl)
 	local valid = type(ttl) == "number" and ttl >= constants.MIN_TTL_SECONDS and ttl <= constants.MAX_TTL_SECONDS
@@ -319,7 +319,9 @@ function utils.createHandler(tagName, tagValue, handler, position)
 
 			local hasNewOwner = Owner ~= prevOwner
 			local hasDifferentControllers = #utils.keys(Controllers) ~= #utils.keys(prevControllers)
+			--luacheck: ignore
 			if (hasNewOwner or hasDifferentControllers) and tagValue ~= "State" and AntRegistryId ~= nil then
+				--luacheck: ignore
 				notices.notifyState(msg, AntRegistryId)
 			end
 

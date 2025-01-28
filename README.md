@@ -184,7 +184,7 @@ Example:
   "records": {
     "@": {
       "transactionId": "3333333333333333333333333333333333333333333",
-      "ttlSeconds": 3600
+      "ttlSeconds": 900
     }
   }
 }

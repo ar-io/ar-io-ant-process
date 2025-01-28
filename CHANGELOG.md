@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Adjusts min and max allowed TTLs to 60 (1 minute) and 86400 (1 day), respetively. Defaults to 900 seconds (15 mins).
+- Removed limit on undernames of 10k records.
+
 ### Added
 
 - Boot mechanism for initializing state and sending notices to ANT Registry and Owner

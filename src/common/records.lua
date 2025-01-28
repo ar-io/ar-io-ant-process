@@ -1,7 +1,14 @@
 local utils = require(".common.utils")
+
 local records = {}
 -- defaults to landing page txid
-Records = Records or { ["@"] = { transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI", ttlSeconds = 3600 } }
+Records = Records
+	or {
+		["@"] = {
+			transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI",
+			ttlSeconds = 900,
+		},
+	}
 
 --- Set a record in the Records of the ANT.
 ---@param name string The name of the record.
@@ -12,12 +19,6 @@ function records.setRecord(name, transactionId, ttlSeconds)
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
-
-	local recordsCount = #Records
-
-	if recordsCount >= 10000 then
-		error("Max records limit of 10,000 reached, please delete some records to make space")
-	end
 
 	Records[name] = {
 		transactionId = transactionId,

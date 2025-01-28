@@ -2,6 +2,21 @@ local utils = require(".common.utils")
 local json = require(".common.json")
 local initialize = {}
 
+---@alias InitialANTState {
+--- name: string,
+--- ticker: string,
+--- description: string,
+--- keywords: table<string>,
+--- logo: string,
+--- balances: table<string, integer>,
+--- owner: string,
+--- controllers: string[],
+--- records: table<string, Record>,
+---}
+
+--- Initializes the ANT state from a JSON string
+---@param state InitialANTState
+---@return string JSON representation of the initialized ANT State
 function initialize.initializeANTState(state)
 	local encoded = json.decode(state)
 	local balances = encoded.balances

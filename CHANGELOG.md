@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Adjusts min and max allowed TTLs to 60 (1 minute) and 86400 (1 day), respetively. Defaults to 900 seconds (15 mins).
+- Removed limit on undernames of 10k records.
+
+### Added
+
+- Boot mechanism for initializing state and sending notices to ANT Registry and Owner
+
+## [11] - [1YqVEdJDvcpQ6qEWXYBEaVqB_NzAz4qPAsnUqLf5m3I] - (2025-1-24)
+
+### Fixed
+
+- Undername creation has been fixed to enable creation of one character undernames.
+- Token API responses updated to spec
+
+## [10] - [k9tQkbnFYZOGp6ist1yFuaqk_wOkzM5KUSNDtWzCLtg] - (2025-1-14)
+
+### Changed
+
+- Updated build process to compile a WASM binary as well as the bundled Lua code
+- Updated testing to use our own WASM binary instead of an AOS fixture
+
 ## [9] - [16_FyX-V2QU0RPSh1GIaEETSaUjNb0oVjCFpVbAfQq4] - (2024-12-4)
 
 ### Changed

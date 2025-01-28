@@ -23,7 +23,7 @@ describe('aos Records', async () => {
   }
 
   async function setRecord(
-    { name, ttl = 3600, transactionId = STUB_ADDRESS },
+    { name, ttl = 900, transactionId = STUB_ADDRESS },
     mem,
   ) {
     return handle(
@@ -89,7 +89,7 @@ describe('aos Records', async () => {
         { name: 'Action', value: 'Set-Record' },
         { name: 'Sub-Domain', value: '@' },
         { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
-        { name: 'TTL-Seconds', value: 3600 },
+        { name: 'TTL-Seconds', value: 900 },
       ],
     });
 
@@ -103,7 +103,7 @@ describe('aos Records', async () => {
     const records = JSON.parse(recordsResult.Messages[0].Data);
     const record = records['@'];
     assert(record.transactionId === ''.padEnd(43, '3'));
-    assert(record.ttlSeconds === 3600);
+    assert(record.ttlSeconds === 900);
   });
 
   it('should remove the record of an ANT', async () => {
@@ -112,7 +112,7 @@ describe('aos Records', async () => {
         { name: 'Action', value: 'Set-Record' },
         { name: 'Sub-Domain', value: 'timmy' },
         { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
-        { name: 'TTL-Seconds', value: 3600 },
+        { name: 'TTL-Seconds', value: 900 },
       ],
     });
 
@@ -143,7 +143,7 @@ describe('aos Records', async () => {
         { name: 'Action', value: 'Set-Record' },
         { name: 'Sub-Domain', value: 'Timmy' },
         { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
-        { name: 'TTL-Seconds', value: 3600 },
+        { name: 'TTL-Seconds', value: 900 },
       ],
     });
 
@@ -157,6 +157,6 @@ describe('aos Records', async () => {
     const records = JSON.parse(recordsResult.Messages[0].Data);
     const record = records['timmy'];
     assert(record.transactionId === ''.padEnd(43, '3'));
-    assert(record.ttlSeconds === 3600);
+    assert(record.ttlSeconds === 900);
   });
 });

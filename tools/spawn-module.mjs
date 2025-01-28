@@ -94,7 +94,7 @@ async function main() {
         records: {
           '@': {
             transactionId: 'UyC5P5qKPZaltMmmZAWdakhlDXsBF6qmyrbWYFchRTk',
-            ttlSeconds: 3600,
+            ttlSeconds: 900,
           },
         },
         ticker: 'ANT',

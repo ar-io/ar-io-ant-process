@@ -11,10 +11,20 @@ This repository provides two flavours of ANT process module, AOS and a custom mo
   - [Testing](#testing)
   - [Building the AOS code](#building-the-aos-code)
     - [Build](#build)
+      - [Lua code](#lua-code)
+      - [Module WASM Binary](#module-wasm-binary)
     - [Publish](#publish)
+      - [Lua code](#lua-code-1)
+      - [Module WASM Binary](#module-wasm-binary-1)
     - [Load](#load)
+      - [Lua code](#lua-code-2)
+      - [Module WASM Binary](#module-wasm-binary-2)
     - [Spawn](#spawn)
+      - [Lua code](#lua-code-3)
+      - [Module WASM Binary](#module-wasm-binary-3)
 - [Handler Methods](#handler-methods)
+  - [Boot Methods](#boot-methods)
+    - [`_boot` (WASM Binary only)](#_boot-wasm-binary-only)
   - [Read Methods](#read-methods)
     - [`Info`](#info)
     - [`Total-Supply`](#total-supply)
@@ -39,8 +49,9 @@ This repository provides two flavours of ANT process module, AOS and a custom mo
     - [`Reassign-Name`](#reassign-name)
 - [Developers](#developers)
   - [Requirements](#requirements)
-  - [Lua Setup (MacOS)](#lua-setup-macos)
-  - [LuaRocks Setup](#luarocks-setup)
+  - [Lua Setup](#lua-setup)
+    - [With local script (MacOS and Linux only)](#with-local-script-macos-and-linux-only)
+    - [Manually](#manually)
   - [aos](#aos)
   - [Code Formatting](#code-formatting)
   - [Testing](#testing-1)
@@ -59,10 +70,10 @@ yarn
 ```
 
 Then install the ao cli - read the docs [here](https://github.com/permaweb/ao/tree/main/dev-cli)
-Below is latest version as of writing, refer to the docs for the latest version.
+Refer to the docs for installing different versions.
 
 ```sh
-curl -L https://arweave.net/iVthglhSN7G9LuJSU_h5Wy_lcEa0RE4VQmrtoBMj7Bw | bash
+curl -L https://install_ao.g8way.io | bash
 ```
 
 You may need to follow the instructions in the cli to add the program to your PATH.
@@ -81,39 +92,103 @@ busted .
 
 This bundles the ant-aos code and outputs it to `dist` folder. This can then be used to send to the `Eval` method on AOS to load the ANT source code.
 
+##### Lua code
+
 ```bash
 yarn aos:build
+```
+
+##### Module WASM Binary
+
+```bash
+yarn module:build
 ```
 
 #### Publish
 
 Ensure that in the `tools` directory you place you Arweave JWK as `key.json`
 
+##### Lua code
+
 ```bash
 yarn aos:publish
+```
+
+##### Module WASM Binary
+
+```bash
+yarn module:publish
 ```
 
 #### Load
 
 This will load an AOS module into the loader, followed by the bundled aos Lua file to verify that it is a valid build.
 
+##### Lua code
+
 ```bash
 yarn aos:load
 ```
 
+##### Module WASM Binary
+
+```bash
+yarn module:load
+```
+
 #### Spawn
 
-this will spawn an aos process and load the bundled lua code into it.
+This will spawn an aos process and load the bundled lua code into it.
+
+##### Lua code
 
 ```bash
 yarn aos:spawn
 ```
 
-This will deploy the bundled lua file to arweave as an L1 transaction, so your wallet will need AR to pay the gas.
+##### Module WASM Binary
+
+```bash
+yarn module:spawn
+```
+
+This will deploy the bundled lua file or WASM module to arweave as an L2 ([ANS-104]) transaction, so your wallet will need Turbo Credits to pay the gas.
 
 ## Handler Methods
 
-For interacting with handlers please refer to the [AO Cookbook]
+For interacting with handlers please refer to the [AR.IO SDK] or the [AO Cookbook]
+
+### Boot Methods
+
+#### `_boot` (WASM Binary only)
+
+When compiled as a WASM Module Binary the ANT provides a boot method to initialize the state of the ANT.
+
+This will send a `Credit-Notice` to the initialized Owner (if applicable) and a `State-Notice` to the [ANT Registry].
+
+If a valid JSON string state is provided, it will be used to set the initial state of the ANT.
+
+Example:
+
+```json
+{
+  "name": "Test Process",
+  "ticker": "TEST",
+  "description": "TEST DESCRIPTION",
+  "keywords": ["KEYWORD-1", "KEYWORD-2", "KEYWORD-3"],
+  "owner": "STUB_ADDRESS",
+  "controllers": ["STUB_ADDRESS"],
+  "balances": {
+    "STUB_ADDRESS": 1
+  },
+  "records": {
+    "@": {
+      "transactionId": "3333333333333333333333333333333333333333333",
+      "ttlSeconds": 900
+    }
+  }
+}
+```
 
 ### Read Methods
 
@@ -317,38 +392,43 @@ Calls the IO Network process to reassign the given ArNS name to a new ANT ID if 
 - Lua 5.3 - [Download](https://www.lua.org/download.html)
 - Luarocks - [Download](https://luarocks.org/)
 
-### Lua Setup (MacOS)
+### Lua Setup
+
+#### With local script (MacOS and Linux only)
+
+Note that we use lua 5.3 because that is what the [ao-dev-cli](https://github.com/permaweb/ao/tree/main/dev-cli) uses
 
 1. Clone the repository and navigate to the project directory.
-1. Install `lua`
-   - `brew install lua@5.3`
-1. Add the following to your `.zshrc` or `.bashrc` file:
+2. run the following:
 
-   ```bash
-   echo 'export LDFLAGS="-L/usr/local/opt/lua@5.3/lib"' >> ~/.zshrc
-   echo 'export CPPFLAGS="-I/usr/local/opt/lua@5.3/include"' >> ~/.zshrc
-   echo 'export PKG_CONFIG_PATH="/usr/local/opt/lua@5.3/lib/pkgconfig"' >> ~/.zshrc
-   echo 'export PATH="/usr/local/opt/lua@5.3/bin:$PATH"' >> ~/.zshrc
-   ```
+```shell
+yarn install-lua-deps
+```
 
-1. Run `source ~/.zshrc` or `source ~/.bashrc` to apply the changes.
-1. Run `lua -v` to verify the installation.
+#### Manually
 
-### LuaRocks Setup
+1. Build and install lua
 
-1. Install `luarocks`
+```shell
+curl -R -O https://lua.org/ftp/lua-5.3.1.tar.gz
+tar -xzvf lua-5.3.1.tar.gz
+cd lua-5.3.1
+make
+make install
+```
 
-   ```bash
-   curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.1.tar.gz
-   tar zxpf luarocks-3.9.1.tar.gz
-   cd luarocks-3.9.1
-   ./configure --with-lua=/usr/local/opt/lua@5.3 --with-lua-include=/usr/local/opt/lua@5.3/include
-   make build
-   sudo make install
-   ```
+2. Build and install LuaRocks
 
-1. Check the installation by running `luarocks --version`.
-1. Check the LuaRocks configuration by running `luarocks config | grep LUA`
+Note that we do not specify the lua version, it will discover it.
+
+```shell
+curl -R -O http://luarocks.github.io/luarocks/releases/luarocks-3.9.1.tar.gz
+tar zxpf luarocks-3.9.1.tar.gz
+cd luarocks-3.9.1
+./configure --with-lua=/usr/local --with-lua-include=/usr/local/include
+make build
+sudo make install
+```
 
 If you ever need to refresh .luarocks, run the following command:
 
@@ -412,8 +492,11 @@ dependencies = {
 - [ArNS Docs]
 - [ArNS Portal]
 - [AO Cookbook]
+- [AR.IO SDK]
 
 [AR.IO Gateways]: https://docs.ar.io/gateways/ar-io-node/overview/
+[AR.IO SDK]: https://www.npmjs.com/package/@ar.io/sdk
+[ANT Registry]: https://github.com/ar-io/ar-io-ant-registry-process
 [ArNS Docs]: https://ar.io/docs/arns/
 [ArNS ANT Docs]: https://ar.io/docs/arns/#arweave-name-token-ant
 [ArNS Portal]: https://arns.app

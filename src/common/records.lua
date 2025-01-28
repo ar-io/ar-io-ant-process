@@ -1,12 +1,12 @@
 local utils = require(".common.utils")
-local constants = require(".common.constants")
+
 local records = {}
 -- defaults to landing page txid
 Records = Records
 	or {
 		["@"] = {
 			transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI",
-			ttlSeconds = constants.DEFAULT_TTL_SECONDS,
+			ttlSeconds = 84600,
 		},
 	}
 

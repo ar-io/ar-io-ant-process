@@ -34,7 +34,7 @@ describe('BOOT ANT', async () => {
       records: {
         '@': {
           transactionId: ''.padEnd(43, '3'),
-          ttlSeconds: 3600,
+          ttlSeconds: 900,
         },
       },
     };

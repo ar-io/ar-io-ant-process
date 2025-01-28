@@ -51,7 +51,7 @@ export const DEFAULT_ANT_STATE = JSON.stringify({
   records: {
     '@': {
       transactionId: 'UyC5P5qKPZaltMmmZAWdakhlDXsBF6qmyrbWYFchRTk',
-      ttlSeconds: 3600,
+      ttlSeconds: 900,
     },
   },
   ticker: 'ANT',

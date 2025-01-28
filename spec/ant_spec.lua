@@ -84,16 +84,16 @@ describe("Arweave Name Token", function()
 	end)
 
 	it("sets a record with max ttl", function()
-		local name, transactionId, ttlSeconds = "@", fake_address, 3600
+		local name, transactionId, ttlSeconds = "@", fake_address, 86400
 		records.setRecord(name, transactionId, ttlSeconds) -- happy path
 		assert.are.same(_G.Records["@"].transactionId, fake_address)
-		assert.are.same(_G.Records["@"].ttlSeconds, 3600)
+		assert.are.same(_G.Records["@"].ttlSeconds, 86400)
 	end)
 
 	it("gets all records", function()
 		_G.Records["@"] = {
 			transactionId = string.rep("1", 43),
-			ttlSeconds = 3600,
+			ttlSeconds = 900,
 		}
 		local recordEntries = records.getRecords()
 

@@ -287,7 +287,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			end
 
 			-- sometimes the message id is not present on dryrun so we add a stub string to prevent issues with concat string
-			print("Handling Action [" .. msg.Id or "no-msg-id" .. "]: " .. tagValue)
+
 			local prevOwner = tostring(Owner)
 			local prevControllers = utils.deepCopy(Controllers)
 			assert(prevControllers, "Unable to deep copy controllers")

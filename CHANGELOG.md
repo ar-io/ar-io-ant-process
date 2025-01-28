@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [12] - [mwCMAjglwV_96oEMEIi5epg_QXElOMzEcLkCUeQyGGo] - (2025-1-28)
+
 ### Changed
 
 - Adjusts min and max allowed TTLs to 60 (1 minute) and 86400 (1 day), respetively. Defaults to 900 seconds (15 mins).

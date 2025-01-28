@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Min TTL on records is now 60 seconds, down from 900 seconds. Defaults to 900 seconds.
+- Removed limit on undernames of 10k records.
+
 ### Added
 
 - Boot mechanism for initializing state and sending notices to ANT Registry and Owner

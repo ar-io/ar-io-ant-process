@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Min TTL on records is now 60 seconds, down from 900 seconds. Defaults to 900 seconds.
+- Adjusts min and max allowed TTLs to 60 (1 minute) and 86400 (1 day), respetively. Defaults to 900 seconds (15 mins).
 - Removed limit on undernames of 10k records.
 
 ### Added

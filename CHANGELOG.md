@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Removed print with ID in Handler wrapper since ID can be null on dry runs.
+
 ## [12] - [mwCMAjglwV_96oEMEIi5epg_QXElOMzEcLkCUeQyGGo] - (2025-1-28)
 
 ### Changed

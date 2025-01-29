@@ -333,6 +333,7 @@ function ant.init()
 	AOS provides a _boot handler that is designed to load Lua code on boot.
 	This handler OVERRIDES this and replaces it with our ANT state initialization handler.
 
+	NOTE: if we use utils.Send here memory blows up for some reason
 	]]
 	Handlers.once("_boot", function(msg)
 		return msg.Tags.Type == "Process" and Owner == msg.From
@@ -343,28 +344,22 @@ function ant.init()
 				initialize.initializeANTState(msg.Data)
 			end, utils.errorHandler)
 			if not status then
-				utils.Send(
-					msg,
-					notices.addForwardedTags(msg, {
-						Target = Owner,
-						Error = res or "",
-						Data = res or "",
-						Action = "Invalid-Boot-Notice",
-						["Message-Id"] = msg.Id,
-					})
-				)
+				ao.send(notices.addForwardedTags(msg, {
+					Target = Owner,
+					Error = res or "",
+					Data = res or "",
+					Action = "Invalid-Boot-Notice",
+					["Message-Id"] = msg.Id,
+				}))
 			end
 		end
 
 		if Owner then
-			utils.Send(
-				msg,
-				notices.credit({
-					From = msg.From,
-					Sender = Owner,
-					Recipient = Owner,
-				})
-			)
+			ao.send(notices.credit({
+				From = msg.From,
+				Sender = Owner,
+				Recipient = Owner,
+			}))
 		end
 
 		if AntRegistryId then

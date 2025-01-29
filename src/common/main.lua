@@ -90,6 +90,7 @@ function ant.init()
 		local recipient = msg.Tags.Recipient
 		if msg.From ~= Owner then
 			utils.Send(msg, {
+				Target = msg.From,
 				Action = "Transfer-Error",
 				["Message-Id"] = msg.Id,
 				Error = "Insufficient Balance!",
@@ -108,6 +109,7 @@ function ant.init()
 		local balRes = balances.balance(addressToCheck, msg.Tags["Allow-Unsafe-Addresses"])
 
 		utils.Send(msg, {
+			Target = msg.From,
 			Action = "Balance-Notice",
 			Balance = tostring(balRes),
 			Ticker = Ticker,
@@ -123,13 +125,14 @@ function ant.init()
 			bals[k] = tostring(v)
 		end
 
-		utils.Send(msg, { Data = json.encode(bals) })
+		utils.Send(msg, { Target = msg.From, Data = json.encode(bals) })
 	end)
 
 	createActionHandler(TokenSpecActionMap.TotalSupply, function(msg)
 		assert(msg.From ~= ao.id, "Cannot call Total-Supply from the same process!")
 
 		utils.Send(msg, {
+			Target = msg.From,
 			Action = "Total-Supply",
 			Data = tostring(TotalSupply),
 			Ticker = Ticker,
@@ -149,6 +152,7 @@ function ant.init()
 			Handlers = utils.getHandlerNames(Handlers),
 		}
 		utils.Send(msg, {
+			Target = msg.From,
 			Action = "Info-Notice",
 			Tags = info,
 			Data = json.encode(info),
@@ -225,8 +229,8 @@ function ant.init()
 		return initialize.initializeANTState(msg.Data)
 	end)
 
-	createActionHandler(ActionMap.State, function(msg)
-		notices.notifyState(msg, msg.From)
+	createActionHandler(ActionMap.State, function()
+		return utils.getState()
 	end)
 
 	-- IO Network Contract Handlers
@@ -248,7 +252,7 @@ function ant.init()
 			Name = name,
 		})
 
-		ao.send({
+		utils.Send(msg, {
 			Target = msg.From,
 			Action = "Release-Name-Notice",
 			Initiator = msg.From,
@@ -275,7 +279,7 @@ function ant.init()
 			["Process-Id"] = antProcessIdToReassign,
 		})
 
-		ao.send({
+		utils.Send(msg, {
 			Target = msg.From,
 			Action = "Reassign-Name-Notice",
 			Initiator = msg.From,

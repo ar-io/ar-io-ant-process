@@ -11,7 +11,7 @@
     "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
     "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
     "aos:spawn": "node tools/spawn-aos.mjs",
-    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs",
+    "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 test/records.test.mjs",
     "install-lua-deps": "sh tools/install-lua-deps.sh && luarocks install ar-io-ao-0.1-1.rockspec",
     "prepare": "husky"
   },

@@ -159,4 +159,25 @@ describe('aos Records', async () => {
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 900);
   });
+
+  it('should be able to set 3k records', async () => {
+    let recordMem = startMemory;
+    for (let i = 0; i < 10_000; i++) {
+      if (!(i % 100)) {
+        console.log(i + '/10k');
+      }
+      const res = await setRecord(
+        {
+          name: i.toString(),
+          transactionId: ''.padEnd(43, '1'),
+          ttl: 900,
+        },
+        recordMem,
+      );
+      recordMem = res.Memory;
+    }
+    const recordsRes = await getRecords(recordMem);
+    console.log('retrieved ' + Object.keys(recordsRes).length + ' records');
+    assert(recordsRes, 'unable to get records');
+  });
 });

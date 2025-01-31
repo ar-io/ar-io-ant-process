@@ -1,10 +1,10 @@
-import { createAntAosLoader } from './utils.mjs';
+import { createAntAosLoader } from '../utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
-} from '../tools/constants.mjs';
+} from '../../tools/constants.mjs';
 
 describe('JSON limits', async () => {
   const { handle: originalHandle, memory: startMemory } =

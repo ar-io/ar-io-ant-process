@@ -39,7 +39,7 @@ module ID.
    - Multiple dry runs per ANT.
    - ETH compatibility checked via handler analysis.
    - Upgrade involves loading Lua code.
-2. **Optimized Approach (Proposed Change)**
+2. **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs**
    - Use the module ID to evaluate process version.
    - Upgrade via spawning a new ANT and reassigning ARNS records.
 

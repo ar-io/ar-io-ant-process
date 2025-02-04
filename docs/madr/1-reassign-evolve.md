@@ -17,11 +17,13 @@ this we dryrun interactions on APIs and analyze the results to see if the APIs
 perform as expected - this is very inefficient as dry run calls to CU's are
 expensive in networking client side, as well as for the CU.
 
-And so it is proposed to leverage the `Reassign-Name` handler in conjunction
-with `_boot` to fork the process state to a whole new ANT, assign that new ANT
-as the registered ANT to the specified ArNS name in the registry, and using the
-module ID of the process to identify process version and capabilities, and
-solely the module ID.
+With the ARIO process now supporting
+[`Reassign-Name`](https://github.com/ar-io/ar-io-ant-process/pull/26) and recent
+additions to add [`_boot`](https://github.com/ar-io/ar-io-ant-process/pull/57)
+to fork the process state to a whole new ANT, we can assign that new ANT as the
+registered ANT to the specified ArNS name in the registry, and using the module
+ID of the process to identify process version and capabilities, and solely the
+module ID.
 
 ## Decision Drivers
 

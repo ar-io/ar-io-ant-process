@@ -60,6 +60,8 @@ binary and loading our code into it.
 - **Immutable Module Versioning:** Eliminates issues with heuristic version
   analysis.
 - **Reduced CU Load:** Fewer computations per ANT.
+- **Gateway ANT Module Whitelisting:** Gateways can decide which ANT Modules
+  they support.
 
 ### Negative Consequences
 

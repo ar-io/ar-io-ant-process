@@ -1,4 +1,4 @@
-# Reassign ANT to Evolve Implementation Kickoff on the ArNS Portal
+# Reassigning ANTs as Evolve/Upgrade Mechanism
 
 - Status: Proposed
 - Approvers: [Ariel], [Dylan], [Atticus], [Phil], [David]

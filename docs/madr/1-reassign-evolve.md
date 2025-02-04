@@ -28,7 +28,8 @@ module ID.
 ## Decision Drivers
 
 - Improve the performance of ANT loading client side.
-- Ensure the upgrade process is more robust by using immutable module IDs.
+- Ensure the upgrade process is more robust by using immutable module IDs
+  instead of using the "Eval" handler.
 - Reduce computational load on CU infra.
 - Mitigate risks associated with reassigning ANT state and ARNS records.
 

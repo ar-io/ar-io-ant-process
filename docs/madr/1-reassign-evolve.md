@@ -13,23 +13,15 @@ the state of the process containing a version number, that tells us only what
 that version number is. At any point the user - owner - of the ANT may `Eval`
 new code into the process resulting in changes to the process that may not
 reflect what we expect the version number we assigned to reflect. To overcome
-this we dryrun interactions on APIs and analyze the results to see if the APIs
-perform as expected - this is very inefficient as dry run calls to CU's are
-expensive in networking client side, as well as for the CU.
-
-With the ARIO process now supporting
-[`Reassign-Name`](https://github.com/ar-io/ar-io-ant-process/pull/26) and recent
-additions to add [`_boot`](https://github.com/ar-io/ar-io-ant-process/pull/57)
-to fork the process state to a whole new ANT, we can assign that new ANT as the
-registered ANT to the specified ArNS name in the registry, and using the module
-ID of the process to identify process version and capabilities, and solely the
-module ID.
+this we currently use dryrun interactions on APIs and analyze the results to see
+if the APIs perform as expected - this is very inefficient as dry run calls to
+CU's are expensive in networking client side, as well as for the CU.
 
 ## Decision Drivers
 
 - Improve the performance of ANT loading client side.
-- Ensure the upgrade process is more robust by using immutable module IDs
-  instead of using the "Eval" handler.
+- Ensure the upgrade process is more robust by using immutable versioning, such
+  as module IDs.
 - Reduce computational load on CU infra.
 - Mitigate risks associated with reassigning ANT state and ARNS records.
 
@@ -45,9 +37,17 @@ module ID.
 
 ## Decision Outcome
 
-### Chosen Option: Optimized Approach
+### Chosen Option: **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs**
 
-The optimized approach reduces computational overhead and improves caching for
+With the ARIO process now supporting
+[`Reassign-Name`](https://github.com/ar-io/ar-io-ant-process/pull/26) and recent
+additions to add [`_boot`](https://github.com/ar-io/ar-io-ant-process/pull/57)
+to fork the process state to a whole new ANT, we can assign that new ANT as the
+registered ANT to the specified ArNS name in the registry, and using the module
+ID of the process to identify process version and capabilities, and solely the
+module ID.
+
+This optimized approach reduces computational overhead and improves caching for
 better performance. It also shifts to a more robust upgrade mechanism using
 immutable module IDs rather than version detection heuristics. We can do this
 now that we compile and publish our own WASM binaries, rather than using an AOS

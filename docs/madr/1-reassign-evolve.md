@@ -59,6 +59,9 @@ binary and loading our code into it.
   loading.
 - **Immutable Module Versioning:** Eliminates issues with heuristic version
   analysis.
+  - Downstream clients can identify and validate the capabilities of a module
+    (and by extension the ANT itself) has by maintaining a map of modules that
+    are capables of executing target workflows
 - **Reduced CU Load:** Fewer computations per ANT.
 - **Gateway ANT Module Whitelisting:** Gateways can decide which ANT Modules
   they support.

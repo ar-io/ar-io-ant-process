@@ -32,7 +32,7 @@ CU's are expensive in networking client side, as well as for the CU.
    - ETH compatibility checked via handler analysis.
    - Upgrade involves loading Lua code.
 2. **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs**
-   - Use the module ID to evaluate process version.
+   - Use the module ID to evaluate process version and supported capabilites
    - Upgrade via spawning a new ANT and reassigning ARNS records.
 
 ## Decision Outcome
@@ -54,10 +54,6 @@ now that we compile and publish our own WASM binaries, rather than using an AOS
 binary and loading our code into it.
 
 ```mermaid
----
-config:
-  theme: dark
----
 sequenceDiagram
     autonumber
 
@@ -69,31 +65,28 @@ sequenceDiagram
     participant ARIOProcess
 
 
-    Owner ->> ARIOGateway: Get Process Meta from GQL
-    ARIOGateway -->> Owner: Process Meta GQL Result
-    Owner->>OldAnt: Get state
-    OldAnt-->>Owner: Return state
+    Owner ->> ARIOGateway: Get Module ID for process from GQL
+    ARIOGateway -->> Owner: Module ID Result
 
-    rect rgb(150,50,50)
-    break Process up to date
-    Owner ->> ARIOProcess: No upgrade needed - Module ID from process meta is up to date
-    end
 
-    end
-   rect rgb(50,150,100)
-   activate ARIOProcess
-    Owner->>NewAnt: Spawn new ant with old state
-    rect rgb(50,50,50)
-    loop Polling
-        Owner->>AntRegistry: Check if new ant is registered
-        AntRegistry-->>Owner: Not registered yet (retry)
-    end
-    end
-    AntRegistry-->>Owner: Return ACL list including the New ANT ID
-    Owner->>OldAnt: Send reassign message
-    OldAnt->>ARIOProcess: Forward Reassign Message
-    ARIOProcess-->>NewAnt: Reassign-Notice
-    deactivate ARIOProcess
+    alt No upgrade needed Module ID from process meta is up to date
+
+        else
+
+        Owner->>OldAnt: Get state
+        OldAnt-->>Owner: Return state
+
+        Owner->>NewAnt: Spawn new ant with old state
+        NewAnt->>AntRegistry: Register ANT notice
+        Owner->>NewAnt: Get State to verify responsiveness and Module ID to verify correct deployment
+
+        Owner->>OldAnt: Sign and accept Reassign message
+        OldAnt->>ARIOProcess: Forward Reassign Message
+        ARIOProcess-->>OldAnt: Reassign-Notice
+
+        Owner->>ARIOProcess: Check for Reassignment success and notify user
+
+
     end
 ```
 
@@ -119,22 +112,38 @@ sequenceDiagram
 - **State Limitations:** Large ANT states (e.g., >2000 undernames) may fail to
   bootstrap on spawn, meaning we need to understand the limitations there and
   decide what amounts we wish to support.
+- **MU cranking risks**: Its possible a module fails to instantiate/boot
+  properly - the defense there is to query for its state to ensure
+  responsiveness
+- **Custom ANTs will be lost**: If a user has a custom ANT implementation
+  (meaning code that is outside of our control is loaded in) then this code and
+  state will not be carried over.
 
 ## Pros and Cons of the Options
 
 ### Current Approach
 
 - `+` Already implemented and functional.
-- `+` Ensures ETH compatibility via handler checks.
-- `-` Multiple dry runs increase computational cost.
-- `-` Upgrade process relies on mutable version checks.
+- `+` Ensures workflow compatibility via handler checks and dryruns.
+- `-` Multiple dry runs (in our case 3) increases computational cost for CUs.
+- `-` Upgrade process relies on heuristic version checks.
+- `-` No way to assert utility of the ANT without the dryruns.
+- `-` Relying on Eval poses a security risk.
 
-### Optimized Approach (Chosen)
+### **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs** (Chosen)
 
 - `+` 3x faster ANT loading.
 - `+` Reduces CU consumption.
 - `+` Enables robust versioning.
-- `-` Introduces new risks related to state migration and memory management.
+  - We can store modules in a version registry allowing clientside applications
+    to have a dynamic source of truth for the latest ANT module.
+- `+` Gives us the ability to guarantee that we will not brick the ANT, because
+  we can spawn it then validate it, unlike with Eval where we cannot eval first,
+  then test after.
+- `-` Introduces new risks related to state migration due to the actual spawning
+  of the ANT (the MU may not crank the messages)
+- `-` Does not actually fix reliability issues with AOS in that code can still
+  be loaded into this.
 
 ## Links
 

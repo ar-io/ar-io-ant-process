@@ -335,7 +335,7 @@ function ant.init()
 
 	NOTE: if we use utils.Send here memory blows up for some reason
 	]]
-	Handlers.once("_boot", function(msg)
+	Handlers.prepend("_boot", function(msg)
 		return msg.Tags.Type == "Process" and Owner == msg.From
 	end, function(msg)
 		if type(msg.Data) == "string" then
@@ -365,7 +365,7 @@ function ant.init()
 		if AntRegistryId then
 			notices.notifyState(msg, AntRegistryId)
 		end
-	end)
+	end, 1)
 end
 
 return ant

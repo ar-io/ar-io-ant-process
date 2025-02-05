@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Added msg.reply to all APIs
+- Switch to Handlers.prepend instead of Handlers.once for backwards compatibility in `_boot` Handler.
+
+## [13] - [zh4at_Y_GKJMD3SOkZ5Yx7mG2JRRLc89huEOspPtHq4] - (2025-1-29)
+
+### Fixed
+
 - Removed print with ID in Handler wrapper since ID can be null on dry runs.
 
 ## [12] - [mwCMAjglwV_96oEMEIi5epg_QXElOMzEcLkCUeQyGGo] - (2025-1-28)

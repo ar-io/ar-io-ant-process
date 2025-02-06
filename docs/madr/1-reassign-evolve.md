@@ -1,6 +1,6 @@
 # Reassigning ANTs as Evolve/Upgrade Mechanism
 
-- Status: Proposed
+- Status: Accepted
 - Approvers: [Ariel], [Dylan], [Atticus], [Phil], [David]
 - Date: [2025-01-30]
 - Authors: [Atticus]

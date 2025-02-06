@@ -127,7 +127,8 @@ sequenceDiagram
 - `+` Ensures workflow compatibility via handler checks and dryruns.
 - `-` Multiple dry runs (in our case 3) increases computational cost for CUs.
 - `-` Upgrade process relies on heuristic version checks.
-- `-` No way to assert utility of the ANT without the dryruns.
+- `-` No way to assert capabilities and schema compliance of the ANT without
+  multiple dryruns.
 - `-` Relying on Eval poses a security risk.
 
 ### **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs** (Chosen)

@@ -105,6 +105,9 @@ sequenceDiagram
   - Downstream clients can identify and validate the capabilities of a module
     (and by extension the ANT itself) has by maintaining a map of modules that
     are capables of executing target workflows
+  - Gives us the ability to guarantee that we will not brick the ANT, because we
+    can spawn it then validate it, unlike with Eval where we cannot eval first,
+    then test after.
 - **Reduced CU Load:** Fewer computations per ANT.
 - **Gateway ANT Module Whitelisting:** Gateways can decide which ANT Modules
   they support.

@@ -157,6 +157,20 @@ sequenceDiagram
 - `-` Does not actually fix reliability issues with AOS in that code can still
   be loaded into this.
 
+## Next steps
+
+- Convert evolve workflow on the ArNS portal to the chosen one outlined above -
+  this will switch from Eval to Reassign and migrate state to new ANT. Entailed
+  in this is:
+  - Fetching module IDs via gql for comparison with our module ID list to
+    determine if the ANTs need to be updated.
+  - Converting the Eval workflow to:
+    - Spawn, with migrated state
+    - Verify spawn success
+    - Reassign name to new ANT
+    - Confirm Reassign success
+- Create a Module ID registry process
+
 ## Links
 
 - [Ariel]: https://github.com/arielmelendez

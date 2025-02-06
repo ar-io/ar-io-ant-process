@@ -140,6 +140,7 @@ sequenceDiagram
 - `-` No way to assert capabilities and schema compliance of the ANT without
   multiple dryruns.
 - `-` Relying on Eval poses a security risk.
+- `-` Evals don't allow to validate behavior of the ANT after eval occurs.
 
 ### **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs** (Chosen)
 

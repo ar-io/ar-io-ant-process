@@ -56,8 +56,8 @@ binary and loading our code into it.
 Additionally, we can store the latest module ids of our WASM binaries in a ao
 process - enabling support to push new ANT modules dynamically and have client
 side apps be updated immediately on publish of those modules, as they are
-produced (e.g. publish new module, update the repository process, and the arns app
-pulls latest modules from process to inform user of upgrades).
+produced (e.g. publish new module, update the repository process, and the arns
+app pulls latest modules from process to inform user of upgrades).
 
 ```mermaid
 sequenceDiagram
@@ -120,7 +120,8 @@ sequenceDiagram
   decide what amounts we wish to support.
 - **MU cranking risks**: Its possible a module fails to instantiate/boot
   properly - the defense there is to query for its state to ensure
-  responsiveness
+  responsiveness once spawned. Users will not be presented to reassign a name if
+  spawning fails, or a newly created process is not as responding as expected.
 - **Custom ANTs will be lost**: If a user has a custom ANT implementation
   (meaning code that is outside of our control is loaded in) then this code and
   state will not be carried over.

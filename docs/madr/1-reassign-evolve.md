@@ -132,7 +132,8 @@ sequenceDiagram
 
 ### **Leverage Re-Assign Name and \_boot capabilites to upgrade ANTs** (Chosen)
 
-- `+` 3x faster ANT loading.
+- `+` 3x faster ANT loading due to no longer needing to perform heuristic
+  dryruns for version checking.
 - `+` Reduces CU consumption.
 - `+` Enables robust versioning.
   - We can store modules in a version registry allowing clientside applications

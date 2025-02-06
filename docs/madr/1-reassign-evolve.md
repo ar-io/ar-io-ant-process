@@ -53,6 +53,12 @@ immutable module IDs rather than version detection heuristics. We can do this
 now that we compile and publish our own WASM binaries, rather than using an AOS
 binary and loading our code into it.
 
+Additionally, we can store the latest module ids of our WASM binaries in a ao
+process - enabling support to push new ANT modules dynamically and have client
+side apps be updated immediately on publish of those modules, as they are
+produced (e.g. publish new module, update the repository process, and the arns app
+pulls latest modules from process to inform user of upgrades).
+
 ```mermaid
 sequenceDiagram
     autonumber

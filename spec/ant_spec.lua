@@ -109,10 +109,22 @@ describe("Arweave Name Token", function()
 			assert.are.same(_G.Records[name].priority, priority)
 		end)
 
-		it("fails to set @ record with priority order", function()
+		it("fails to set @ record with priority order greater than 0", function()
 			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 1
 			local status, _ = pcall(records.setRecord, name, transactionId, ttlSeconds, priority)
 			assert.is_false(status)
+		end)
+
+		it("sets @ record with priority order of 0", function()
+			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 0
+			records.setRecord(name, transactionId, ttlSeconds, priority)
+			assert.are.same(_G.Records[name].priority, priority)
+		end)
+
+		it("sets @ record with priority order of 0 when priority is nil", function()
+			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, nil
+			records.setRecord(name, transactionId, ttlSeconds, priority)
+			assert.are.same(_G.Records[name].priority, 0)
 		end)
 
 		it("gets all records", function()

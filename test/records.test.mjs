@@ -23,7 +23,7 @@ describe('aos Records', async () => {
   }
 
   async function setRecord(
-    { name, ttl = 900, transactionId = STUB_ADDRESS },
+    { name, ttl = 900, transactionId = STUB_ADDRESS, priority = undefined },
     mem,
   ) {
     return handle(
@@ -33,7 +33,8 @@ describe('aos Records', async () => {
           { name: 'Sub-Domain', value: name },
           { name: 'TTL-Seconds', value: ttl },
           { name: 'Transaction-Id', value: transactionId },
-        ],
+          { name: 'Priority', value: priority },
+        ].filter((t) => t.value !== undefined),
       },
       mem,
     );
@@ -158,5 +159,30 @@ describe('aos Records', async () => {
     const record = records['timmy'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 900);
+  });
+
+  it('should set name with priority order', async () => {
+    const setRecordResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        { name: 'Sub-Domain', value: 'Timmy' },
+        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+        { name: 'TTL-Seconds', value: 900 },
+        { name: 'Priority', value: 1 },
+      ],
+    });
+
+    const recordsResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Records' }],
+      },
+      setRecordResult.Memory,
+    );
+
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+    const record = records['timmy'];
+    assert(record.transactionId === ''.padEnd(43, '3'));
+    assert(record.ttlSeconds === 900);
+    assert(record.priority === 1);
   });
 });

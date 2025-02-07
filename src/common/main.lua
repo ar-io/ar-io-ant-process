@@ -178,10 +178,13 @@ function ant.init()
 	createActionHandler(ActionMap.SetRecord, function(msg)
 		utils.assertHasPermission(msg.From)
 		local tags = msg.Tags
-		local name, transactionId, ttlSeconds =
-			string.lower(tags["Sub-Domain"]), tags["Transaction-Id"], tonumber(tags["TTL-Seconds"])
+		local name, transactionId, ttlSeconds, priority =
+			string.lower(tags["Sub-Domain"]),
+			tags["Transaction-Id"],
+			tonumber(tags["TTL-Seconds"]),
+			tonumber(tags["Priority"])
 		assert(ttlSeconds, "Missing ttl seconds")
-		return records.setRecord(name, transactionId, ttlSeconds)
+		return records.setRecord(name, transactionId, ttlSeconds, priority)
 	end)
 
 	createActionHandler(ActionMap.RemoveRecord, function(msg)

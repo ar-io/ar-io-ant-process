@@ -7,6 +7,7 @@ Records = Records
 		["@"] = {
 			transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI",
 			ttlSeconds = 900,
+			priority = 0,
 		},
 	}
 
@@ -14,20 +15,31 @@ Records = Records
 ---@param name string The name of the record.
 ---@param transactionId string The transaction ID of the record.
 ---@param ttlSeconds number The time-to-live in seconds for the record.
+---@param priority integer|nil The sort order of the record
 ---@return Record
-function records.setRecord(name, transactionId, ttlSeconds)
+function records.setRecord(name, transactionId, ttlSeconds, priority)
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
+	assert(
+		priority == nil or math.type(priority) == "integer",
+		"Priority must be an integer or nil, received " .. tostring(priority)
+	)
+	-- TODO: verify this is a desired behaviour
+	if name == "@" then
+		assert(priority == nil, "Cannot set priority to @ record")
+	end
 
 	Records[name] = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
+		priority = priority,
 	}
 
 	return {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
+		priority = priority,
 	}
 end
 

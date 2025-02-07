@@ -111,7 +111,7 @@ describe("Arweave Name Token", function()
 
 		it("fails to set @ record with priority order", function()
 			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 1
-			local status, res = pcall(records.setRecord, name, transactionId, ttlSeconds, priority)
+			local status, _ = pcall(records.setRecord, name, transactionId, ttlSeconds, priority)
 			assert.is_false(status)
 		end)
 

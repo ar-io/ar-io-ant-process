@@ -186,7 +186,7 @@ describe('aos Records', async () => {
     assert(record.priority === 1);
   });
 
-  it('should fail when setting priority for @ record', async () => {
+  it('should force priority to 0 for @ record', async () => {
     const res = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Record' },

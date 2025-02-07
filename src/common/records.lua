@@ -30,11 +30,13 @@ function records.setRecord(name, transactionId, ttlSeconds, priority)
 		assert(priority == nil, "Cannot set priority to @ record")
 	end
 
+	collectgarbage("stop")
 	Records[name] = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
 		priority = priority,
 	}
+	collectgarbage("restart")
 
 	return {
 		transactionId = transactionId,

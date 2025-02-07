@@ -206,7 +206,7 @@ describe('aos Records', async () => {
     const records = JSON.parse(recordsResult.Messages[0].Data);
 
     const record = records['@'];
-    assert(record.priority === undefined);
+    assert(record.priority === 0);
   });
 
   it('should fail when setting priority for @ record', async () => {

@@ -18,25 +18,25 @@ Records = Records
 ---@param priority integer|nil The sort order of the record - must be nil or 1 or greater
 ---@return Record
 function records.setRecord(name, transactionId, ttlSeconds, priority)
-	collectgarbage("stop")
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
-	assert(
-		priority == nil
-			or (name == "@" and priority == 0)
-			or (name ~= "@" and math.type(priority) == "integer" and priority > 0),
-		"Priority must be an integer greater than 0, or nil, but received " .. tostring(priority)
-	)
-	-- TODO: verify this is a desired behaviour
-	if name == "@" then
-		priority = 0
+	if priority then
+		if name == "@" then
+			assert(priority == 0, "Priority for '@' must be 0, but received " .. tostring(priority))
+		else
+			assert(
+				math.type(priority) == "integer" and priority > 0,
+				"Priority must be an integer greater than 0, but received " .. tostring(priority)
+			)
+		end
 	end
 
+	collectgarbage("stop")
 	Records[name] = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
-		priority = priority,
+		priority = name == "@" and 0 or priority,
 	}
 	collectgarbage("restart")
 

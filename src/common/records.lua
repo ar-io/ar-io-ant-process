@@ -7,7 +7,7 @@ Records = Records
 		["@"] = {
 			transactionId = "-k7t8xMoB8hW482609Z9F4bTFMC3MnuW8bTvTyT8pFI",
 			ttlSeconds = 900,
-			priority = 0,
+			priority = nil,
 		},
 	}
 

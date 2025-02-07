@@ -185,4 +185,49 @@ describe('aos Records', async () => {
     assert(record.ttlSeconds === 900);
     assert(record.priority === 1);
   });
+
+  it('should fail when setting priority for @ record', async () => {
+    const res = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        { name: 'Sub-Domain', value: '@' },
+        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+        { name: 'TTL-Seconds', value: 900 },
+        { name: 'Priority', value: 1 },
+      ],
+    });
+
+    const recordsResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Records' }],
+      },
+      res.Memory,
+    );
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+
+    const record = records['@'];
+    assert(record.priority === undefined);
+  });
+
+  it('should fail when setting priority for @ record', async () => {
+    const res = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        { name: 'Sub-Domain', value: 'timmy' },
+        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+        { name: 'TTL-Seconds', value: 900 },
+        { name: 'Priority', value: '1.089' },
+      ],
+    });
+
+    const recordsResult = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Records' }],
+      },
+      res.Memory,
+    );
+    const records = JSON.parse(recordsResult.Messages[0].Data);
+
+    assert(!records['timmy']);
+  });
 });

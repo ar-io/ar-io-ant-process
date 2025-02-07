@@ -53,6 +53,7 @@ const publishingTags = Object.entries({
   Author: 'Permanent Data Solutions',
   'Git-Hash': process.env.GITHUB_SHA ?? 'no-git-hash',
   'AOS-Git-Hash': config.aos_git_hash,
+  ...config,
 })
   .filter(([_, value]) => value !== undefined)
   .map(([name, value]) => ({ name, value }));

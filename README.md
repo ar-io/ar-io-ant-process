@@ -1,8 +1,12 @@
 # Arweave Name Token process on AO
 
-This repository contains the source code used for Arweave Name Tokens used to resolve ArNS names on [AR.IO Gateways]. For official documentation on ANT's refer to the [ArNS ANT Docs]. For official documentation on ArNS refer to the [ArNS Docs].
+This repository contains the source code used for Arweave Name Tokens used to
+resolve ArNS names on [AR.IO Gateways]. For official documentation on ANT's refer
+to the [ArNS ANT Docs]. For official documentation on ArNS refer to the [ArNS
+Docs].
 
-This repository provides two flavours of ANT process module, AOS and a custom module.
+This repository provides two flavours of ANT process module, AOS and a custom
+module.
 
 <!-- toc -->
 
@@ -69,18 +73,21 @@ First install the npm dependencies
 yarn
 ```
 
-Then install the ao cli - read the docs [here](https://github.com/permaweb/ao/tree/main/dev-cli)
-Refer to the docs for installing different versions.
+Then install the ao cli - read the docs
+[here](https://github.com/permaweb/ao/tree/main/dev-cli) Refer to the docs for
+installing different versions.
 
 ```sh
 curl -L https://install_ao.g8way.io | bash
 ```
 
-You may need to follow the instructions in the cli to add the program to your PATH.
+You may need to follow the instructions in the cli to add the program to your
+PATH.
 
 ### Testing
 
-To test the module, you can use the following command to run [busted](https://lunarmodules.github.io/busted/)
+To test the module, you can use the following command to run
+[busted](https://lunarmodules.github.io/busted/)
 
 ```sh
 busted .
@@ -90,7 +97,8 @@ busted .
 
 #### Build
 
-This bundles the ant-aos code and outputs it to `dist` folder. This can then be used to send to the `Eval` method on AOS to load the ANT source code.
+This bundles the ant-aos code and outputs it to `dist` folder. This can then be
+used to send to the `Eval` method on AOS to load the ANT source code.
 
 ##### Lua code
 
@@ -122,7 +130,8 @@ yarn module:publish
 
 #### Load
 
-This will load an AOS module into the loader, followed by the bundled aos Lua file to verify that it is a valid build.
+This will load an AOS module into the loader, followed by the bundled aos Lua
+file to verify that it is a valid build.
 
 ##### Lua code
 
@@ -152,21 +161,26 @@ yarn aos:spawn
 yarn module:spawn
 ```
 
-This will deploy the bundled lua file or WASM module to arweave as an L2 ([ANS-104]) transaction, so your wallet will need Turbo Credits to pay the gas.
+This will deploy the bundled lua file or WASM module to arweave as an L2
+([ANS-104]) transaction, so your wallet will need Turbo Credits to pay the gas.
 
 ## Handler Methods
 
-For interacting with handlers please refer to the [AR.IO SDK] or the [AO Cookbook]
+For interacting with handlers please refer to the [AR.IO SDK] or the [AO
+Cookbook]
 
 ### Boot Methods
 
 #### `_boot` (WASM Binary only)
 
-When compiled as a WASM Module Binary the ANT provides a boot method to initialize the state of the ANT.
+When compiled as a WASM Module Binary the ANT provides a boot method to
+initialize the state of the ANT.
 
-This will send a `Credit-Notice` to the initialized Owner (if applicable) and a `State-Notice` to the [ANT Registry].
+This will send a `Credit-Notice` to the initialized Owner (if applicable) and a
+`State-Notice` to the [ANT Registry].
 
-If a valid JSON string state is provided, it will be used to set the initial state of the ANT.
+If a valid JSON string state is provided, it will be used to set the initial
+state of the ANT.
 
 Example:
 
@@ -194,7 +208,8 @@ Example:
 
 #### `Info`
 
-Retrieves the Name, Ticker, Total supply, Logo, Denomination, and Owner of the ANT.
+Retrieves the Name, Ticker, Total supply, Logo, Denomination, and Owner of the
+ANT.
 
 | Tag Name | Type   | Pattern | Required | Description                       |
 | -------- | ------ | ------- | -------- | --------------------------------- |
@@ -265,7 +280,8 @@ Retrieves the balance of a target address.
 
 #### `Balances`
 
-Retrieves all the balances of the ANT - with the standard implementation this will only contain the Owner of the ant with a balance of 1.
+Retrieves all the balances of the ANT - with the standard implementation this
+will only contain the Owner of the ant with a balance of 1.
 
 | Tag Name | Type   | Pattern    | Required | Description                       |
 | -------- | ------ | ---------- | -------- | --------------------------------- |
@@ -286,12 +302,13 @@ Transfers the ownership of the ANT.
 
 Sets a record for a given subdomain.
 
-| Tag Name       | Type   | Pattern                   | Required | Description                         |
-| -------------- | ------ | ------------------------- | -------- | ----------------------------------- |
-| Action         | string | "Set-Record"              | true     | Action tag for triggering handler   |
-| Sub-Domain     | string | "^(?:[a-zA-Z0-9_-]+\|@)$" | true     | Subdomain to set the record for.    |
-| Transaction-Id | string | "^[a-zA-Z0-9_-]{43}$"     | true     | Transaction ID for the record.      |
-| TTL-Seconds    | number | Min: 900, Max: 2,592,000  | true     | Time-to-live in seconds for record. |
+| Tag Name       | Type   | Pattern                   | Required | Description                                                                                                               |
+| -------------- | ------ | ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Action         | string | "Set-Record"              | true     | Action tag for triggering handler                                                                                         |
+| Sub-Domain     | string | "^(?:[a-zA-Z0-9_-]+\|@)$" | true     | Subdomain to set the record for.                                                                                          |
+| Transaction-Id | string | "^[a-zA-Z0-9_-]{43}$"     | true     | Transaction ID for the record.                                                                                            |
+| TTL-Seconds    | number | Min: 60, Max: 86400       | true     | Time-to-live in seconds for record.                                                                                       |
+| Priority       | number | integer, nil              | false    | Sort priority of the undername to be served by the gateway. Used to determine which names to serve within undername limit |
 
 #### `Set-Name`
 
@@ -367,7 +384,8 @@ Removes a record from the ANT.
 
 #### `Release-Name`
 
-Calls the IO Network process to release the given ArNS name if that name is associated with the ANT.
+Calls the IO Network process to release the given ArNS name if that name is
+associated with the ANT.
 
 | Tag Name | Type   | Pattern             | Required | Description                       |
 | -------- | ------ | ------------------- | -------- | --------------------------------- |
@@ -376,7 +394,8 @@ Calls the IO Network process to release the given ArNS name if that name is asso
 
 #### `Reassign-Name`
 
-Calls the IO Network process to reassign the given ArNS name to a new ANT ID if that name is associated with the ANT.
+Calls the IO Network process to reassign the given ArNS name to a new ANT ID if
+that name is associated with the ANT.
 
 | Tag Name      | Type   | Pattern               | Required | Description                                          |
 | ------------- | ------ | --------------------- | -------- | ---------------------------------------------------- |
@@ -396,7 +415,8 @@ Calls the IO Network process to reassign the given ArNS name to a new ANT ID if 
 
 #### With local script (MacOS and Linux only)
 
-Note that we use lua 5.3 because that is what the [ao-dev-cli](https://github.com/permaweb/ao/tree/main/dev-cli) uses
+Note that we use lua 5.3 because that is what the
+[ao-dev-cli](https://github.com/permaweb/ao/tree/main/dev-cli) uses
 
 1. Clone the repository and navigate to the project directory.
 2. run the following:
@@ -446,7 +466,8 @@ aos --load src/main.lua
 
 ### Code Formatting
 
-The code is formatted using `stylua`. To install `stylua`, run the following command:
+The code is formatted using `stylua`. To install `stylua`, run the following
+command:
 
 ```sh
 cargo install stylua
@@ -475,7 +496,8 @@ To add new dependencies, install using luarocks to the local directory
 luarocks install <package>
 ```
 
-And add the package to the `dependencies` table in the `ar-io-ao-0.1-1.rockspec` file.
+And add the package to the `dependencies` table in the `ar-io-ao-0.1-1.rockspec`
+file.
 
 ```lua
 -- rest of the file

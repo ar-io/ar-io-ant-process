@@ -1,48 +1,18 @@
-import { createAntAosLoader } from './utils.mjs';
+import { createAntAosLoader, createHandleWrapper } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
   BUNDLED_AOS_ANT_LUA,
+  AOS_ANT_OLD_WASM,
 } from '../tools/constants.mjs';
-
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export const AOS_ANT_OLD_WASM = fs.readFileSync(
-  path.join(
-    __dirname,
-    '../tools/fixtures/aos-ant-gFNGk70U9iwof9MyDqqKeizGa98w66-qCyFxupzXUnU.wasm',
-  ), // MUST load as binary (note no utf-8 flag)
-);
 
 describe('aos Evolve', async () => {
   const { handle: originalHandle, memory: startMemory } =
     await createAntAosLoader();
 
-  function createHandle(
-    ogHandle,
-    startMem,
-    defaultHandleOptions = DEFAULT_HANDLE_OPTIONS,
-    aoLoaderHandlerEnv = AO_LOADER_HANDLER_ENV,
-  ) {
-    return async function (options = {}, mem = startMem) {
-      return ogHandle(
-        mem,
-        {
-          ...defaultHandleOptions,
-          ...options,
-        },
-        aoLoaderHandlerEnv,
-      );
-    };
-  }
-  const handle = createHandle(originalHandle, startMemory);
+  const handle = createHandleWrapper(originalHandle, startMemory);
 
   it('should evolve the ant and retain eval ability', async () => {
     const evolveResult = await handle({
@@ -143,7 +113,7 @@ describe('aos Evolve', async () => {
     const { handle: tempOriginalHandle, memory: tempStartMemory } =
       await createAntAosLoader(AOS_ANT_OLD_WASM);
 
-    const tempHandle = createHandle(tempOriginalHandle, tempStartMemory);
+    const tempHandle = createHandleWrapper(tempOriginalHandle, tempStartMemory);
 
     const evolveResult = await tempHandle({
       Tags: [{ name: 'Action', value: 'Eval' }],

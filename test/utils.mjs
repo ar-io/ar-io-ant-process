@@ -26,3 +26,21 @@ export async function createAntAosLoader(wasmModule = AOS_ANT_WASM) {
     memory: evalRes.Memory,
   };
 }
+
+export function createHandleWrapper(
+  ogHandle,
+  startMem,
+  defaultHandleOptions = DEFAULT_HANDLE_OPTIONS,
+  aoLoaderHandlerEnv = AO_LOADER_HANDLER_ENV,
+) {
+  return async function (options = {}, mem = startMem) {
+    return ogHandle(
+      mem,
+      {
+        ...defaultHandleOptions,
+        ...options,
+      },
+      aoLoaderHandlerEnv,
+    );
+  };
+}

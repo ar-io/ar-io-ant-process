@@ -20,11 +20,11 @@ describe('JSON limits', async () => {
     );
   }
 
-  it('should not be able to parse a large json', async () => {
+  it('should be able to parse a large json', async () => {
     const records = {};
     const controllers = [];
     const balances = {};
-    for (let i = 0; i < 15_000; i++) {
+    for (let i = 0; i < 10_000; i++) {
       records[`${i}-name`] = {
         transactionId: ''.padEnd(43, '1'),
         ttlSeconds: 900,

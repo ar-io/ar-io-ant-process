@@ -30,6 +30,7 @@
 ---@alias Record {
 --- transactionId: string,
 --- ttlSeconds: integer,
+--- priority: integer|nil
 ---}
 
 ---@alias AntState {

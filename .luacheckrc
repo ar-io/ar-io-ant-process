@@ -1,7 +1,8 @@
 allow_defined = true
 exclude_files = {
 	"dist/",
-	"src/common/crypto"
+	"src/common/crypto",
+	"tools/fixtures/aos-process"
 }
 globals = {
 	"Handlers",

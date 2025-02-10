@@ -76,35 +76,73 @@ describe("Arweave Name Token", function()
 		assert.is_false(hasController)
 	end)
 
-	it("sets a record with min ttl", function()
-		local name, transactionId, ttlSeconds = "@", fake_address, 60
-		records.setRecord(name, transactionId, ttlSeconds) -- happy path
-		assert.are.same(_G.Records["@"].transactionId, fake_address)
-		assert.are.same(_G.Records["@"].ttlSeconds, 60)
-	end)
+	describe("Records", function()
+		-- TTL
+		it("sets a record with min ttl", function()
+			local name, transactionId, ttlSeconds = "@", fake_address, 60
+			records.setRecord(name, transactionId, ttlSeconds) -- happy path
+			assert.are.same(_G.Records["@"].transactionId, fake_address)
+			assert.are.same(_G.Records["@"].ttlSeconds, 60)
+		end)
 
-	it("sets a record with max ttl", function()
-		local name, transactionId, ttlSeconds = "@", fake_address, 86400
-		records.setRecord(name, transactionId, ttlSeconds) -- happy path
-		assert.are.same(_G.Records["@"].transactionId, fake_address)
-		assert.are.same(_G.Records["@"].ttlSeconds, 86400)
-	end)
+		it("sets a record with max ttl", function()
+			local name, transactionId, ttlSeconds = "@", fake_address, 86400
+			records.setRecord(name, transactionId, ttlSeconds) -- happy path
+			assert.are.same(_G.Records["@"].transactionId, fake_address)
+			assert.are.same(_G.Records["@"].ttlSeconds, 86400)
+		end)
 
-	it("gets all records", function()
-		_G.Records["@"] = {
-			transactionId = string.rep("1", 43),
-			ttlSeconds = 900,
-		}
-		local recordEntries = records.getRecords()
+		-- Priority order
+		it("sets a record with a priority order", function()
+			local name, transactionId, ttlSeconds, priority = "name", fake_address, 60, 1
+			records.setRecord(name, transactionId, ttlSeconds, priority) -- happy path
+			assert.are.same(_G.Records[name].transactionId, fake_address)
+			assert.are.same(_G.Records[name].ttlSeconds, ttlSeconds)
+			assert.are.same(_G.Records[name].priority, priority)
+		end)
 
-		assert(recordEntries["@"])
-	end)
+		it("sets a record without a priority order", function()
+			local name, transactionId, ttlSeconds, priority = "name", fake_address, 60, nil
+			records.setRecord(name, transactionId, ttlSeconds, priority) -- happy path
+			assert.are.same(_G.Records[name].transactionId, fake_address)
+			assert.are.same(_G.Records[name].ttlSeconds, ttlSeconds)
+			assert.are.same(_G.Records[name].priority, priority)
+		end)
 
-	it("removes a record", function()
-		local name = "@"
-		records.removeRecord(name) -- happy path
+		it("fails to set @ record with priority order greater than 0", function()
+			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 1
+			local status, _ = pcall(records.setRecord, name, transactionId, ttlSeconds, priority)
+			assert.is_false(status)
+		end)
 
-		assert.are.same(_G.Records[name], nil)
+		it("sets @ record with priority order of 0", function()
+			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 0
+			records.setRecord(name, transactionId, ttlSeconds, priority)
+			assert.are.same(_G.Records[name].priority, priority)
+		end)
+
+		it("sets @ record with priority order of 0 when priority is nil", function()
+			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, nil
+			records.setRecord(name, transactionId, ttlSeconds, priority)
+			assert.are.same(_G.Records[name].priority, 0)
+		end)
+
+		it("gets all records", function()
+			_G.Records["@"] = {
+				transactionId = string.rep("1", 43),
+				ttlSeconds = 900,
+			}
+			local recordEntries = records.getRecords()
+
+			assert(recordEntries["@"])
+		end)
+
+		it("removes a record", function()
+			local name = "@"
+			records.removeRecord(name) -- happy path
+
+			assert.are.same(_G.Records[name], nil)
+		end)
 	end)
 
 	it("sets the name", function()

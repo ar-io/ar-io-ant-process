@@ -6,8 +6,8 @@ import {
   AOS_ANT_WASM,
 } from '../tools/constants.mjs';
 
-export async function createAntAosLoader() {
-  const handle = await AoLoader(AOS_ANT_WASM, AO_LOADER_OPTIONS);
+export async function createAntAosLoader(wasmModule = AOS_ANT_WASM) {
+  const handle = await AoLoader(wasmModule, AO_LOADER_OPTIONS);
   // just to get the mem buffer originally
   const evalRes = await handle(
     null,

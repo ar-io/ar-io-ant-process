@@ -7,20 +7,42 @@ import {
   BUNDLED_AOS_ANT_LUA,
 } from '../tools/constants.mjs';
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const AOS_ANT_OLD_WASM = fs.readFileSync(
+  path.join(
+    __dirname,
+    '../tools/fixtures/aos-ant-gFNGk70U9iwof9MyDqqKeizGa98w66-qCyFxupzXUnU.wasm',
+  ), // MUST load as binary (note no utf-8 flag)
+);
+
 describe('aos Evolve', async () => {
   const { handle: originalHandle, memory: startMemory } =
     await createAntAosLoader();
 
-  async function handle(options = {}, mem = startMemory) {
-    return originalHandle(
-      mem,
-      {
-        ...DEFAULT_HANDLE_OPTIONS,
-        ...options,
-      },
-      AO_LOADER_HANDLER_ENV,
-    );
+  function createHandle(
+    ogHandle,
+    startMem,
+    defaultHandleOptions = DEFAULT_HANDLE_OPTIONS,
+    aoLoaderHandlerEnv = AO_LOADER_HANDLER_ENV,
+  ) {
+    return async function (options = {}, mem = startMem) {
+      return ogHandle(
+        mem,
+        {
+          ...defaultHandleOptions,
+          ...options,
+        },
+        aoLoaderHandlerEnv,
+      );
+    };
   }
+  const handle = createHandle(originalHandle, startMemory);
 
   it('should evolve the ant and retain eval ability', async () => {
     const evolveResult = await handle({
@@ -115,5 +137,37 @@ describe('aos Evolve', async () => {
     );
 
     assert(!fooRes.Output?.output?.includes('bar'));
+  });
+
+  it('should evolve the old aos-ant module for backwards compatibility', async () => {
+    const { handle: tempOriginalHandle, memory: tempStartMemory } =
+      await createAntAosLoader(AOS_ANT_OLD_WASM);
+
+    const tempHandle = createHandle(tempOriginalHandle, tempStartMemory);
+
+    const evolveResult = await tempHandle({
+      Tags: [{ name: 'Action', value: 'Eval' }],
+      Data: BUNDLED_AOS_ANT_LUA,
+    });
+
+    const result = await tempHandle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      evolveResult.Memory,
+    );
+    const state = JSON.parse(result.Messages[0].Data);
+    assert(state);
+
+    const evalResult = await tempHandle(
+      {
+        Tags: [{ name: 'Action', value: 'Eval' }],
+        Data: 'Handlers.list',
+      },
+      evolveResult.Memory,
+    );
+
+    assert(evalResult.Output.data);
+    assert(evalResult.Output.data.includes('info'));
   });
 });

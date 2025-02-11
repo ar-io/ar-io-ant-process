@@ -35,6 +35,7 @@ const jwk = process.env.WALLET
 
 const signer = new ArweaveSigner(jwk);
 const turbo = TurboFactory.authenticated({ signer });
+console.log(config);
 const publishingTags = Object.entries({
   // ao tags
   'Data-Protocol': 'ao',
@@ -56,7 +57,8 @@ const publishingTags = Object.entries({
   ...config,
 })
   .filter(([_, value]) => value !== undefined)
-  .map(([name, value]) => ({ name, value }));
+  .map(([name, value]) => ({ name, value: value.toString() }));
+console.log(publishingTags);
 
 const data = createData(wasmBinary, signer, {
   tags: publishingTags,

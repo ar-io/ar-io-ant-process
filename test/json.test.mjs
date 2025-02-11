@@ -28,8 +28,7 @@ describe('JSON limits', async () => {
   });
 
   it('should be able to parse a large json', async () => {
-    console.log('parsing data size: ' + data.length);
-    const result = await handle({
+    await handle({
       Data: data,
       Tags: [{ name: 'Content-Type', value: 'application/json' }],
     });
@@ -40,12 +39,14 @@ describe('JSON limits', async () => {
       await createAntAosLoader(AOS_ANT_OLD_WASM);
 
     const tempHandle = createHandleWrapper(tempOriginalHandle, tempStartMemory);
-    console.log('parsing data size: ' + data.length);
     const result = await tempHandle({
       Data: data,
       Tags: [{ name: 'Content-Type', value: 'application/json' }],
     }).catch((e) => new Error(e));
-
-    assert(result instanceof Error, 'should have thrown an error due to size');
+    console.log(result.message);
+    assert(
+      result.message.includes('memory access out of bounds'),
+      'should have thrown an error due to size',
+    );
   });
 });

@@ -38,6 +38,13 @@ export const AOS_ANT_WASM = fs.readFileSync(
   path.join(__dirname, '../dist/aos-ant.wasm'), // MUST load as binary (note no utf-8 flag)
 );
 
+export const AOS_ANT_OLD_WASM = fs.readFileSync(
+  path.join(
+    __dirname,
+    'fixtures/aos-ant-gFNGk70U9iwof9MyDqqKeizGa98w66-qCyFxupzXUnU.wasm',
+  ), // MUST load as binary (note no utf-8 flag)
+);
+
 export const BUNDLED_AOS_ANT_LUA = fs.readFileSync(
   path.join(__dirname, '../dist/aos-bundled.lua'),
   'utf-8',

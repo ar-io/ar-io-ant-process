@@ -116,8 +116,8 @@ jobs:
           DRY_RUN: ${{github.ref_name != 'main'}}
         run: |
           PUBLISH_OUTPUT=$(yarn module:publish 2>&1)
-          # This line extracts the transaction ID of the published Lua source code from the output
-          # It uses grep to find the line containing "Generated source code data item with id:"
+          # This line extracts the transaction ID of the published Module ID from the output
+          # It uses grep to find the line containing "Generated WASM Binary data item with id:"
           # Then it uses sed to extract the 43-character transaction ID
           MODULE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated WASM Binary data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
           echo "::set-output name=moduleTxId::$MODULE_TX_ID"

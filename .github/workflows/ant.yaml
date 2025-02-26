@@ -120,13 +120,13 @@ jobs:
           # It uses grep to find the line containing "Generated source code data item with id:"
           # Then it uses sed to extract the 43-character transaction ID
           MODULE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated WASM Binary data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
-          echo "::set-output name=moduleId::$MODULE_TX_ID"
+          echo "::set-output name=moduleTxId::$MODULE_TX_ID"
 
       - name: Create Tag for Module ID
         if: ${{github.ref_name == 'main'}}
         run: |
-          git tag "${{ steps.publish-module.outputs.moduleId }}"
-          git push origin "${{ steps.publish-module.outputs.moduleId }}"
+          git tag "${{ steps.publish-module.outputs.moduleTxId }}"
+          git push origin "${{ steps.publish-module.outputs.moduleTxId }}"
 
   notify:
     runs-on: ubuntu-latest

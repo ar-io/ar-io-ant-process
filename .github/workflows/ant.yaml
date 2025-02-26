@@ -79,7 +79,9 @@ jobs:
     outputs:
       published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
       published_module_id: ${{ steps.publish-module.outputs.moduleTxId }}
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if:
+      github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2
@@ -108,6 +110,8 @@ jobs:
           git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
           git push origin "${{ steps.publish-lua-code.outputs.srcTxId }}"
 
+      - name: Build WASM Module
+        run: yarn copy-aos-process && yarn module:build
       - name: Publish WASM Module
         id: publish-module
         env:

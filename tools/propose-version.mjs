@@ -47,6 +47,20 @@ const luaSourceId =
   process.env.LUA_SOURCE_ID ??
   process.argv[process.argv.indexOf('--lua-source') + 1];
 
+// Validate required parameters
+if (!registryId) {
+  console.error("Missing required parameter: registry ID (--ant-registry or REGISTRY_ID)");
+  process.exit(1);
+}
+if (!vaotId) {
+  console.error("Missing required parameter: VAOT ID (--vaot-id or VAOT_ID)");
+  process.exit(1);
+}
+if (!moduleId) {
+  console.error("Missing required parameter: module ID (--module or MODULE_ID)");
+  process.exit(1);
+}
+
 const notes = getLatestChanges();
 
 const walletPath = process.argv.includes('--wallet-file')

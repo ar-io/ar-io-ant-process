@@ -2,7 +2,7 @@ import path, { dirname } from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ArweaveSigner } from '@ardrive/turbo-sdk';
-import { connect } from '@permaweb/aoconnect';
+import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 import version from '../version.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -108,7 +108,7 @@ const proposalResult = await ao.message({
     { name: 'Process-Id', value: vaotId },
   ],
   data: proposalEvalStr,
-  signer,
+  signer: createDataItemSigner(signer),
 });
 if (!proposalResult || typeof proposalResult !== 'string')
   throw new Error('Failed to create proposal');

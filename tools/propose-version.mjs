@@ -8,6 +8,8 @@ import version from '../version.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const TX_ID_REGEX = new RegExp('^[a-zA-Z0-9\\-_s+]{43}$');
+
 /*
 example dryrun
 
@@ -47,20 +49,20 @@ const luaSourceId =
   process.env.LUA_SOURCE_ID ??
   process.argv[process.argv.indexOf('--lua-source') + 1];
 
+const requiredIds = [registryId, vaotId, moduleId];
 // Validate required parameters
-if (!registryId) {
-  console.error(
-    'Missing required parameter: registry ID (--ant-registry or REGISTRY_ID)',
-  );
-  process.exit(1);
-}
-if (!vaotId) {
-  console.error('Missing required parameter: VAOT ID (--vaot-id or VAOT_ID)');
-  process.exit(1);
-}
-if (!moduleId) {
-  console.error(
-    'Missing required parameter: module ID (--module or MODULE_ID)',
+if (!requiredIds.every((id) => TX_ID_REGEX.test(id))) {
+  console.error('Missing required parameters!');
+  console.log(
+    JSON.stringify(
+      {
+        registryId,
+        moduleId,
+        vaotId,
+      },
+      null,
+      2,
+    ),
   );
   process.exit(1);
 }

@@ -1,7 +1,6 @@
 import path, { dirname } from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { ArweaveSigner } from '@ardrive/turbo-sdk';
 import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 import version from '../version.mjs';
 
@@ -77,7 +76,7 @@ const jwk = process.env.WALLET
   ? JSON.parse(process.env.WALLET)
   : JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
 
-const signer = new ArweaveSigner(jwk);
+const signer = createDataItemSigner(jwk);
 
 const ao = connect({
   CU_URL: 'https://cu.ardrive.io',
@@ -108,7 +107,7 @@ const proposalResult = await ao.message({
     { name: 'Process-Id', value: vaotId },
   ],
   data: proposalEvalStr,
-  signer: createDataItemSigner(signer),
+  signer,
 });
 if (!proposalResult || typeof proposalResult !== 'string')
   throw new Error('Failed to create proposal');

@@ -182,4 +182,3 @@ jobs:
     with:
       published_module_id: ${{ needs.publish.outputs.published_module_id }}
       published_lua_code_id: ${{ needs.publish.outputs.published_lua_code_id }}
-      dryrun: ${{ vars.DRYRUN_PROPOSAL }}

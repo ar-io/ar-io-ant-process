@@ -88,7 +88,7 @@ const proposalEvalStr = `
         Version = "${version}",
         ["Module-Id"] = "${moduleId}",
         ${luaSourceId ? `["Lua-Source-Id"] = "${luaSourceId}",` : ''}
-        ${notes ? `Notes = "${notes}"` : ''}
+        ${notes ? `Notes = [[${notes}]]` : ''}
     })
   `;
 

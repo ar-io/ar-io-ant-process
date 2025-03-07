@@ -78,7 +78,10 @@ jobs:
       contents: write # to be able to publish a GitHub release
     outputs:
       published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+      published_module_id: ${{ steps.publish-module.outputs.moduleTxId }}
+    if:
+      github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2
@@ -107,13 +110,47 @@ jobs:
           git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
           git push origin "${{ steps.publish-lua-code.outputs.srcTxId }}"
 
+      - name: Install AO Tool
+        run: |
+          curl -L https://install_ao.g8way.io | sh
+          export AO_INSTALL=/home/runner/.ao
+          export PATH="$AO_INSTALL/bin:$PATH"
+          echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Verify AO Installation
+        run: ao -V
+      - name: Build WASM Module
+        run: yarn copy-aos-process && yarn module:build
+      - name: Publish WASM Module
+        id: publish-module
+        env:
+          WALLET: ${{ secrets.WALLET }}
+          GITHUB_SHA: ${{ github.sha }}
+          DRY_RUN: ${{github.ref_name != 'main'}}
+        run: |
+          PUBLISH_OUTPUT=$(yarn module:publish 2>&1)
+          # This line extracts the transaction ID of the published Module ID from the output
+          # It uses grep to find the line containing "Generated WASM Binary data item with id:"
+          # Then it uses sed to extract the 43-character transaction ID
+          MODULE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated WASM Binary data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
+          echo "::set-output name=moduleTxId::$MODULE_TX_ID"
+
+      - name: Create Tag for Module ID
+        if: ${{github.ref_name == 'main'}}
+        run: |
+          git tag "${{ steps.publish-module.outputs.moduleTxId }}"
+          git push origin "${{ steps.publish-module.outputs.moduleTxId }}"
+
   notify:
     runs-on: ubuntu-latest
     needs: [unit, integration, publish]
     if: always()
     steps:
       - name: Notify Slack on Success
-        if: (github.ref_name == 'main' || github.ref_name == 'develop') && needs.unit.result == 'success' && needs.integration.result == 'success'
+        if:
+          (github.ref_name == 'main' || github.ref_name == 'develop') &&
+          needs.unit.result == 'success' && needs.integration.result ==
+          'success'
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -121,6 +158,7 @@ jobs:
             Unit Tests: ${{ needs.unit.result }}
             Integration Tests: ${{ needs.integration.result }}
             Published Lua Id: ${{ needs.publish.outputs.published_lua_code_id || 'N/A' }}
+            Published Module Id: ${{ needs.publish.outputs.published_module_id || 'N/A' }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -136,3 +174,12 @@ jobs:
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  propose:
+    needs: [publish]
+    if: needs.publish.result == 'success'
+    uses: ./.github/workflows/vaot-proposal.yaml
+    secrets: inherit
+    with:
+      published_module_id: ${{ needs.publish.outputs.published_module_id }}
+      published_lua_code_id: ${{ needs.publish.outputs.published_lua_code_id }}
+      dryrun: ${{ vars.DRYRUN_PROPOSAL }}

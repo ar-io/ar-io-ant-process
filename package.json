@@ -13,6 +13,7 @@
     "aos:spawn": "node tools/spawn-aos.mjs",
     "test": "yarn aos:build && node --test --test-concurrency 1 --experimental-wasm-memory64 **/*.test.mjs",
     "install-lua-deps": "sh tools/install-lua-deps.sh && luarocks install ar-io-ao-0.1-1.rockspec",
+    "propose-version": "node tools/propose-version.mjs",
     "prepare": "husky"
   },
   "devDependencies": {

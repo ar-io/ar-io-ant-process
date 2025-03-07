@@ -174,3 +174,12 @@ jobs:
           fields: repo,message,commit,author,action,eventName,ref,workflow,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  propose:
+    needs: [publish]
+    if: needs.publish.result == 'success'
+    uses: ./.github/workflows/vaot-proposal.yaml
+    secrets: inherit
+    with:
+      published_module_id: ${{ needs.publish.outputs.published_module_id }}
+      published_lua_code_id: ${{ needs.publish.outputs.published_lua_code_id }}
+      dryrun: ${{ vars.DRYRUN_PROPOSAL }}

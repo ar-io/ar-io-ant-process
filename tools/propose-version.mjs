@@ -49,15 +49,19 @@ const luaSourceId =
 
 // Validate required parameters
 if (!registryId) {
-  console.error("Missing required parameter: registry ID (--ant-registry or REGISTRY_ID)");
+  console.error(
+    'Missing required parameter: registry ID (--ant-registry or REGISTRY_ID)',
+  );
   process.exit(1);
 }
 if (!vaotId) {
-  console.error("Missing required parameter: VAOT ID (--vaot-id or VAOT_ID)");
+  console.error('Missing required parameter: VAOT ID (--vaot-id or VAOT_ID)');
   process.exit(1);
 }
 if (!moduleId) {
-  console.error("Missing required parameter: module ID (--module or MODULE_ID)");
+  console.error(
+    'Missing required parameter: module ID (--module or MODULE_ID)',
+  );
   process.exit(1);
 }
 
@@ -77,15 +81,19 @@ const ao = connect({
   CU_URL: 'https://cu.ardrive.io',
 });
 
+const proposalEvalStr = `
+    Send({
+        Target = "${registryId}",
+        Version = "${version}",
+        ["Module-Id"] = "${moduleId}",
+        ${luaSourceId ? `["Lua-Source-Id"] = "${luaSourceId}",` : ''}
+        ${notes ? `Notes = "${notes}"` : ''}
+    })
+  `;
+
 if (dryRun) {
-  console.log({
-    vaotId,
-    version,
-    registryId,
-    moduleId,
-    luaSourceId,
-    notes,
-  });
+  console.log('Would have proposed to Eval: \n');
+  console.log(proposalEvalStr);
   process.exit('0');
 }
 
@@ -97,15 +105,7 @@ const proposalResult = await ao.message({
     { name: 'Vote', value: 'yay' },
     { name: 'Process-Id', value: vaotId },
   ],
-  data: `
-    Send({
-        Target = "${registryId}",
-        Version = "${version}",
-        ["Module-Id"] = "${moduleId}",
-        ${luaSourceId ? `["Lua-Source-Id"] = "${luaSourceId}",` : ''}
-        Notes = "${notes ?? ''}"
-    })
-  `,
+  data: proposalEvalStr,
   signer,
 });
 if (!proposalResult || typeof proposalResult !== 'string')

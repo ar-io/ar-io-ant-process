@@ -15,7 +15,7 @@ on:
         type: string
       dryrun:
         required: false
-        type: boolean
+        type: string
 
 jobs:
   propose:

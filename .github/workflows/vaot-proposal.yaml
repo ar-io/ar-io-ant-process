@@ -13,9 +13,6 @@ on:
       published_lua_code_id:
         required: false
         type: string
-      dryrun:
-        required: false
-        type: boolean
 
 jobs:
   propose:
@@ -36,14 +33,13 @@ jobs:
           VAOT_ID: ${{ vars.VAOT_ID}}
           MODULE_ID: ${{ inputs.published_module_id }}
           LUA_SOURCE_ID: ${{ inputs.published_lua_code_id }}
-          DRY_RUN: ${{ inputs.dryrun }}
       - name: Notify Success
         if: success()
         uses: rtCamp/action-slack-notify@v2.3.0
         env:
           SLACK_COLOR: ${{ job.status }}
           SLACK_TITLE: ANT Version Proposed to ANT Registry Process!
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CUSTOM_PAYLOAD: |
             {
               "attachments": [{
@@ -85,7 +81,7 @@ jobs:
         env:
           SLACK_COLOR: danger
           SLACK_TITLE: ANT Registry Process ANT version update Proposal FAILED!
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CUSTOM_PAYLOAD: |
             {
               "text": "ANT Registry Process ANT Version Proposal Failed!",

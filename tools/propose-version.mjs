@@ -1,8 +1,7 @@
 import path, { dirname } from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { ArweaveSigner } from '@ardrive/turbo-sdk';
-import { connect } from '@permaweb/aoconnect';
+import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 import version from '../version.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,7 +76,7 @@ const jwk = process.env.WALLET
   ? JSON.parse(process.env.WALLET)
   : JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
 
-const signer = new ArweaveSigner(jwk);
+const signer = createDataItemSigner(jwk);
 
 const ao = connect({
   CU_URL: 'https://cu.ardrive.io',
@@ -89,7 +88,7 @@ const proposalEvalStr = `
         Version = "${version}",
         ["Module-Id"] = "${moduleId}",
         ${luaSourceId ? `["Lua-Source-Id"] = "${luaSourceId}",` : ''}
-        ${notes ? `Notes = "${notes}"` : ''}
+        ${notes ? `Notes = [[${notes}]]` : ''}
     })
   `;
 

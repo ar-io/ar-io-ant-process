@@ -84,11 +84,16 @@ const ao = connect({
 
 const proposalEvalStr = `
     Send({
+        Action = "Add-Version",
         Target = "${registryId}",
         Version = "${version}",
         ["Module-Id"] = "${moduleId}",
         ${luaSourceId ? `["Lua-Source-Id"] = "${luaSourceId}",` : ''}
-        ${notes ? `Notes = [[${notes}]]` : ''}
+        ${
+          notes // the [[]] syntax allows for multiline lua strings
+            ? `Notes = [[${notes}]]`
+            : ''
+        }
     })
   `;
 

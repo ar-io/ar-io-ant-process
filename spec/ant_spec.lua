@@ -15,6 +15,7 @@ local originalState = {
 	records = { ["@"] = { transactionId = fake_address, ttlSeconds = 900 } },
 	balances = { [fake_address] = 1 },
 	owner = fake_address,
+	logo = string.rep("1", 43),
 }
 
 describe("Arweave Name Token", function()
@@ -40,6 +41,7 @@ describe("Arweave Name Token", function()
 		assert.are.same(_G.Ticker, originalState.ticker)
 		assert.are.same(_G.Description, originalState.description)
 		assert.are.same(_G.Keywords, originalState.keywords)
+		assert.are.same(_G.Logo, originalState.logo)
 	end)
 
 	it("Transfers tokens between accounts", function()

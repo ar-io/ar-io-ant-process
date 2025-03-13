@@ -13,6 +13,7 @@ function ant.init()
 	local initialize = require(".common.initialize")
 	local records = require(".common.records")
 	local controllers = require(".common.controllers")
+	local constants = require(".common.constants")
 
 	---@alias Owner string
 	---@description The owner of the ANT
@@ -32,7 +33,7 @@ function ant.init()
 	Ticker = Ticker or "ANT"
 	---@alias Logo string
 	---@description Arweave transaction ID that is the logo of the ANT
-	Logo = Logo or "Sie_26dvgyok0PZD_-iQAFOhOd5YxDTkczOLoqTTL_A"
+	Logo = Logo or constants.DEFAULT_ANT_LOGO
 	---@alias Description string
 	---@description A brief description of this ANT up to 255 characters
 	Description = Description or "A brief description of this ANT."

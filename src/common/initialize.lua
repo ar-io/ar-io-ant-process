@@ -1,5 +1,6 @@
 local utils = require(".common.utils")
 local json = require(".common.json")
+local constants = require(".common.constants")
 local initialize = {}
 
 ---@alias InitialANTState {
@@ -12,6 +13,7 @@ local initialize = {}
 --- owner: string,
 --- controllers: string[],
 --- records: table<string, Record>,
+--- logo: string,
 ---}
 
 --- Initializes the ANT state from a JSON string
@@ -27,6 +29,8 @@ function initialize.initializeANTState(state)
 	local description = encoded.description
 	local keywords = encoded.keywords
 	local owner = encoded.owner
+	local logo = encoded.logo or constants.DEFAULT_ANT_LOGO
+
 	assert(type(name) == "string", "name must be a string")
 	assert(type(ticker) == "string", "ticker must be a string")
 	assert(type(description) == "string", "description must be a string")
@@ -38,6 +42,8 @@ function initialize.initializeANTState(state)
 	assert(type(controllers) == "table", "controllers must be a table")
 	assert(type(records) == "table", "records must be a table")
 	assert(type(owner) == "string", "owner must be a string")
+	assert(type(logo) == "string", "logo must be a string")
+
 	for k, v in pairs(records) do
 		utils.validateUndername(k)
 		assert(type(v) == "table", "records values must be tables")
@@ -56,6 +62,7 @@ function initialize.initializeANTState(state)
 	Records = records
 	Initialized = true
 	Owner = owner
+	Logo = logo
 
 	return json.encode({
 		name = Name,
@@ -67,6 +74,7 @@ function initialize.initializeANTState(state)
 		records = Records,
 		owner = Owner,
 		initialized = Initialized,
+		logo = Logo,
 	})
 end
 

@@ -6,16 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [17] - (2025-3-13)
+
+### Changed
+
+- Added Logo to initialize state handling.
+
 ## [16] - [OO2ewZKq4AHoqGQmYUIl-NhJ-llQyFJ3ha4Uf4-w5RI] - (2025-2-10)
 
-## Changed
+### Changed
 
 - Increased stack memory and initial memory on modules to 3MiB and 4MiB
   respectively.
 
 ## [15] - [s9drxRd-ylbJVtAi14tGmF7e42kA69PgfKUtgtmvAmU] - (2025-2-10)
 
-## Added
+### Added
 
 - Priority property on Set-Record API. Allows for Owner and Controllers to set
   the Priority of the undername to be served by ar.io gateways, and will be used

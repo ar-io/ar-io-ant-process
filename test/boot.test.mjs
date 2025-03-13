@@ -24,6 +24,7 @@ describe('BOOT ANT', async () => {
       );
     }
     const antState = {
+      logo: 'logo'.padEnd(43, '1'),
       name: 'Test Process',
       ticker: 'TEST',
       description: 'TEST DESCRIPTION',
@@ -81,6 +82,7 @@ describe('BOOT ANT', async () => {
     assert.strictEqual(state.Ticker, antState.ticker);
     assert.strictEqual(state.Name, antState.name);
     assert.strictEqual(state.Owner, antState.owner);
+    assert.strictEqual(state.Logo, antState.logo);
     assert.deepEqual(state.Controllers, antState.controllers);
     assert.deepEqual(state.Keywords, antState.keywords);
     assert.deepEqual(state.Balances, antState.balances);

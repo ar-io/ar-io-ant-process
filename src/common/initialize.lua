@@ -1,5 +1,6 @@
 local utils = require(".common.utils")
 local json = require(".common.json")
+local constants = require(".common.constants")
 local initialize = {}
 
 ---@alias InitialANTState {
@@ -28,7 +29,7 @@ function initialize.initializeANTState(state)
 	local description = encoded.description
 	local keywords = encoded.keywords
 	local owner = encoded.owner
-	local logo = encoded.logo or ""
+	local logo = encoded.logo or constants.DEFAULT_ANT_LOGO
 
 	assert(type(name) == "string", "name must be a string")
 	assert(type(ticker) == "string", "ticker must be a string")

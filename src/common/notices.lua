@@ -42,13 +42,6 @@ function notices.debit(msg)
 	})
 end
 
---- @param noticesToSend table<AoMessage>
-function notices.sendNotices(noticesToSend)
-	for _, notice in ipairs(noticesToSend) do
-		utils.Send(msg, notice)
-	end
-end
-
 --- @param msg AoMessage
 --- @param target string
 --- @description Notify the target of the current state

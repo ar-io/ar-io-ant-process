@@ -247,37 +247,25 @@ function utils.errorHandler(err)
 	return debug.traceback(err)
 end
 
----@param outbox table
----@description Validates the outbox
----@example
----```lua
----utils.validateOutbox(ao.outbox)
----```
-function utils.validateOutbox(outbox)
-	local messages = outbox.Messages
-	local spawns = outbox.Spawns
-	local assignments = outbox.Assignments
+function utils.validateMessage(msg)
+	local ignoredKeys = {
+		Tags = true,
+		reply = true,
+		forward = true,
+		Data = true,
+	}
 
-	assert(type(messages) == "table" and type(spawns) == "table" and type(assignments) == "table")
-
-	for _, message in ipairs(messages) do
-		for _, tag in ipairs(message.Tags) do
-			local name, value = tag.name, tag.value
-			assert(type(name) == "string" and type(value) == "string", "Tag name and value must be strings")
+	for k, v in pairs(msg) do
+		if not ignoredKeys[k] then
+			assert(type(k) == "string", string.format("Key %s must be a string", k))
+			assert(type(v) == "string", string.format("Value %s must be a string", v))
 		end
 	end
 
-	for _, spawn in ipairs(spawns) do
-		for _, tag in ipairs(spawn.Tags) do
-			local name, value = tag.name, tag.value
-			assert(type(name) == "string" and type(value) == "string", "Tag name and value must be strings")
-		end
-	end
-
-	for _, assignment in ipairs(assignments) do
-		for _, tag in ipairs(assignment.Tags) do
-			local name, value = tag.name, tag.value
-			assert(type(name) == "string" and type(value) == "string", "Tag name and value must be strings")
+	if msg.Tags then
+		for k, v in pairs(msg.Tags) do
+			assert(type(k) == "string", string.format("Key %s must be a string", k))
+			assert(type(v) == "string", string.format("Value %s must be a string", v))
 		end
 	end
 end
@@ -360,15 +348,6 @@ function utils.createHandler(tagName, tagValue, handler, position)
 				notices.notifyState(msg, AntRegistryId)
 			end
 
-			--[[
-			We specifically validate the outbox after the handler has been called, 
-			and all messages have been added to the outbox. 
-			This is to ensure that the outbox is valid before any notices are sent. 
-			We do not pcall this because we want to halt execution if the outbox is
-			invalid, so that any variables are not modified
-			]]
-			utils.validateOutbox(ao.outbox)
-
 			return handlerRes
 		end
 	)
@@ -412,6 +391,8 @@ end
 --- @param msg AoMessage
 --- @param response table
 function utils.Send(msg, response)
+	utils.validateMessage(response)
+
 	if msg.reply then
 		--- Reference: https://github.com/permaweb/aos/blob/main/blueprints/patch-legacy-reply.lua
 		msg.reply(response)

@@ -45,7 +45,7 @@ end
 --- @param noticesToSend table<AoMessage>
 function notices.sendNotices(noticesToSend)
 	for _, notice in ipairs(noticesToSend) do
-		ao.send(notice)
+		utils.Send(msg, notice)
 	end
 end
 

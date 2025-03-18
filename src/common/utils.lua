@@ -247,6 +247,29 @@ function utils.errorHandler(err)
 	return debug.traceback(err)
 end
 
+function utils.validateMessage(msg)
+	local ignoredKeys = {
+		Tags = true,
+		reply = true,
+		forward = true,
+		Data = true,
+	}
+
+	for k, v in pairs(msg) do
+		if not ignoredKeys[k] then
+			assert(type(k) == "string", string.format("Key %s must be a string", k))
+			assert(type(v) == "string", string.format("Value %s must be a string", v))
+		end
+	end
+
+	if msg.Tags then
+		for k, v in pairs(msg.Tags) do
+			assert(type(k) == "string", string.format("Key %s must be a string", k))
+			assert(type(v) == "string", string.format("Value %s must be a string", v))
+		end
+	end
+end
+
 ---@param tagName string
 ---@param tagValue string
 ---@param handler function
@@ -368,6 +391,8 @@ end
 --- @param msg AoMessage
 --- @param response table
 function utils.Send(msg, response)
+	utils.validateMessage(response)
+
 	if msg.reply then
 		--- Reference: https://github.com/permaweb/aos/blob/main/blueprints/patch-legacy-reply.lua
 		msg.reply(response)

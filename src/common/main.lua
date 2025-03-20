@@ -141,22 +141,31 @@ function ant.init()
 	end)
 
 	createActionHandler(TokenSpecActionMap.Info, function(msg)
-		local info = {
-			Name = Name,
-			Ticker = Ticker,
-			["Total-Supply"] = tostring(TotalSupply),
-			Logo = Logo,
-			Description = Description,
-			Keywords = Keywords,
-			Denomination = tostring(Denomination),
-			Owner = Owner,
-			Handlers = utils.getHandlerNames(Handlers),
-		}
 		utils.Send(msg, {
 			Target = msg.From,
 			Action = "Info-Notice",
-			Tags = info,
-			Data = json.encode(info),
+			Tags = {
+				Name = Name,
+				Ticker = Ticker,
+				["Total-Supply"] = tostring(TotalSupply),
+				Logo = Logo,
+				Description = Description,
+				Keywords = json.encode(Keywords),
+				Denomination = tostring(Denomination),
+				Owner = Owner,
+				Handlers = json.encode(utils.getHandlerNames(Handlers)),
+			},
+			Data = json.encode({
+				Name = Name,
+				Ticker = Ticker,
+				["Total-Supply"] = tostring(TotalSupply),
+				Logo = Logo,
+				Description = Description,
+				Keywords = Keywords,
+				Denomination = tostring(Denomination),
+				Owner = Owner,
+				Handlers = utils.getHandlerNames(Handlers),
+			}),
 		})
 	end)
 
@@ -250,7 +259,7 @@ function ant.init()
 		local ioProcess = msg.Tags["IO-Process-Id"]
 
 		-- send the release message to the provided IO Process Id
-		ao.send({
+		utils.Send(msg, {
 			Target = ioProcess,
 			Action = "Release-Name",
 			Initiator = msg.From,
@@ -276,7 +285,7 @@ function ant.init()
 		local antProcessIdToReassign = msg.Tags["Process-Id"]
 
 		-- send the release message to the provided IO Process Id
-		ao.send({
+		utils.Send(msg, {
 			Target = ioProcess,
 			Action = "Reassign-Name",
 			Initiator = msg.From,
@@ -306,7 +315,7 @@ function ant.init()
 		local recipient = msg.Tags.Recipient
 		local ioProcess = msg.Tags["IO-Process-Id"]
 
-		ao.send({
+		utils.Send(msg, {
 			Target = ioProcess,
 			Action = "Approve-Primary-Name-Request",
 			Name = name,
@@ -327,7 +336,7 @@ function ant.init()
 			utils.validateUndername(name)
 		end
 
-		ao.send({
+		utils.Send(msg, {
 			Target = ioProcess,
 			Action = "Remove-Primary-Names",
 			Names = msg.Tags.Names,
@@ -349,22 +358,29 @@ function ant.init()
 				initialize.initializeANTState(msg.Data)
 			end, utils.errorHandler)
 			if not status then
-				ao.send(notices.addForwardedTags(msg, {
-					Target = Owner,
-					Error = res or "",
-					Data = res or "",
-					Action = "Invalid-Boot-Notice",
-					["Message-Id"] = msg.Id,
-				}))
+				utils.Send(
+					msg,
+					notices.addForwardedTags(msg, {
+						Target = Owner,
+						Error = res or "",
+						Data = res or "",
+						Action = "Invalid-Boot-Notice",
+						["Message-Id"] = msg.Id,
+					})
+				)
 			end
 		end
 
 		if Owner then
-			ao.send(notices.credit({
-				From = msg.From,
-				Sender = Owner,
-				Recipient = Owner,
-			}))
+			utils.Send(
+				msg,
+				notices.credit({
+					Target = Owner,
+					From = msg.From,
+					Sender = Owner,
+					Recipient = Owner,
+				})
+			)
 		end
 
 		if AntRegistryId then

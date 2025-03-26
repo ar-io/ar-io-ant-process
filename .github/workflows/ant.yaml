@@ -1,6 +1,31 @@
 name: Arweave Name Token
 
-on: [push, workflow_dispatch]
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'spec/**'
+      - 'test/**'
+      - 'tools/**'
+      - '*.rockspec'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'version.mjs'
+      - 'ao-build-config.yml'
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'src/**'
+      - 'spec/**'
+      - 'test/**'
+      - 'tools/**'
+      - '*.rockspec'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'version.mjs'
+      - 'ao-build-config.yml'
 
 jobs:
   unit:
@@ -69,19 +94,35 @@ jobs:
       - run: yarn copy-aos-process
       - run: yarn module:build
       - run: yarn test
+  check-should-publish:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.filter.outputs.should_publish }}
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Check for Lua file and build config changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            should_publish:
+              - '**/*.lua'
+              - 'version.mjs'
+              - 'ao-build-config.yml'
   publish:
     runs-on: ubuntu-latest
     environment: main
-    needs: [lint, unit, integration]
+    needs: [lint, unit, integration, check-should-publish]
     permissions:
       contents: write # to be able to publish a GitHub release
     outputs:
       published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
       published_module_id: ${{ steps.publish-module.outputs.moduleTxId }}
     if:
-      github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' ||
-      github.event_name == 'workflow_dispatch'
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+      (github.event_name == 'workflow_dispatch' ||
+      needs.check-should-publish.outputs.should_publish == 'true')
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2

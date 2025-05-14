@@ -348,6 +348,13 @@ function utils.createHandler(tagName, tagValue, handler, position)
 				notices.notifyState(msg, AntRegistryId)
 			end
 
+			-- send a patch notice on any action that changes the state
+			-- note: did not add to notices to avoid circular dependency between notices and utils
+			ao.send({
+				device = "patch@1.0",
+				cache = { state = json.encode(utils.getState()) },
+			})
+
 			return handlerRes
 		end
 	)

@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -84,6 +84,8 @@ describe('aos Controllers', async () => {
         ],
       });
 
+      assertPatchMessage(addControllerResult);
+
       const removeControllerResult = await handle(
         {
           Tags: [
@@ -93,6 +95,8 @@ describe('aos Controllers', async () => {
         },
         addControllerResult.Memory,
       );
+
+      assertPatchMessage(removeControllerResult);
 
       const controllersRes = await getControllers(
         removeControllerResult.Memory,

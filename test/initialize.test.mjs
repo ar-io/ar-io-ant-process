@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -61,5 +61,6 @@ describe('aos Initialization', async () => {
     assert.deepEqual(balances, antState.balances);
     assert.deepEqual(controllers, antState.controllers);
     assert.deepEqual(records, antState.records);
+    assertPatchMessage(result);
   });
 });

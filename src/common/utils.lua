@@ -352,7 +352,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			-- note: did not add to notices to avoid circular dependency between notices and utils
 			ao.send({
 				device = "patch@1.0",
-				cache = json.encode(utils.getState()),
+				cache = { state = json.encode(utils.getState()) },
 			})
 
 			return handlerRes

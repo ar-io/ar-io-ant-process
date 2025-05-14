@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -82,6 +82,7 @@ describe('aos Records', async () => {
     assert(record);
     assert(record.transactionId);
     assert(record.ttlSeconds);
+    assertPatchMessage(result);
   });
 
   it('should set the record of an ANT', async () => {
@@ -105,6 +106,7 @@ describe('aos Records', async () => {
     const record = records['@'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 900);
+    assertPatchMessage(result);
   });
 
   it('should remove the record of an ANT', async () => {
@@ -136,6 +138,7 @@ describe('aos Records', async () => {
 
     const record = JSON.parse(recordsResult.Messages[0].Data)['timmy'];
     assert(!record);
+    assertPatchMessage(result);
   });
 
   it('should set name as lower case when provided as uppercase', async () => {
@@ -159,6 +162,7 @@ describe('aos Records', async () => {
     const record = records['timmy'];
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 900);
+    assertPatchMessage(result);
   });
 
   it('should set name with priority order', async () => {
@@ -184,6 +188,7 @@ describe('aos Records', async () => {
     assert(record.transactionId === ''.padEnd(43, '3'));
     assert(record.ttlSeconds === 900);
     assert(record.priority === 1);
+    assertPatchMessage(result);
   });
 
   it('should force priority to 0 for @ record', async () => {
@@ -207,6 +212,7 @@ describe('aos Records', async () => {
 
     const record = records['@'];
     assert(record.priority === 0);
+    assertPatchMessage(result);
   });
 
   it('should fail when setting priority for @ record', async () => {
@@ -229,5 +235,6 @@ describe('aos Records', async () => {
     const records = JSON.parse(recordsResult.Messages[0].Data);
 
     assert(!records['timmy']);
+    assertPatchMessage(result);
   });
 });

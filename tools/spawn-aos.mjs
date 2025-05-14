@@ -2,6 +2,10 @@ import { connect, createDataItemSigner } from '@permaweb/aoconnect';
 import fs from 'fs';
 import path from 'path';
 import Arweave from 'arweave';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const arweave = Arweave.init({
   host: 'arweave.net',
@@ -14,14 +18,17 @@ const ao = connect({
 });
 const moduleId = 'cbn0KKrBZH7hdNkNokuXLtGryrWM--PjSTBqIzw9Kkk';
 const scheduler = '_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA';
-
+const walletFile =
+  process.argv.indexOf('--wallet') !== -1 &&
+  process.argv[process.argv.indexOf('--wallet') + 1]
+    ? process.argv[process.argv.indexOf('--wallet') + 1]
+    : 'key.json';
 async function main() {
   const luaCode = fs.readFileSync(
     path.join(__dirname, '../dist/aos-bundled.lua'),
     'utf-8',
   );
-
-  const wallet = fs.readFileSync(path.join(__dirname, 'key.json'), 'utf-8');
+  const wallet = fs.readFileSync(walletFile, 'utf-8');
   const address = await arweave.wallets.jwkToAddress(JSON.parse(wallet));
   const signer = createDataItemSigner(JSON.parse(wallet));
 
@@ -55,7 +62,6 @@ async function main() {
   const testCases = [
     ['Eval', {}, luaCode],
     ['Initialize-State', {}, initState],
-    ['Transfer', { Recipient: 'N4h8M9A9hasa3tF47qQyNvcKjm4APBKuFs7vqUVm-SI' }],
   ];
 
   for (const [method, args, data] of testCases) {

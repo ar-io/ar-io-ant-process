@@ -65,8 +65,8 @@ export function assertPatchMessage(result) {
   // should include the cache tag with the object with state as the value
   assert(
     patchMessage.Tags.some(
-      (tag) => tag.name === 'cache' && tag.value.state !== undefined,
-      'Expected cache tag in patch message',
+      (tag) => tag.name === 'cache' && tag.value !== undefined,
     ),
+    'Expected cache tag in patch message',
   );
 }

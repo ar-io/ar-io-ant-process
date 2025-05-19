@@ -352,7 +352,7 @@ function utils.createHandler(tagName, tagValue, handler, position)
 			-- note: did not add to notices to avoid circular dependency between notices and utils
 			ao.send({
 				device = "patch@1.0",
-				cache = { state = json.encode(utils.getState()) },
+				cache = utils.getState(), -- serialization is done by hyperbeam ~seralize@1.0 device, so no need to spend compute here to do it
 			})
 
 			return handlerRes

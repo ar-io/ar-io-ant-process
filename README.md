@@ -519,7 +519,7 @@ dependencies = {
 [AR.IO Gateways]: https://docs.ar.io/gateways/ar-io-node/overview/
 [AR.IO SDK]: https://www.npmjs.com/package/@ar.io/sdk
 [ANT Registry]: https://github.com/ar-io/ar-io-ant-registry-process
-[ArNS Docs]: https://ar.io/docs/arns/
+[ArNS Docs]: https://docs.ar.io/arns
 [ArNS ANT Docs]: https://ar.io/docs/arns/#arweave-name-token-ant
 [ArNS Portal]: https://arns.app
 [AO Cookbook]: https://cookbook_ao.arweave.dev

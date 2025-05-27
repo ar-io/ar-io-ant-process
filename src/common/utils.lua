@@ -348,12 +348,14 @@ function utils.createHandler(tagName, tagValue, handler, position)
 				notices.notifyState(msg, AntRegistryId)
 			end
 
-			-- send a patch notice on any action that changes the state
-			-- note: did not add to notices to avoid circular dependency between notices and utils
-			ao.send({
-				device = "patch@1.0",
-				cache = utils.getState(), -- serialization is done by hyperbeam ~seralize@1.0 device, so no need to spend compute here to do it
-			})
+			-- send a patch state to the ANT Cache Process, we do this to avoid cranking issues for legacy MUs that cannot parse patch notices with raw lua data
+			if AntCacheRegistryId then
+				ao.send({
+					Target = AntCacheRegistryId,
+					Action = "Patch-State",
+					Data = utils.getState(),
+				})
+			end
 
 			return handlerRes
 		end

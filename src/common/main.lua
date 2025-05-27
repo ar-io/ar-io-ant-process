@@ -24,7 +24,6 @@ function ant.init()
 	---@alias Controllers table<integer, string>
 	---@description The list of controllers for the ANT
 	Controllers = Controllers or { Owner }
-
 	---@alias Name string
 	---@description The name of the ANT
 	Name = Name or "Arweave Name Token"
@@ -52,6 +51,9 @@ function ant.init()
 	---@alias AntRegistryId string
 	---@description The Arweave ID of the ANT Registry contract that this ANT is registered with
 	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
+	---@alias AntCacheRegistryId string
+	---@description The Arweave ID of the ANT Cache Registry contract that this ANT is registered with
+	AntCacheRegistryId = AntCacheRegistryId or ao.env.Process.Tags["ANT-Cache-Registry-Id"] or nil
 
 	local ActionMap = {
 		-- write

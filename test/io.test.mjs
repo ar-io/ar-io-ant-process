@@ -31,8 +31,8 @@ describe('IO Network Updates', async () => {
       ],
     });
 
-    // two messages should be sent - one to the io process and one to the sender
-    assert(result.Messages?.length === 2, 'Expected two messages');
+    // three messages should be sent - one to the io process, one to the sender, and one to the patch
+    assert(result.Messages?.length === 3, 'Expected three messages');
 
     // Check if there is a message to the IO Process ID with Action 'Release-Name'
     const ioProcessMessage = result.Messages.find(
@@ -74,8 +74,8 @@ describe('IO Network Updates', async () => {
       Owner: 'not-owner',
     });
 
-    // assert no other messages
-    assert(result.Messages?.length === 1, 'Expected only one message');
+    // assert 2 messages, including the patch message for hyperbeam
+    assert(result.Messages?.length === 2, 'Expected two messages');
 
     const error = result.Messages[0]?.Tags.find(
       (tag) => tag.name === 'Error' && tag.value === 'Release-Name-Error',
@@ -93,8 +93,8 @@ describe('IO Network Updates', async () => {
       ],
     });
 
-    // two messages should be sent - one to the io process and one to the sender
-    assert(result.Messages?.length === 2, 'Expected two messages');
+    // two messages should be sent - one to the io process and one to the sender, and one to the patch
+    assert(result.Messages?.length === 3, 'Expected three messages');
 
     // Check if there is a message to the IO Process ID with Action 'Reassign-Name'
     const ioProcessMessage = result.Messages.find(
@@ -148,8 +148,8 @@ describe('IO Network Updates', async () => {
       Owner: 'not-owner',
     });
 
-    // assert no other messages
-    assert(result.Messages?.length === 1, 'Expected only one message');
+    // assert 2 messages, including the patch message for hyperbeam
+    assert(result.Messages?.length === 2, 'Expected two messages');
 
     const error = result.Messages[0]?.Tags.find(
       (tag) => tag.name === 'Error' && tag.value === 'Reassign-Name-Error',
@@ -167,8 +167,8 @@ describe('IO Network Updates', async () => {
       ],
     });
 
-    // assert no other messages
-    assert(result.Messages?.length === 1, 'Expected only one message');
+    // assert 2 messages, including the patch message for hyperbeam
+    assert(result.Messages?.length === 2, 'Expected two messages');
 
     const error = result.Messages[0]?.Tags.find(
       (tag) => tag.name === 'Error' && tag.value === 'Reassign-Name-Error',

@@ -1,19 +1,10 @@
 {
-  "[mjs, js]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.formatOnPaste": true,
-    "editor.formatOnSaveMode": "file"
-  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.configPath": ".prettierrc",
   "prettier.prettierPath": "./node_modules/prettier/index.cjs",
-  "[typescript]": {
-    "editor.formatOnSave": true
-  },
-  "[markdown]": {
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
-  },
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
   "search.exclude": {
     "**/node_modules": true,
     "**/lib": true,

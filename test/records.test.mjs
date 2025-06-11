@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -94,6 +94,8 @@ describe('aos Records', async () => {
       ],
     });
 
+    assertPatchMessage(setRecordResult);
+
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
@@ -117,6 +119,8 @@ describe('aos Records', async () => {
       ],
     });
 
+    assertPatchMessage(setRecordResult);
+
     const removeRecordResult = await handle(
       {
         Tags: [
@@ -126,6 +130,8 @@ describe('aos Records', async () => {
       },
       setRecordResult.Memory,
     );
+
+    assertPatchMessage(removeRecordResult);
 
     const recordsResult = await handle(
       {
@@ -147,6 +153,8 @@ describe('aos Records', async () => {
         { name: 'TTL-Seconds', value: 900 },
       ],
     });
+
+    assertPatchMessage(setRecordResult);
 
     const recordsResult = await handle(
       {
@@ -172,6 +180,8 @@ describe('aos Records', async () => {
       ],
     });
 
+    assertPatchMessage(setRecordResult);
+
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
@@ -187,7 +197,7 @@ describe('aos Records', async () => {
   });
 
   it('should force priority to 0 for @ record', async () => {
-    const res = await handle({
+    const setRecordResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Record' },
         { name: 'Sub-Domain', value: '@' },
@@ -197,11 +207,13 @@ describe('aos Records', async () => {
       ],
     });
 
+    assertPatchMessage(setRecordResult);
+
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
       },
-      res.Memory,
+      setRecordResult.Memory,
     );
     const records = JSON.parse(recordsResult.Messages[0].Data);
 
@@ -210,7 +222,7 @@ describe('aos Records', async () => {
   });
 
   it('should fail when setting priority for @ record', async () => {
-    const res = await handle({
+    const setRecordResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Record' },
         { name: 'Sub-Domain', value: 'timmy' },
@@ -220,14 +232,17 @@ describe('aos Records', async () => {
       ],
     });
 
+    assertPatchMessage(setRecordResult);
+
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
       },
-      res.Memory,
+      setRecordResult.Memory,
     );
     const records = JSON.parse(recordsResult.Messages[0].Data);
 
     assert(!records['timmy']);
+    assertPatchMessage(recordsResult);
   });
 });

@@ -386,6 +386,12 @@ function ant.init()
 		if AntRegistryId then
 			notices.notifyState(msg, AntRegistryId)
 		end
+
+		-- send a patch notice on instance boot
+		ao.send({
+			device = "patch@1.0",
+			cache = utils.getState(), -- serialization is done by hyperbeam ~seralize@1.0 device, so no need to spend compute here to do it
+		})
 	end, 1)
 end
 

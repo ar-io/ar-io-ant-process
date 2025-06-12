@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [20] - (2025-6-12)
+
+### Changed
+
+- Updated ANT state initialization to send a patch notice on boot.
+
 ## [19] - (2025-5-19)
 
 ### Added

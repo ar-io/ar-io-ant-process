@@ -392,6 +392,9 @@ function ant.init()
 			device = "patch@1.0",
 			cache = utils.getState(), -- serialization is done by hyperbeam ~seralize@1.0 device, so no need to spend compute here to do it
 		})
+
+		-- send self state notice to enable hyperbeam to cache the state. The SU will not process the boot result otherwise.
+		notices.notifyState(msg, ao.id)
 	end, 1)
 end
 

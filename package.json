@@ -1,0 +1,42 @@
+{
+  "type": "module",
+  "scripts": {
+    "copy-aos-process": "node tools/copy-aos-process.mjs",
+    "module:build": "rm -rf dist && yarn aos:build && rm -rf build && cp -r tools/fixtures/aos-process build && cp dist/aos-bundled.lua build/ant.lua && yarn node tools/inject-ant-code.mjs && cd build && ao build && mv process.wasm ../dist/aos-ant.wasm && cd .. && rm -rf build && yarn module:load",
+    "module:publish": "node tools/publish-module.mjs",
+    "module:load": "node tools/load-module.mjs",
+    "module:spawn": "node tools/spawn-module.mjs",
+    "lint": "luacheck .",
+    "aos:build": "node tools/bundle-aos.mjs",
+    "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
+    "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
+    "aos:spawn": "node tools/spawn-aos.mjs",
+    "test": "yarn aos:build && node --test --experimental-wasm-memory64 **/*.test.mjs",
+    "install-lua-deps": "sh tools/install-lua-deps.sh && luarocks install ar-io-ao-0.1-1.rockspec",
+    "propose-version": "node tools/propose-version.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@ardrive/turbo-sdk": "^1.19.0",
+    "@permaweb/ao-loader": "^0.0.44",
+    "@permaweb/aoconnect": "^0.0.55",
+    "arweave": "^1.15.1",
+    "husky": "^9.1.6",
+    "js-yaml": "^4.1.0",
+    "lint-staged": "^15.2.10",
+    "markdown-toc-gen": "^1.1.0",
+    "prettier": "^3.3.2"
+  },
+  "lint-staged": {
+    "*.lua": [
+      "stylua",
+      "luacheck --config .luacheckrc"
+    ],
+    "*.{js,mjs}": [
+      "prettier --write"
+    ],
+    "**/README.md": [
+      "markdown-toc-gen insert"
+    ]
+  }
+}

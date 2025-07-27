@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -86,11 +86,7 @@ describe('aos Balances', async () => {
       // Get owner info before transfer
       const infoBefore = await getInfo(startMemory);
 
-      const caller =
-        shouldPass === true ? STUB_ADDRESS : 'random-address-'.padEnd(43, '1');
-
       const transferResult = await handle({
-        ...(caller ? { From: caller, Owner: caller } : {}),
         Tags: [
           { name: 'Action', value: 'Transfer' },
           { name: 'Recipient', value: target_address },
@@ -164,6 +160,33 @@ describe('aos Balances', async () => {
     });
     // for end
   }
+
+  it('should fail to transfer when called by non-owner', async () => {
+    const infoBefore = await getInfo(startMemory);
+    const nonOwner = 'non-owner-'.padEnd(43, '1');
+    const transferResult = await handle({
+      From: nonOwner,
+      Owner: nonOwner,
+      Tags: [
+        { name: 'Action', value: 'Transfer' },
+        { name: 'Recipient', value: STUB_RECIPIENT },
+      ],
+    });
+
+    assert.strictEqual(transferResult.Messages.length, 2);
+    assertPatchMessage(transferResult);
+    assert.strictEqual(
+      transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
+      'Transfer-Error',
+      `Expected Transfer-Error tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value}`,
+    );
+    const infoAfter = await getInfo(transferResult.Memory);
+    assert.strictEqual(
+      infoAfter.Owner,
+      infoBefore.Owner,
+      'Owner should not change on invalid transfer',
+    );
+  });
 
   // test for balances
   it('should fetch the balances of the ANT', async () => {

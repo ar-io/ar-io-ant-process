@@ -150,7 +150,13 @@ describe('aos Controllers', async () => {
   }
 
   it('should fail to remove controller when called by non-owner', async () => {
+    const infoBefore = await getInfo(startMemory);
     const nonOwner = 'non-owner-'.padEnd(43, '1');
+    assert.notEqual(
+      nonOwner,
+      infoBefore.Owner,
+      'Non-owner parameter should not be the current owner',
+    );
     const newController = 'new-controller-'.padEnd(43, '1');
 
     // add the controller which we will attempt to remove
@@ -202,7 +208,13 @@ describe('aos Controllers', async () => {
   });
 
   it('should fail to add controller when called by non-owner', async () => {
+    const infoBefore = await getInfo(startMemory);
     const nonOwner = 'non-owner-'.padEnd(43, '1');
+    assert.notEqual(
+      nonOwner,
+      infoBefore.Owner,
+      'Non-owner parameter should not be the current owner',
+    );
     const newController = 'new-controller-'.padEnd(43, '1');
 
     const controllersBefore = await getControllers(startMemory);

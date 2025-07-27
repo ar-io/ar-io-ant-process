@@ -65,15 +65,7 @@ describe('Primary Names', async () => {
         assert.strictEqual(nameTag.value, ''.padEnd(43, '3'));
       } else {
         assert.strictEqual(res.Messages.length, 2);
-        const patchMessage = res.Messages[1];
-        const patchTag = patchMessage.Tags.find(
-          (t) => t.name == 'device' && t.value == 'patch@1.0',
-        );
-        assert.strictEqual(
-          patchTag !== undefined,
-          true,
-          'patch message should be present',
-        );
+        assertPatchMessage(res);
         assert.strictEqual(
           res.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
           'Approve-Primary-Name-Error',

@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -82,14 +82,7 @@ describe('IO Network Updates', async () => {
     );
     assert(error, 'Release-Name-Error message not found');
 
-    const patch = result.Messages[1];
-    assert(patch, 'Patch message not found');
-    assert(
-      patch.Tags.some(
-        (tag) => tag.name === 'device' && tag.value === 'patch@1.0',
-      ),
-      'Patch message not found',
-    );
+    assertPatchMessage(result);
   });
 
   it('should send updates to IO network when a name is reassigned', async () => {
@@ -165,14 +158,7 @@ describe('IO Network Updates', async () => {
     );
     assert(error, 'Reassign-Name-Error message not found');
 
-    const patch = result.Messages[1];
-    assert(patch, 'Patch message not found');
-    assert(
-      patch.Tags.some(
-        (tag) => tag.name === 'device' && tag.value === 'patch@1.0',
-      ),
-      'Patch message not found',
-    );
+    assertPatchMessage(result);
   });
 
   it('should send a reassign-name-error-notice for invalid process IDs', async () => {
@@ -193,13 +179,6 @@ describe('IO Network Updates', async () => {
     );
     assert(error, 'Reassign-Name-Error message not found');
 
-    const patch = result.Messages[1];
-    assert(patch, 'Patch message not found');
-    assert(
-      patch.Tags.some(
-        (tag) => tag.name === 'device' && tag.value === 'patch@1.0',
-      ),
-      'Patch message not found',
-    );
+    assertPatchMessage(result);
   });
 });

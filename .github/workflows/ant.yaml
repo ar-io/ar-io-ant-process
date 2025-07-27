@@ -84,7 +84,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Install AO Tool
         run: |
-          curl -L https://install_ao.g8way.io | sh
+          curl -L https://install_ao.arweave.net | sh
           export AO_INSTALL=/home/runner/.ao
           export PATH="$AO_INSTALL/bin:$PATH"
           echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV
@@ -130,7 +130,7 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'yarn'
       - run: yarn --frozen-lockfile
-      - run: curl -L https://install_ao.g8way.io | sh
+      - run: curl -L https://install_ao.arweave.net | sh
       - name: Publish Lua Code
         id: publish-lua-code
         env:
@@ -153,7 +153,7 @@ jobs:
 
       - name: Install AO Tool
         run: |
-          curl -L https://install_ao.g8way.io | sh
+          curl -L https://install_ao.arweave.net | sh
           export AO_INSTALL=/home/runner/.ao
           export PATH="$AO_INSTALL/bin:$PATH"
           echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV

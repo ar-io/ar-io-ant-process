@@ -164,6 +164,11 @@ describe('aos Balances', async () => {
   it('should fail to transfer when called by non-owner', async () => {
     const infoBefore = await getInfo(startMemory);
     const nonOwner = 'non-owner-'.padEnd(43, '1');
+    assert.notEqual(
+      nonOwner,
+      infoBefore.Owner,
+      'Non-owner parameter should not be the current owner',
+    );
     const transferResult = await handle({
       From: nonOwner,
       Owner: nonOwner,

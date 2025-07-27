@@ -4,7 +4,6 @@ import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
-  STUB_ADDRESS,
   STUB_ETH_ADDRESS,
 } from '../tools/constants.mjs';
 
@@ -65,6 +64,16 @@ describe('Primary Names', async () => {
         assert.strictEqual(recipientTag.value, target_address);
         assert.strictEqual(nameTag.value, ''.padEnd(43, '3'));
       } else {
+        assert.strictEqual(res.Messages.length, 2);
+        const patchMessage = res.Messages[1];
+        const patchTag = patchMessage.Tags.find(
+          (t) => t.name == 'device' && t.value == 'patch@1.0',
+        );
+        assert.strictEqual(
+          patchTag !== undefined,
+          true,
+          'patch message should be present',
+        );
         assert.strictEqual(
           res.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
           'Approve-Primary-Name-Error',
@@ -89,7 +98,17 @@ describe('Primary Names', async () => {
     });
     const invalidMessage = res.Messages[0];
     const actionTag = invalidMessage.Tags.find((t) => t.name == 'Action');
+    assert.strictEqual(res.Messages.length, 2);
     assert.strictEqual(actionTag.value, 'Invalid-Approve-Primary-Name-Notice');
+    const patchMessage = res.Messages[1];
+    const patchTag = patchMessage.Tags.find(
+      (t) => t.name == 'device' && t.value == 'patch@1.0',
+    );
+    assert.strictEqual(
+      patchTag !== undefined,
+      true,
+      'patch message should be present',
+    );
   });
 
   it('should send remove names request', async () => {
@@ -126,6 +145,17 @@ describe('Primary Names', async () => {
 
     const invalidMessage = res.Messages[0];
     const actionTag = invalidMessage.Tags.find((t) => t.name == 'Action');
+    // patch and error message
+    assert.strictEqual(res.Messages.length, 2);
     assert.strictEqual(actionTag.value, 'Invalid-Remove-Primary-Names-Notice');
+    const patchMessage = res.Messages[1];
+    const patchTag = patchMessage.Tags.find(
+      (t) => t.name == 'device' && t.value == 'patch@1.0',
+    );
+    assert.strictEqual(
+      patchTag !== undefined,
+      true,
+      'patch message should be present',
+    );
   });
 });

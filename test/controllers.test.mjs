@@ -22,6 +22,16 @@ describe('aos Controllers', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
+  }
 
   async function getControllers(mem = startMemory) {
     return handle(

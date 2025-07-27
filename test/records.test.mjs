@@ -21,6 +21,16 @@ describe('aos Records', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
+  }
 
   async function setRecord(
     { name, ttl = 900, transactionId = STUB_ADDRESS, priority = undefined },

@@ -20,6 +20,16 @@ describe('aos Info', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
+  }
 
   it('should get the process info', async () => {
     const result = await handle({

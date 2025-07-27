@@ -21,6 +21,7 @@ describe('Primary Names', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+
   const STUB_RECIPIENT = 'recipient-'.padEnd(43, '1');
 
   for (const [target_address, allowUnsafe, shouldPass] of [

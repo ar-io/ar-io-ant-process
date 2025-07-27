@@ -115,9 +115,10 @@ describe('aos Balances', async () => {
           'Owner should not change on invalid transfer',
         );
         assert.strictEqual(
-          transferResult.Messages[0].Tags.find((t) => t.name === 'Action')
+          transferResult.Messages[0].Tags.find((t) => t.name === 'Error')
             ?.value,
           'Transfer-Error',
+          `Expected Transfer-Error tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value}`,
         );
       }
     });

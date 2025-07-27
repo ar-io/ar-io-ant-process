@@ -261,14 +261,18 @@ describe('aos Records', async () => {
         ],
       });
 
-      // Should return an error message, not a patch message
-      assert(setRecordResult.Messages?.length > 0, 'Expected error message');
+      assert.equal(
+        setRecordResult.Messages.length,
+        2,
+        'Expected patch and error message',
+      );
       const errorMessage = setRecordResult.Messages[0];
       assert.strictEqual(
         errorMessage.Tags.find((tag) => tag.name === 'Error').value,
         'Set-Record-Error',
         'Expected error tag in response',
       );
+      assertPatchMessage(setRecordResult);
 
       // Verify the record was not actually set
       const recordsResult = await handle(
@@ -322,8 +326,13 @@ describe('aos Records', async () => {
         setRecordResult.Memory,
       );
 
-      // Should return an error message, not a patch message
-      assert(removeRecordResult.Messages?.length > 0, 'Expected error message');
+      assert.equal(
+        removeRecordResult.Messages.length,
+        2,
+        'Expected patch and error message',
+      );
+      assertPatchMessage(removeRecordResult);
+
       const errorMessage = removeRecordResult.Messages[0];
       assert.strictEqual(
         errorMessage.Tags.find((tag) => tag.name === 'Error').value,

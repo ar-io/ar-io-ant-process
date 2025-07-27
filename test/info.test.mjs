@@ -321,5 +321,44 @@ describe('aos Info', async () => {
         'Keywords should not be changed by unauthorized user',
       );
     });
+
+    it('should fail to set logo when called by non-owner/non-controller', async () => {
+      const unauthorizedLogo = 'unauthorized-logo-transaction-id';
+      const setLogoResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Logo' },
+          { name: 'Logo', value: unauthorizedLogo },
+        ],
+      });
+
+      // Should return an error message and patch message
+      assert.strictEqual(
+        setLogoResult.Messages?.length,
+        2,
+        'Expected 2 messages',
+      );
+      const errorMessage = setLogoResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Logo-Error',
+        'Expected Set-Logo-Error tag in response',
+      );
+      assertPatchMessage(setLogoResult);
+
+      // Verify the logo was not actually changed
+      const infoResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Info' }],
+        },
+        setLogoResult.Memory,
+      );
+      const info = JSON.parse(infoResult.Messages[0].Data);
+      assert(
+        info.Logo !== unauthorizedLogo,
+        'Logo should not be changed by unauthorized user',
+      );
+    });
   });
 });

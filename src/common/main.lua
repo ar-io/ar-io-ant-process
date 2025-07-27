@@ -69,7 +69,6 @@ function ant.init()
 		Record = "Record",
 		Records = "Records",
 		State = "State",
-		Evolve = "Evolve",
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
 		ReassignName = "Reassign-Name",

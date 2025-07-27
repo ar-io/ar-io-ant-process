@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -100,15 +100,7 @@ describe('Primary Names', async () => {
     const actionTag = invalidMessage.Tags.find((t) => t.name == 'Action');
     assert.strictEqual(res.Messages.length, 2);
     assert.strictEqual(actionTag.value, 'Invalid-Approve-Primary-Name-Notice');
-    const patchMessage = res.Messages[1];
-    const patchTag = patchMessage.Tags.find(
-      (t) => t.name == 'device' && t.value == 'patch@1.0',
-    );
-    assert.strictEqual(
-      patchTag !== undefined,
-      true,
-      'patch message should be present',
-    );
+    assertPatchMessage(res);
   });
 
   it('should send remove names request', async () => {
@@ -148,14 +140,6 @@ describe('Primary Names', async () => {
     // patch and error message
     assert.strictEqual(res.Messages.length, 2);
     assert.strictEqual(actionTag.value, 'Invalid-Remove-Primary-Names-Notice');
-    const patchMessage = res.Messages[1];
-    const patchTag = patchMessage.Tags.find(
-      (t) => t.name == 'device' && t.value == 'patch@1.0',
-    );
-    assert.strictEqual(
-      patchTag !== undefined,
-      true,
-      'patch message should be present',
-    );
+    assertPatchMessage(res);
   });
 });

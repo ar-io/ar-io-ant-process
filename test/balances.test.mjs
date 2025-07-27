@@ -60,6 +60,7 @@ describe('aos Balances', async () => {
     ['invalid-address', false, false],
     ['invalid-address', false, false],
   ]) {
+    // balance reading test
     it(`should ${shouldPass ? '' : 'not'} fetch the target balance`, async () => {
       const result = await handle({
         Tags: [
@@ -80,6 +81,7 @@ describe('aos Balances', async () => {
       }
     });
 
+    // test for unsafe address handling
     it(`should ${allowUnsafe ? '' : 'not'} transfer the ANT`, async () => {
       // Get owner info before transfer
       const infoBefore = await getInfo(startMemory);
@@ -123,6 +125,7 @@ describe('aos Balances', async () => {
       }
     });
 
+    // test for credit and debit notice
     it(`should ${shouldPass ? '' : 'not'} send credit and debit notice on transfer`, async () => {
       const transferResult = await handle({
         Tags: [
@@ -162,6 +165,7 @@ describe('aos Balances', async () => {
     // for end
   }
 
+  // test for balances
   it('should fetch the balances of the ANT', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Balances' }],

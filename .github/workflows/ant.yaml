@@ -136,7 +136,8 @@ jobs:
         env:
           WALLET: ${{ secrets.WALLET }}
           GITHUB_SHA: ${{ github.sha }}
-          DRY_RUN: ${{github.ref_name != 'main'}}
+          DRY_RUN:
+            ${{github.ref_name != 'main' && github.ref_name != 'develop'}}
         run: |
           PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
           # This line extracts the transaction ID of the published Lua source code from the output

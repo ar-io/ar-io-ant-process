@@ -167,6 +167,12 @@ describe('aos Info', async () => {
     const UNAUTHORIZED_ADDRESS = 'unauthorized-address-'.padEnd(43, '9');
 
     it('should fail to set name when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setNameResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -205,6 +211,12 @@ describe('aos Info', async () => {
     });
 
     it('should fail to set ticker when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setTickerResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -243,6 +255,12 @@ describe('aos Info', async () => {
     });
 
     it('should fail to set description when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setDescriptionResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -282,6 +300,12 @@ describe('aos Info', async () => {
 
     it('should fail to set keywords when called by non-owner/non-controller', async () => {
       const unauthorizedKeywords = ['hack', 'malicious', 'unauthorized'];
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setKeywordsResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -323,6 +347,12 @@ describe('aos Info', async () => {
 
     it('should fail to set logo when called by non-owner/non-controller', async () => {
       const unauthorizedLogo = 'unauthorized-logo-transaction-id';
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setLogoResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,

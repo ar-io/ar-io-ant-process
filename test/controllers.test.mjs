@@ -172,6 +172,11 @@ describe('aos Controllers', async () => {
       controllersBefore.Messages[0].Data,
     );
 
+    assert(
+      controllersListBefore.includes(newController),
+      'Controller should be added',
+    );
+
     // attempt to remove the controller which we added, but with an unauthorized caller
     const removeControllerResult = await handle(
       {

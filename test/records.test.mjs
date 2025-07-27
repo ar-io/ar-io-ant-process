@@ -250,6 +250,12 @@ describe('aos Records', async () => {
     const UNAUTHORIZED_ADDRESS = 'unauthorized-address-'.padEnd(43, '9');
 
     it('should fail to set record when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setRecordResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -290,6 +296,12 @@ describe('aos Records', async () => {
 
     it('should fail to remove record when called by non-owner/non-controller', async () => {
       // First, set a record as the authorized owner
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
       const setRecordResult = await handle({
         Tags: [
           { name: 'Action', value: 'Set-Record' },

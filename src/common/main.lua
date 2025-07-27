@@ -87,7 +87,17 @@ function ant.init()
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
 		local recipient = msg.Tags.Recipient
 
-		assert(msg.From == Owner, "Only the owner can transfer the ANT")
+		-- For token spec compliance, we need to return an error message if the caller is not the owner
+		-- action must be Transfer-Error, Error must be Insufficient Balance!
+		if msg.From ~= Owner then
+			utils.Send(msg, {
+				Target = msg.From,
+				Action = "Transfer-Error",
+				["Message-Id"] = msg.Id,
+				Error = "Insufficient Balance!",
+			})
+			return
+		end
 
 		balances.transfer(recipient, msg.Tags["Allow-Unsafe-Addresses"])
 

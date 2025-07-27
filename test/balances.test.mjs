@@ -180,10 +180,16 @@ describe('aos Balances', async () => {
 
     assert.strictEqual(transferResult.Messages.length, 2);
     assertPatchMessage(transferResult);
+    // note this is different because Action: Transfer-Error is from the token spec, and we are testing for Error: Insufficient Balance! which is also from the token spec
+    assert.strictEqual(
+      transferResult.Messages[0].Tags.find((t) => t.name === 'Action')?.value,
+      'Transfer-Error',
+      `Expected Transfer-Error action tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Action')?.value}`,
+    );
     assert.strictEqual(
       transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
-      'Transfer-Error',
-      `Expected Transfer-Error tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value}`,
+      'Insufficient Balance!',
+      `Expected Insufficient Balance! error tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value}`,
     );
     const infoAfter = await getInfo(transferResult.Memory);
     assert.strictEqual(

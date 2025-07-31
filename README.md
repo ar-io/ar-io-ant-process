@@ -78,7 +78,7 @@ Then install the ao cli - read the docs
 installing different versions.
 
 ```sh
-curl -L https://install_ao.g8way.io | bash
+curl -L https://install_ao.arweave.net | bash
 ```
 
 You may need to follow the instructions in the cli to add the program to your

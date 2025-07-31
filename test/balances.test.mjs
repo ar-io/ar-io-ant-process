@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -60,6 +60,7 @@ describe('aos Balances', async () => {
     ['invalid-address', false, false],
     ['invalid-address', false, false],
   ]) {
+    // balance reading test
     it(`should ${shouldPass ? '' : 'not'} fetch the target balance`, async () => {
       const result = await handle({
         Tags: [
@@ -80,7 +81,11 @@ describe('aos Balances', async () => {
       }
     });
 
+    // test for unsafe address handling
     it(`should ${allowUnsafe ? '' : 'not'} transfer the ANT`, async () => {
+      // Get owner info before transfer
+      const infoBefore = await getInfo(startMemory);
+
       const transferResult = await handle({
         Tags: [
           { name: 'Action', value: 'Transfer' },
@@ -99,14 +104,24 @@ describe('aos Balances', async () => {
         const balances = JSON.parse(balancesResult.Messages[0].Data);
         assert.equal(balances[target_address] === '1', shouldPass);
       } else {
+        // Verify that Owner doesn't change on transfer
+        const infoAfter = await getInfo(transferResult.Memory);
+
+        assert.strictEqual(
+          infoAfter.Owner,
+          infoBefore.Owner,
+          'Owner should not change on invalid transfer',
+        );
         assert.strictEqual(
           transferResult.Messages[0].Tags.find((t) => t.name === 'Error')
             ?.value,
           'Transfer-Error',
+          `Expected Transfer-Error tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value}`,
         );
       }
     });
 
+    // test for credit and debit notice
     it(`should ${shouldPass ? '' : 'not'} send credit and debit notice on transfer`, async () => {
       const transferResult = await handle({
         Tags: [
@@ -146,6 +161,45 @@ describe('aos Balances', async () => {
     // for end
   }
 
+  it('should fail to transfer when called by non-owner', async () => {
+    const infoBefore = await getInfo(startMemory);
+    const nonOwner = 'non-owner-'.padEnd(43, '1');
+    assert.notEqual(
+      nonOwner,
+      infoBefore.Owner,
+      'Non-owner parameter should not be the current owner',
+    );
+    const transferResult = await handle({
+      From: nonOwner,
+      Owner: nonOwner,
+      Tags: [
+        { name: 'Action', value: 'Transfer' },
+        { name: 'Recipient', value: STUB_RECIPIENT },
+      ],
+    });
+
+    assert.strictEqual(transferResult.Messages.length, 2);
+    assertPatchMessage(transferResult);
+    // note this is different because Action: Transfer-Error is from the token spec, and we are testing for Error: Insufficient Balance! which is also from the token spec
+    assert.strictEqual(
+      transferResult.Messages[0].Tags.find((t) => t.name === 'Action')?.value,
+      'Transfer-Error',
+      `Expected Transfer-Error action tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Action')?.value}`,
+    );
+    assert.strictEqual(
+      transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
+      'Insufficient Balance!',
+      `Expected Insufficient Balance! error tag in response, got ${transferResult.Messages[0].Tags.find((t) => t.name === 'Error')?.value}`,
+    );
+    const infoAfter = await getInfo(transferResult.Memory);
+    assert.strictEqual(
+      infoAfter.Owner,
+      infoBefore.Owner,
+      'Owner should not change on invalid transfer',
+    );
+  });
+
+  // test for balances
   it('should fetch the balances of the ANT', async () => {
     const result = await handle({
       Tags: [{ name: 'Action', value: 'Balances' }],

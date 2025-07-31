@@ -21,6 +21,16 @@ describe('aos Records', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
+  }
 
   async function setRecord(
     { name, ttl = 900, transactionId = STUB_ADDRESS, priority = undefined },
@@ -244,5 +254,126 @@ describe('aos Records', async () => {
 
     assert(!records['timmy']);
     assertPatchMessage(recordsResult);
+  });
+
+  describe('Authorization Tests', () => {
+    const UNAUTHORIZED_ADDRESS = 'unauthorized-address-'.padEnd(43, '9');
+
+    it('should fail to set record when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setRecordResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: 'unauthorized-test' },
+          { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+          { name: 'TTL-Seconds', value: 900 },
+        ],
+      });
+
+      assert.equal(
+        setRecordResult.Messages.length,
+        2,
+        'Expected patch and error message',
+      );
+      const errorMessage = setRecordResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Record-Error',
+        'Expected error tag in response',
+      );
+      assertPatchMessage(setRecordResult);
+
+      // Verify the record was not actually set
+      const recordsResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Records' }],
+        },
+        setRecordResult.Memory,
+      );
+      const records = JSON.parse(recordsResult.Messages[0].Data);
+      assert(
+        !records['unauthorized-test'],
+        'Record should not be set by unauthorized user',
+      );
+    });
+
+    it('should fail to remove record when called by non-owner/non-controller', async () => {
+      // First, set a record as the authorized owner
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setRecordResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: 'to-be-removed' },
+          { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+          { name: 'TTL-Seconds', value: 900 },
+        ],
+      });
+      assertPatchMessage(setRecordResult);
+
+      // Verify the record was set
+      const recordsAfterSet = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Records' }],
+        },
+        setRecordResult.Memory,
+      );
+      const recordsSet = JSON.parse(recordsAfterSet.Messages[0].Data);
+      assert(
+        recordsSet['to-be-removed'],
+        'Record should be set before removal test',
+      );
+
+      // Try to remove the record as an unauthorized user
+      const removeRecordResult = await handle(
+        {
+          From: UNAUTHORIZED_ADDRESS,
+          Owner: UNAUTHORIZED_ADDRESS,
+          Tags: [
+            { name: 'Action', value: 'Remove-Record' },
+            { name: 'Sub-Domain', value: 'to-be-removed' },
+          ],
+        },
+        setRecordResult.Memory,
+      );
+
+      assert.equal(
+        removeRecordResult.Messages.length,
+        2,
+        'Expected patch and error message',
+      );
+      assertPatchMessage(removeRecordResult);
+
+      const errorMessage = removeRecordResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Remove-Record-Error',
+        'Expected error tag in response',
+      );
+
+      // Verify the record was not actually removed
+      const recordsAfterRemove = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Records' }],
+        },
+        removeRecordResult.Memory,
+      );
+      const recordsRemaining = JSON.parse(recordsAfterRemove.Messages[0].Data);
+      assert(
+        recordsRemaining['to-be-removed'],
+        'Record should still exist after unauthorized removal attempt',
+      );
+    });
   });
 });

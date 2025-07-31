@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [22] - (2025-7-27)
+
+### Fixed
+
+- Updated transfer handler to AO token spec.
+
 ## [21] - (2025-6-17)
 
 ### Changed

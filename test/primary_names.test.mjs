@@ -1,10 +1,9 @@
-import { createAntAosLoader } from './utils.mjs';
+import { assertPatchMessage, createAntAosLoader } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
   AO_LOADER_HANDLER_ENV,
   DEFAULT_HANDLE_OPTIONS,
-  STUB_ADDRESS,
   STUB_ETH_ADDRESS,
 } from '../tools/constants.mjs';
 
@@ -22,6 +21,7 @@ describe('Primary Names', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+
   const STUB_RECIPIENT = 'recipient-'.padEnd(43, '1');
 
   for (const [target_address, allowUnsafe, shouldPass] of [
@@ -65,6 +65,8 @@ describe('Primary Names', async () => {
         assert.strictEqual(recipientTag.value, target_address);
         assert.strictEqual(nameTag.value, ''.padEnd(43, '3'));
       } else {
+        assert.strictEqual(res.Messages.length, 2);
+        assertPatchMessage(res);
         assert.strictEqual(
           res.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
           'Approve-Primary-Name-Error',
@@ -89,7 +91,9 @@ describe('Primary Names', async () => {
     });
     const invalidMessage = res.Messages[0];
     const actionTag = invalidMessage.Tags.find((t) => t.name == 'Action');
+    assert.strictEqual(res.Messages.length, 2);
     assert.strictEqual(actionTag.value, 'Invalid-Approve-Primary-Name-Notice');
+    assertPatchMessage(res);
   });
 
   it('should send remove names request', async () => {
@@ -126,6 +130,9 @@ describe('Primary Names', async () => {
 
     const invalidMessage = res.Messages[0];
     const actionTag = invalidMessage.Tags.find((t) => t.name == 'Action');
+    // patch and error message
+    assert.strictEqual(res.Messages.length, 2);
     assert.strictEqual(actionTag.value, 'Invalid-Remove-Primary-Names-Notice');
+    assertPatchMessage(res);
   });
 });

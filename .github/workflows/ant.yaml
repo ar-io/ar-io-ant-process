@@ -84,7 +84,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Install AO Tool
         run: |
-          curl -L https://install_ao.g8way.io | sh
+          curl -L https://install_ao.arweave.net | sh
           export AO_INSTALL=/home/runner/.ao
           export PATH="$AO_INSTALL/bin:$PATH"
           echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV
@@ -130,13 +130,14 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'yarn'
       - run: yarn --frozen-lockfile
-      - run: curl -L https://install_ao.g8way.io | sh
+      - run: curl -L https://install_ao.arweave.net | sh
       - name: Publish Lua Code
         id: publish-lua-code
         env:
           WALLET: ${{ secrets.WALLET }}
           GITHUB_SHA: ${{ github.sha }}
-          DRY_RUN: ${{github.ref_name != 'main'}}
+          DRY_RUN:
+            ${{github.ref_name != 'main' && github.ref_name != 'develop'}}
         run: |
           PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
           # This line extracts the transaction ID of the published Lua source code from the output
@@ -153,7 +154,7 @@ jobs:
 
       - name: Install AO Tool
         run: |
-          curl -L https://install_ao.g8way.io | sh
+          curl -L https://install_ao.arweave.net | sh
           export AO_INSTALL=/home/runner/.ao
           export PATH="$AO_INSTALL/bin:$PATH"
           echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV

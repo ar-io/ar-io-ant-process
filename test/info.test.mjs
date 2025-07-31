@@ -1,4 +1,4 @@
-import { createAntAosLoader } from './utils.mjs';
+import { createAntAosLoader, assertPatchMessage } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -19,6 +19,16 @@ describe('aos Info', async () => {
       },
       AO_LOADER_HANDLER_ENV,
     );
+  }
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
   }
 
   it('should get the process info', async () => {
@@ -57,7 +67,6 @@ describe('aos Info', async () => {
       'setDescription',
       'setKeywords',
       'setLogo',
-      'initializeState',
       'state',
       'releaseName',
       'reassignName',
@@ -162,5 +171,233 @@ describe('aos Info', async () => {
     assert(state.Description);
     assert(state.Keywords);
     assert(state.Name);
+  });
+
+  describe('Authorization Tests', () => {
+    const UNAUTHORIZED_ADDRESS = 'unauthorized-address-'.padEnd(43, '9');
+
+    it('should fail to set name when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setNameResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Name' },
+          { name: 'Name', value: 'Unauthorized Name' },
+        ],
+      });
+
+      // Should return an error message and patch message
+      assert.strictEqual(
+        setNameResult.Messages?.length,
+        2,
+        'Expected 2 messages',
+      );
+      const errorMessage = setNameResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Name-Error',
+        'Expected Set-Name-Error tag in response',
+      );
+      assertPatchMessage(setNameResult);
+
+      // Verify the name was not actually changed
+      const infoResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Info' }],
+        },
+        setNameResult.Memory,
+      );
+      const info = JSON.parse(infoResult.Messages[0].Data);
+      assert(
+        info.Name !== 'Unauthorized Name',
+        'Name should not be changed by unauthorized user',
+      );
+    });
+
+    it('should fail to set ticker when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setTickerResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Ticker' },
+          { name: 'Ticker', value: 'HACK' },
+        ],
+      });
+
+      // Should return an error message and patch message
+      assert.strictEqual(
+        setTickerResult.Messages?.length,
+        2,
+        'Expected 2 messages',
+      );
+      const errorMessage = setTickerResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Ticker-Error',
+        'Expected Set-Ticker-Error tag in response',
+      );
+      assertPatchMessage(setTickerResult);
+
+      // Verify the ticker was not actually changed
+      const infoResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Info' }],
+        },
+        setTickerResult.Memory,
+      );
+      const info = JSON.parse(infoResult.Messages[0].Data);
+      assert(
+        info.Ticker !== 'HACK',
+        'Ticker should not be changed by unauthorized user',
+      );
+    });
+
+    it('should fail to set description when called by non-owner/non-controller', async () => {
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setDescriptionResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Description' },
+          { name: 'Description', value: 'Unauthorized Description' },
+        ],
+      });
+
+      // Should return an error message and patch message
+      assert.strictEqual(
+        setDescriptionResult.Messages?.length,
+        2,
+        'Expected 2 messages',
+      );
+      const errorMessage = setDescriptionResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Description-Error',
+        'Expected Set-Description-Error tag in response',
+      );
+      assertPatchMessage(setDescriptionResult);
+
+      // Verify the description was not actually changed
+      const infoResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Info' }],
+        },
+        setDescriptionResult.Memory,
+      );
+      const info = JSON.parse(infoResult.Messages[0].Data);
+      assert(
+        info.Description !== 'Unauthorized Description',
+        'Description should not be changed by unauthorized user',
+      );
+    });
+
+    it('should fail to set keywords when called by non-owner/non-controller', async () => {
+      const unauthorizedKeywords = ['hack', 'malicious', 'unauthorized'];
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setKeywordsResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Keywords' },
+          { name: 'Keywords', value: JSON.stringify(unauthorizedKeywords) },
+        ],
+      });
+
+      // Should return an error message and patch message
+      assert.strictEqual(
+        setKeywordsResult.Messages?.length,
+        2,
+        'Expected 2 messages',
+      );
+      const errorMessage = setKeywordsResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Keywords-Error',
+        'Expected Set-Keywords-Error tag in response',
+      );
+      assertPatchMessage(setKeywordsResult);
+
+      // Verify the keywords were not actually changed
+      const infoResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Info' }],
+        },
+        setKeywordsResult.Memory,
+      );
+      const info = JSON.parse(infoResult.Messages[0].Data);
+      assert(
+        !info.Keywords.some((keyword) =>
+          unauthorizedKeywords.includes(keyword),
+        ),
+        'Keywords should not be changed by unauthorized user',
+      );
+    });
+
+    it('should fail to set logo when called by non-owner/non-controller', async () => {
+      const unauthorizedLogo = 'unauthorized-logo-transaction-id';
+      const infoBefore = await getInfo(startMemory);
+      assert.notEqual(
+        UNAUTHORIZED_ADDRESS,
+        infoBefore.Owner,
+        'Non-owner parameter should not be the current owner',
+      );
+      const setLogoResult = await handle({
+        From: UNAUTHORIZED_ADDRESS,
+        Owner: UNAUTHORIZED_ADDRESS,
+        Tags: [
+          { name: 'Action', value: 'Set-Logo' },
+          { name: 'Logo', value: unauthorizedLogo },
+        ],
+      });
+
+      // Should return an error message and patch message
+      assert.strictEqual(
+        setLogoResult.Messages?.length,
+        2,
+        'Expected 2 messages',
+      );
+      const errorMessage = setLogoResult.Messages[0];
+      assert.strictEqual(
+        errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+        'Set-Logo-Error',
+        'Expected Set-Logo-Error tag in response',
+      );
+      assertPatchMessage(setLogoResult);
+
+      // Verify the logo was not actually changed
+      const infoResult = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Info' }],
+        },
+        setLogoResult.Memory,
+      );
+      const info = JSON.parse(infoResult.Messages[0].Data);
+      assert(
+        info.Logo !== unauthorizedLogo,
+        'Logo should not be changed by unauthorized user',
+      );
+    });
   });
 });

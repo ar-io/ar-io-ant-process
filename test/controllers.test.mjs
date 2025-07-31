@@ -22,6 +22,16 @@ describe('aos Controllers', async () => {
       AO_LOADER_HANDLER_ENV,
     );
   }
+  async function getInfo(mem) {
+    const result = await handle(
+      {
+        Tags: [{ name: 'Action', value: 'Info' }],
+      },
+      mem,
+    );
+
+    return JSON.parse(result.Messages[0].Data);
+  }
 
   async function getControllers(mem = startMemory) {
     return handle(
@@ -54,6 +64,12 @@ describe('aos Controllers', async () => {
     ['invalid-address', false, false],
   ]) {
     it(`should ${shouldPass ? 'add' : 'not add'} the controller ${target_address}`, async () => {
+      // Get controllers list before the operation
+      const controllersBefore = await getControllers();
+      const controllersListBefore = JSON.parse(
+        controllersBefore.Messages[0].Data,
+      );
+
       const result = await handle({
         Tags: [
           { name: 'Action', value: 'Add-Controller' },
@@ -72,19 +88,38 @@ describe('aos Controllers', async () => {
           result.Messages[0].Tags.find((t) => t.name === 'Error')?.value,
           'Add-Controller-Error',
         );
+
+        // Verify that controllers list wasn't modified on invalid add-controller
+        const controllersAfter = await getControllers(result.Memory);
+        const controllersListAfter = JSON.parse(
+          controllersAfter.Messages[0].Data,
+        );
+        assert.deepStrictEqual(
+          controllersListAfter,
+          controllersListBefore,
+          'Controllers list should not change on invalid add-controller operation',
+        );
       }
     });
 
-    it(`should remove the controller ${target_address}`, async () => {
+    it(`should ${shouldPass ? 'remove' : 'not remove'} the controller ${target_address}`, async () => {
       const addControllerResult = await handle({
         Tags: [
           { name: 'Action', value: 'Add-Controller' },
           { name: 'Controller', value: target_address },
-          { name: 'Allow-Unsafe-Addresses', value: true },
+          { name: 'Allow-Unsafe-Addresses', value: allowUnsafe },
         ],
       });
 
       assertPatchMessage(addControllerResult);
+
+      // Get controllers list before remove operation
+      const controllersBefore = await getControllers(
+        addControllerResult.Memory,
+      );
+      const controllersListBefore = JSON.parse(
+        controllersBefore.Messages[0].Data,
+      );
 
       const removeControllerResult = await handle(
         {
@@ -96,17 +131,133 @@ describe('aos Controllers', async () => {
         addControllerResult.Memory,
       );
 
-      assertPatchMessage(removeControllerResult);
-
-      const controllersRes = await getControllers(
-        removeControllerResult.Memory,
-      );
       if (shouldPass) {
+        assertPatchMessage(removeControllerResult);
+
+        const controllersRes = await getControllers(
+          removeControllerResult.Memory,
+        );
         assert.strictEqual(
           !JSON.parse(controllersRes.Messages[0].Data).includes(target_address),
           shouldPass,
         );
+      } else {
+        // Verify that controllers list wasn't modified on invalid remove-controller
+        const controllersAfter = await getControllers(
+          removeControllerResult.Memory,
+        );
+        const controllersListAfter = JSON.parse(
+          controllersAfter.Messages[0].Data,
+        );
+
+        assert.deepStrictEqual(
+          controllersListAfter,
+          controllersListBefore,
+          `Controllers list should not change on invalid remove-controller operation. Params: ${target_address} ${allowUnsafe} ${shouldPass}`,
+        );
       }
     });
   }
+
+  it('should fail to remove controller when called by non-owner', async () => {
+    const infoBefore = await getInfo(startMemory);
+    const nonOwner = 'non-owner-'.padEnd(43, '1');
+    assert.notEqual(
+      nonOwner,
+      infoBefore.Owner,
+      'Non-owner parameter should not be the current owner',
+    );
+    const newController = 'new-controller-'.padEnd(43, '1');
+
+    // add the controller which we will attempt to remove
+    const addControllerResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Add-Controller' },
+        { name: 'Controller', value: newController },
+      ],
+    });
+
+    const controllersBefore = await getControllers(addControllerResult.Memory);
+    const controllersListBefore = JSON.parse(
+      controllersBefore.Messages[0].Data,
+    );
+
+    assert(
+      controllersListBefore.includes(newController),
+      'Controller should be added',
+    );
+
+    // attempt to remove the controller which we added, but with an unauthorized caller
+    const removeControllerResult = await handle(
+      {
+        From: nonOwner,
+        Owner: nonOwner,
+        Tags: [
+          { name: 'Action', value: 'Remove-Controller' },
+          { name: 'Controller', value: newController },
+        ],
+      },
+      addControllerResult.Memory,
+    );
+    assert.strictEqual(removeControllerResult.Messages.length, 2);
+    assertPatchMessage(removeControllerResult);
+    assert.strictEqual(
+      removeControllerResult.Messages[0].Tags.find((t) => t.name === 'Error')
+        ?.value,
+      'Remove-Controller-Error',
+    );
+    const controllersAfter = await getControllers(
+      removeControllerResult.Memory,
+    );
+    const controllersListAfter = JSON.parse(controllersAfter.Messages[0].Data);
+    assert.deepStrictEqual(
+      controllersListAfter,
+      controllersListBefore,
+      'Controllers list should not change on invalid remove-controller operation',
+    );
+    assert.strictEqual(
+      removeControllerResult.Messages[0].Tags.find((t) => t.name === 'Error')
+        ?.value,
+      'Remove-Controller-Error',
+    );
+  });
+
+  it('should fail to add controller when called by non-owner', async () => {
+    const infoBefore = await getInfo(startMemory);
+    const nonOwner = 'non-owner-'.padEnd(43, '1');
+    assert.notEqual(
+      nonOwner,
+      infoBefore.Owner,
+      'Non-owner parameter should not be the current owner',
+    );
+    const newController = 'new-controller-'.padEnd(43, '1');
+
+    const controllersBefore = await getControllers(startMemory);
+    const controllersListBefore = JSON.parse(
+      controllersBefore.Messages[0].Data,
+    );
+
+    const addControllerResult = await handle({
+      From: nonOwner,
+      Owner: nonOwner,
+      Tags: [
+        { name: 'Action', value: 'Add-Controller' },
+        { name: 'Controller', value: newController },
+      ],
+    });
+    assert.strictEqual(addControllerResult.Messages.length, 2);
+    assertPatchMessage(addControllerResult);
+    assert.strictEqual(
+      addControllerResult.Messages[0].Tags.find((t) => t.name === 'Error')
+        ?.value,
+      'Add-Controller-Error',
+    );
+    const controllersAfter = await getControllers(addControllerResult.Memory);
+    const controllersListAfter = JSON.parse(controllersAfter.Messages[0].Data);
+    assert.deepStrictEqual(
+      controllersListAfter,
+      controllersListBefore,
+      'Controllers list should not change on invalid add-controller operation',
+    );
+  });
 });

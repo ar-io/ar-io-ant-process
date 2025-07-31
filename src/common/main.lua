@@ -64,14 +64,11 @@ function ant.init()
 		SetDescription = "Set-Description",
 		SetKeywords = "Set-Keywords",
 		SetLogo = "Set-Logo",
-		--- initialization method for bootstrapping the contract from other platforms ---
-		InitializeState = "Initialize-State",
 		-- read
 		Controllers = "Controllers",
 		Record = "Record",
 		Records = "Records",
 		State = "State",
-		Evolve = "Evolve",
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
 		ReassignName = "Reassign-Name",
@@ -89,6 +86,9 @@ function ant.init()
 
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
 		local recipient = msg.Tags.Recipient
+
+		-- For token spec compliance, we need to return an error message if the caller is not the owner
+		-- action must be Transfer-Error, Error must be Insufficient Balance!
 		if msg.From ~= Owner then
 			utils.Send(msg, {
 				Target = msg.From,
@@ -96,7 +96,9 @@ function ant.init()
 				["Message-Id"] = msg.Id,
 				Error = "Insufficient Balance!",
 			})
+			return
 		end
+
 		balances.transfer(recipient, msg.Tags["Allow-Unsafe-Addresses"])
 
 		if not msg.Cast then
@@ -237,10 +239,6 @@ function ant.init()
 	createActionHandler(ActionMap.SetLogo, function(msg)
 		utils.assertHasPermission(msg.From)
 		return balances.setLogo(msg.Logo)
-	end)
-
-	createActionHandler(ActionMap.InitializeState, function(msg)
-		return initialize.initializeANTState(msg.Data)
 	end)
 
 	createActionHandler(ActionMap.State, function()

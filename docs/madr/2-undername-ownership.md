@@ -118,10 +118,10 @@ Now accepts optional ownership and metadata parameters:
   TransactionId = "tx123...",
   TtlSeconds = "3600",
   Owner = "address123...",      -- Optional
-  RecordName = "Example Site",   -- Optional
-  RecordLogo = "logoTx123...",   -- Optional
-  RecordDescription = "...",     -- Optional
-  RecordKeywords = "defi,dao"    -- Optional, comma-separated
+  Name = "Example Site",         -- Optional
+  Logo = "logoTx123...",         -- Optional
+  Description = "...",           -- Optional
+  Keywords = '["defi","dao"]'    -- Optional, JSON array
 }
 ```
 
@@ -170,7 +170,7 @@ Send({
   TransactionId = "tx123...",
   TtlSeconds = "86400",
   Owner = "aliceAddress123...",
-  RecordName = "Alice's Site"
+  Name = "Alice's Site"
 })
 ```
 

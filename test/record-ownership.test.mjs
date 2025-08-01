@@ -166,6 +166,185 @@ describe('Record Ownership', async () => {
     assert.equal(record.owner, recordOwner); // Owner unchanged
   });
 
+  test('should allow ANT owner to transfer any record ownership', async () => {
+    const processId = 'test-process-002b';
+    const antOwner = 'ant-owner-address-123';
+    const recordOwner = 'record-owner-address-456';
+    const newOwner = 'new-owner-address-789';
+    
+    const handle = await createLoader({ format: 'wasm64-unknown-emscripten-draft_2024_02_15' });
+    
+    // Initialize and create owned record
+    const initResult = await handle({
+      process: { id: processId, owner: antOwner, tags: [] },
+      message: {
+        Target: processId,
+        From: antOwner,
+        Owner: antOwner,
+        ['Block-Height']: '1',
+        Id: '2501',
+        Module: 'module-id',
+        Tags: [{ name: 'Action', value: 'Eval' }],
+        Data: aos,
+      },
+      memory: null,
+      spawn: {},
+      env: {}
+    });
+
+    const createResult = await handle(
+      initResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '2502',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record' },
+            { name: 'Sub-Domain', value: 'godmode' },
+            { name: 'Transaction-Id', value: 'godmode-tx-id' },
+            { name: 'TTL-Seconds', value: '900' },
+            { name: 'Owner', value: recordOwner }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    // ANT owner transfers record they don't own (god mode)
+    const transferResult = await handle(
+      createResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,  // ANT owner, not record owner
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '2503',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Sub-Domain', value: 'godmode' },
+            { name: 'New-Owner', value: newOwner }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    // Verify transfer succeeded
+    assert(!transferResult.Messages[0].Tags.find(t => t.name === 'Error'), 'ANT owner should be able to transfer any record');
+    const transferData = JSON.parse(transferResult.Messages[0].Data);
+    assert.equal(transferData.previousOwner, recordOwner);
+    assert.equal(transferData.newOwner, newOwner);
+  });
+
+  test('should allow controller to transfer any record ownership', async () => {
+    const processId = 'test-process-002c';
+    const antOwner = 'ant-owner-address-123';
+    const controller = 'controller-address-999';
+    const recordOwner = 'record-owner-address-456';
+    const newOwner = 'new-owner-address-789';
+    
+    const handle = await createLoader({ format: 'wasm64-unknown-emscripten-draft_2024_02_15' });
+    
+    // Initialize with controller
+    const initResult = await handle({
+      process: { id: processId, owner: antOwner, tags: [] },
+      message: {
+        Target: processId,
+        From: antOwner,
+        Owner: antOwner,
+        ['Block-Height']: '1',
+        Id: '2601',
+        Module: 'module-id',
+        Tags: [{ name: 'Action', value: 'Eval' }],
+        Data: aos,
+      },
+      memory: null,
+      spawn: {},
+      env: {}
+    });
+
+    // Add controller
+    const addControllerResult = await handle(
+      initResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '2602',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Add-Controller' },
+            { name: 'Controller', value: controller }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    // Create owned record
+    const createResult = await handle(
+      addControllerResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '2603',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record' },
+            { name: 'Sub-Domain', value: 'controllable' },
+            { name: 'Transaction-Id', value: 'control-tx-id' },
+            { name: 'TTL-Seconds', value: '900' },
+            { name: 'Owner', value: recordOwner }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    // Controller transfers record they don't own
+    const transferResult = await handle(
+      createResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: controller,  // Controller, not record owner
+          Owner: controller,
+          ['Block-Height']: '1',
+          Id: '2604',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Sub-Domain', value: 'controllable' },
+            { name: 'New-Owner', value: newOwner }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    // Verify transfer succeeded
+    assert(!transferResult.Messages[0].Tags.find(t => t.name === 'Error'), 'Controller should be able to transfer any record');
+    const transferData = JSON.parse(transferResult.Messages[0].Data);
+    assert.equal(transferData.previousOwner, recordOwner);
+    assert.equal(transferData.newOwner, newOwner);
+  });
+
   test('should allow record owner to transfer ownership', async () => {
     const processId = 'test-process-003';
     const antOwner = 'ant-owner-address-123';
@@ -873,5 +1052,145 @@ describe('Record Ownership', async () => {
     );
 
     assert.equal(JSON.parse(controllerUpdateResult.Messages[0].Data).transactionId, 'controller-updated-tx');
+  });
+
+  test('should handle Set-Record-Metadata without requiring transactionId', async () => {
+    // First create a record with metadata
+    const createResult = await handle(
+      initResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '7001',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record' },
+            { name: 'Sub-Domain', value: 'metarecord' },
+            { name: 'Transaction-Id', value: 'original-tx-id' },
+            { name: 'TTL-Seconds', value: '3600' },
+            { name: 'Owner', value: recordOwner },
+            { name: 'Record-Name', value: 'Original Name' },
+            { name: 'Record-Description', value: 'Original description' }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    assert(createResult.Messages[0].Tags.find(t => t.name === 'Action' && t.value === 'Set-Record-Notice'));
+
+    // Update metadata only without providing transactionId or ttlSeconds
+    const updateMetaResult = await handle(
+      createResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: recordOwner,
+          Owner: recordOwner,
+          ['Block-Height']: '1',
+          Id: '7002',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record-Metadata' },
+            { name: 'Sub-Domain', value: 'metarecord' },
+            { name: 'Record-Name', value: 'Updated Name' },
+            { name: 'Record-Description', value: 'Updated description' },
+            { name: 'Record-Keywords', value: JSON.stringify(['updated', 'metadata']) }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    assert(updateMetaResult.Messages[0].Tags.find(t => t.name === 'Action' && t.value === 'Set-Record-Metadata-Notice'));
+    const updatedRecord = JSON.parse(updateMetaResult.Messages[0].Data);
+    
+    // Check that metadata was updated
+    assert.equal(updatedRecord.name, 'Updated Name');
+    assert.equal(updatedRecord.description, 'Updated description');
+    assert.deepEqual(updatedRecord.keywords, ['updated', 'metadata']);
+    
+    // Check that transactionId and ttlSeconds were preserved
+    assert.equal(updatedRecord.transactionId, 'original-tx-id');
+    assert.equal(updatedRecord.ttlSeconds, 3600);
+    assert.equal(updatedRecord.owner, recordOwner);
+
+    // Test that owner change requires ANT-level permission
+    const ownerChangeResult = await handle(
+      updateMetaResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: recordOwner,
+          Owner: recordOwner,
+          ['Block-Height']: '1',
+          Id: '7003',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record-Metadata' },
+            { name: 'Sub-Domain', value: 'metarecord' },
+            { name: 'Owner', value: 'new-owner-address' }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    assert(ownerChangeResult.Messages[0].Tags.find(t => t.name === 'Error'), 'Record owner should not be able to change ownership');
+
+    // Test that ANT owner can change ownership via metadata update
+    const antOwnerChangeResult = await handle(
+      updateMetaResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '7004',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record-Metadata' },
+            { name: 'Sub-Domain', value: 'metarecord' },
+            { name: 'Owner', value: 'new-owner-address' }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    assert(antOwnerChangeResult.Messages[0].Tags.find(t => t.name === 'Action' && t.value === 'Set-Record-Metadata-Notice'));
+    assert.equal(JSON.parse(antOwnerChangeResult.Messages[0].Data).owner, 'new-owner-address');
+
+    // Test updating non-existent record
+    const nonExistentResult = await handle(
+      antOwnerChangeResult.Memory,
+      {
+        process: { id: processId, owner: antOwner, tags: [] },
+        message: {
+          Target: processId,
+          From: antOwner,
+          Owner: antOwner,
+          ['Block-Height']: '1',
+          Id: '7005',
+          Module: 'module-id',
+          Tags: [
+            { name: 'Action', value: 'Set-Record-Metadata' },
+            { name: 'Sub-Domain', value: 'nonexistent' },
+            { name: 'Record-Name', value: 'Should fail' }
+          ],
+        },
+        env: {}
+      }
+    );
+
+    assert(nonExistentResult.Messages[0].Tags.find(t => t.name === 'Error'), 'Should error on non-existent record');
   });
 });

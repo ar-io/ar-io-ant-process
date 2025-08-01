@@ -166,7 +166,7 @@ end
 ---```
 function utils.validateOwner(caller)
 	local isOwner = false
-	if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
+	if Owner == caller or Balances[caller] == 1 or ao.env.Process.Id == caller then
 		isOwner = true
 	end
 	assert(isOwner, "Sender is not the owner.")
@@ -208,7 +208,7 @@ function utils.assertHasRecordPermission(from, subdomain)
 			return
 		end
 	end
-	if Owner == from or Balances[from] or ao.env.Process.Id == from then
+	if Owner == from or Balances[from] == 1 or ao.env.Process.Id == from then
 		return
 	end
 

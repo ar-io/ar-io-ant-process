@@ -66,6 +66,7 @@ function ant.init()
 		SetLogo = "Set-Logo",
 		TransferRecordOwnership = "Transfer-Record-Ownership",
 		RevokeRecordOwnership = "Revoke-Record-Ownership",
+		SetRecordMetadata = "Set-Record-Metadata",
 		-- read
 		Controllers = "Controllers",
 		Record = "Record",
@@ -249,6 +250,55 @@ function ant.init()
 		return records.setRecord(name, transactionId, ttlSeconds, priority, owner, recordName, logo, description, keywords)
 	end)
 
+	createActionHandler(ActionMap.SetRecordMetadata, function(msg)
+		local name = string.lower(msg.Tags["Sub-Domain"])
+		
+		-- Check if record exists
+		local existingRecord = Records[name]
+		assert(existingRecord, "Record does not exist")
+		
+		-- Check permissions
+		utils.assertHasRecordPermission(msg.From, name)
+		
+		-- Handle optional metadata fields
+		local owner = msg.Tags["Owner"]
+		local recordName = msg.Tags["Record-Name"]
+		local logo = msg.Tags["Record-Logo"]
+		local description = msg.Tags["Record-Description"]
+		local keywords = nil
+		
+		-- Owner assignment requires ANT-level permission
+		if owner then
+			utils.assertHasPermission(msg.From)
+			assert(utils.isValidAOAddress(owner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")
+		end
+		
+		-- Validate optional metadata using existing patterns
+		if recordName then
+			assert(type(recordName) == "string", "Name must be a string")
+			assert(#recordName <= constants.MAX_UNDERNAME_LENGTH, "Name must not exceed " .. constants.MAX_UNDERNAME_LENGTH .. " characters")
+		end
+		
+		if logo then
+			assert(utils.isValidArweaveAddress(logo), "Invalid logo Arweave ID")
+		end
+		
+		if description then
+			assert(type(description) == "string", "Description must be a string")
+			assert(#description <= constants.MAX_DESCRIPTION_LENGTH, "Description must not exceed " .. constants.MAX_DESCRIPTION_LENGTH .. " characters")
+		end
+		
+		if msg.Tags["Record-Keywords"] then
+			local success, decodedKeywords = pcall(json.decode, msg.Tags["Record-Keywords"])
+			assert(success and type(decodedKeywords) == "table", "Invalid JSON format for keywords")
+			utils.validateKeywords(decodedKeywords)
+			keywords = decodedKeywords
+		end
+		
+		collectgarbage()
+		return records.updateRecordMetadata(name, owner, recordName, logo, description, keywords)
+	end)
+
 	createActionHandler(ActionMap.RemoveRecord, function(msg)
 		utils.assertHasPermission(msg.From)
 		return records.removeRecord(string.lower(msg.Tags["Sub-Domain"]))
@@ -304,8 +354,8 @@ function ant.init()
 		assert(record ~= nil, "Record does not exist")
 		assert(record.owner ~= nil, "Record has no owner")
 
-		-- Only current owner can transfer (ANT owner/controllers have god mode via assertHasRecordPermission)
-		assert(record.owner == caller, "Only record owner can transfer ownership")
+		-- Check permissions (ANT owner/controllers can transfer any record, record owners can transfer their own)
+		utils.assertHasRecordPermission(caller, subdomain)
 
 		-- Use existing transfer function with proper garbage collection
 		collectgarbage("stop")
@@ -435,7 +485,7 @@ function ant.init()
 		local isAuthorized = false
 
 		-- Check if caller is ANT owner
-		if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
+		if Owner == caller or Balances[caller] == 1 or ao.env.Process.Id == caller then
 			isAuthorized = true
 		else
 			-- Check if caller owns a subdomain AND is setting it for themselves
@@ -473,7 +523,7 @@ function ant.init()
 
 		local ioProcess = msg.Tags["IO-Process-Id"]
 		local names = utils.splitString(msg.Tags.Names)
-		local isAntOwner = Owner == caller or Balances[caller] or ao.env.Process.Id == caller
+		local isAntOwner = Owner == caller or Balances[caller] == 1 or ao.env.Process.Id == caller
 
 		-- Validate each name
 		for _, name in ipairs(names) do

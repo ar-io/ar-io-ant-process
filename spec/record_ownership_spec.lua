@@ -1,6 +1,15 @@
 local records = require("src.common.records")
 local constants = require("src.common.constants")
 
+-- Valid 43-character test addresses (Base64URL format)
+local validOwner = "BaMK_9bFWZMsRmk1L5h0UgO0p-xh_oUpqdCCPQhJlkI"
+local validRecordOwner = "Th2GyXvBSav3fV6I_4RgjV-xXJZnN2LNYnzgIJQxgKg"
+local validNewOwner = "aWn0lF5sc8JLrBIGxQvBcUoXqFQCTh5ATaW6N4GNGxw"
+local validTxId = "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ"
+local validLogoTxId = "KTzTXT_ANmF84bg8W0YfoD7bBmJyq0D2K5SvkJ6dJnU"
+local validTxId2 = "xjMaPnMBPvfXqTCg4XLEkJ-5da8p1v7E9IwLHqGa-ck"
+local validOwner2 = "1A9RgCNOL6NnmQQf0zWVlrX0XnWmvaZ4sNjVCn5BmMg"
+
 describe("Record Ownership", function()
 	before_each(function()
 		-- Reset global state before each test
@@ -11,39 +20,39 @@ describe("Record Ownership", function()
 				priority = 0
 			}
 		}
-		_G.Owner = "test-owner"
+		_G.Owner = validOwner
 		_G.Controllers = {}
-		_G.Balances = { ["test-owner"] = 1 }
+		_G.Balances = { [validOwner] = 1 }
 	end)
 
 	describe("setRecord with ownership", function()
 		it("should allow setting a record with an owner", function()
 			local result = records.setRecord(
 				"test",
-				"new-tx-id",
+				validTxId,
 				1800,
 				1,
-				"record-owner-123",
+				validRecordOwner,
 				"Test Record",
-				"logo-tx-id",
+				validLogoTxId,
 				"Test description",
 				{"keyword1", "keyword2"}
 			)
 
-			assert.are.equal("new-tx-id", result.transactionId)
+			assert.are.equal(validTxId, result.transactionId)
 			assert.are.equal(1800, result.ttlSeconds)
 			assert.are.equal(1, result.priority)
-			assert.are.equal("record-owner-123", result.owner)
+			assert.are.equal(validRecordOwner, result.owner)
 			assert.are.equal("Test Record", result.name)
-			assert.are.equal("logo-tx-id", result.logo)
+			assert.are.equal(validLogoTxId, result.logo)
 			assert.are.equal("Test description", result.description)
 			assert.are.same({"keyword1", "keyword2"}, result.keywords)
 		end)
 
 		it("should allow setting a record without optional fields", function()
-			local result = records.setRecord("minimal", "min-tx-id", 900)
+			local result = records.setRecord("minimal", validTxId, 900)
 
-			assert.are.equal("min-tx-id", result.transactionId)
+			assert.are.equal(validTxId, result.transactionId)
 			assert.are.equal(900, result.ttlSeconds)
 			assert.is_nil(result.priority)
 			assert.is_nil(result.owner)
@@ -67,7 +76,7 @@ describe("Record Ownership", function()
 
 		it("should validate TTL seconds", function()
 			assert.has_error(function()
-				records.setRecord("test", "valid-tx-id-43-chars-xxxxxxxxxxxxxxxxxx", 30)
+				records.setRecord("test", validTxId, 30)
 			end, constants.INVALID_TTL_MESSAGE)
 		end)
 	end)
@@ -76,24 +85,24 @@ describe("Record Ownership", function()
 		before_each(function()
 			-- Create a record with an owner
 			_G.Records["owned"] = {
-				transactionId = "tx-id",
+				transactionId = validTxId,
 				ttlSeconds = 900,
-				owner = "current-owner"
+				owner = validRecordOwner
 			}
 		end)
 
 		it("should transfer ownership to new owner", function()
-			local result = records.transferRecordOwnership("owned", "new-owner-123")
+			local result = records.transferRecordOwnership("owned", validNewOwner)
 
 			assert.are.equal("owned", result.subdomain)
-			assert.are.equal("current-owner", result.previousOwner)
-			assert.are.equal("new-owner-123", result.newOwner)
-			assert.are.equal("new-owner-123", Records["owned"].owner)
+			assert.are.equal(validRecordOwner, result.previousOwner)
+			assert.are.equal(validNewOwner, result.newOwner)
+			assert.are.equal(validNewOwner, Records["owned"].owner)
 		end)
 
 		it("should fail if record does not exist", function()
 			assert.has_error(function()
-				records.transferRecordOwnership("nonexistent", "new-owner")
+				records.transferRecordOwnership("nonexistent", validNewOwner)
 			end, "Record does not exist")
 		end)
 
@@ -101,7 +110,7 @@ describe("Record Ownership", function()
 			Records["owned"].owner = nil
 
 			assert.has_error(function()
-				records.transferRecordOwnership("owned", "new-owner")
+				records.transferRecordOwnership("owned", validNewOwner)
 			end, "Record has no owner")
 		end)
 
@@ -113,7 +122,7 @@ describe("Record Ownership", function()
 
 		it("should fail if new owner is same as current", function()
 			assert.has_error(function()
-				records.transferRecordOwnership("owned", "current-owner")
+				records.transferRecordOwnership("owned", validRecordOwner)
 			end, "New owner same as current owner")
 		end)
 	end)
@@ -122,9 +131,9 @@ describe("Record Ownership", function()
 		before_each(function()
 			-- Create a record with an owner
 			_G.Records["revokable"] = {
-				transactionId = "tx-id",
+				transactionId = validTxId,
 				ttlSeconds = 900,
-				owner = "owner-to-revoke"
+				owner = validRecordOwner
 			}
 		end)
 
@@ -132,7 +141,7 @@ describe("Record Ownership", function()
 			local result = records.revokeRecordOwnership("revokable")
 
 			assert.are.equal("revokable", result.subdomain)
-			assert.are.equal("owner-to-revoke", result.previousOwner)
+			assert.are.equal(validRecordOwner, result.previousOwner)
 			assert.is_true(result.revoked)
 			assert.is_nil(Records["revokable"].owner)
 		end)
@@ -157,22 +166,22 @@ describe("Record Ownership", function()
 	describe("getRecord with ownership", function()
 		it("should return record with all metadata", function()
 			Records["metadata"] = {
-				transactionId = "tx-id",
+				transactionId = validTxId,
 				ttlSeconds = 900,
 				priority = 1,
-				owner = "record-owner",
+				owner = validRecordOwner,
 				name = "My Record",
-				logo = "logo-id",
+				logo = validLogoTxId,
 				description = "A test record",
 				keywords = {"test", "record"}
 			}
 
 			local result = records.getRecord("metadata")
 
-			assert.are.equal("tx-id", result.transactionId)
-			assert.are.equal("record-owner", result.owner)
+			assert.are.equal(validTxId, result.transactionId)
+			assert.are.equal(validRecordOwner, result.owner)
 			assert.are.equal("My Record", result.name)
-			assert.are.equal("logo-id", result.logo)
+			assert.are.equal(validLogoTxId, result.logo)
 			assert.are.equal("A test record", result.description)
 			assert.are.same({"test", "record"}, result.keywords)
 		end)
@@ -181,26 +190,90 @@ describe("Record Ownership", function()
 	describe("getRecords with ownership", function()
 		it("should return all records including metadata", function()
 			Records["one"] = {
-				transactionId = "tx-1",
+				transactionId = validTxId,
 				ttlSeconds = 900,
-				owner = "owner-1",
+				owner = validOwner2,
 				name = "Record One"
 			}
 			Records["two"] = {
-				transactionId = "tx-2",
+				transactionId = validTxId2,
 				ttlSeconds = 1800
 				-- No owner or metadata
 			}
 
 			local result = records.getRecords()
 
-			assert.are.equal("tx-1", result["one"].transactionId)
-			assert.are.equal("owner-1", result["one"].owner)
+			assert.are.equal(validTxId, result["one"].transactionId)
+			assert.are.equal(validOwner2, result["one"].owner)
 			assert.are.equal("Record One", result["one"].name)
 
-			assert.are.equal("tx-2", result["two"].transactionId)
+			assert.are.equal(validTxId2, result["two"].transactionId)
 			assert.is_nil(result["two"].owner)
 			assert.is_nil(result["two"].name)
+		end)
+	end)
+
+	describe("updateRecordMetadata", function()
+		before_each(function()
+			_G.Records["meta"] = {
+				transactionId = validTxId,
+				ttlSeconds = 900,
+				owner = validRecordOwner,
+				name = "Original Name",
+				logo = validLogoTxId,
+				description = "Original description",
+				keywords = {"original", "keywords"}
+			}
+		end)
+
+		it("should update only provided metadata fields", function()
+			local result = records.updateRecordMetadata("meta", nil, "New Name", nil, "New description", nil)
+
+			assert.are.equal(validTxId, result.transactionId)
+			assert.are.equal(900, result.ttlSeconds)
+			assert.are.equal(validRecordOwner, result.owner)
+			assert.are.equal("New Name", result.name)
+			assert.are.equal(validLogoTxId, result.logo)
+			assert.are.equal("New description", result.description)
+			assert.are.same({"original", "keywords"}, result.keywords)
+		end)
+
+		it("should update owner field", function()
+			local result = records.updateRecordMetadata("meta", validNewOwner, nil, nil, nil, nil)
+
+			assert.are.equal(validNewOwner, result.owner)
+			assert.are.equal("Original Name", result.name)
+		end)
+
+		it("should update all metadata fields", function()
+			local newKeywords = {"new", "updated", "keywords"}
+			local result = records.updateRecordMetadata(
+				"meta",
+				validNewOwner,
+				"Updated Name",
+				validLogoTxId,
+				"Updated description",
+				newKeywords
+			)
+
+			assert.are.equal(validNewOwner, result.owner)
+			assert.are.equal("Updated Name", result.name)
+			assert.are.equal(validLogoTxId, result.logo)
+			assert.are.equal("Updated description", result.description)
+			assert.are.same(newKeywords, result.keywords)
+		end)
+
+		it("should preserve transaction ID and TTL", function()
+			local result = records.updateRecordMetadata("meta", validNewOwner, "New Name", nil, nil, nil)
+
+			assert.are.equal(validTxId, result.transactionId)
+			assert.are.equal(900, result.ttlSeconds)
+		end)
+
+		it("should fail if record does not exist", function()
+			assert.has_error(function()
+				records.updateRecordMetadata("nonexistent", validNewOwner, nil, nil, nil, nil)
+			end, "Record does not exist")
 		end)
 	end)
 end)

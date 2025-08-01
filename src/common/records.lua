@@ -125,4 +125,38 @@ function records.revokeRecordOwnership(name)
 	}
 end
 
+--- Update only the metadata fields of a record.
+---@param name string The subdomain of the record
+---@param owner string|nil The new owner address
+---@param recordName string|nil The display name
+---@param logo string|nil The logo transaction ID
+---@param description string|nil The description
+---@param keywords table<string>|nil The keywords
+---@return Record
+function records.updateRecordMetadata(name, owner, recordName, logo, description, keywords)
+	local record = Records[name]
+	assert(record, "Record does not exist")
+	
+	collectgarbage("stop")
+	-- Update only provided fields, preserve existing values
+	if owner ~= nil then
+		record.owner = owner
+	end
+	if recordName ~= nil then
+		record.name = recordName
+	end
+	if logo ~= nil then
+		record.logo = logo
+	end
+	if description ~= nil then
+		record.description = description
+	end
+	if keywords ~= nil then
+		record.keywords = keywords
+	end
+	collectgarbage("restart")
+	
+	return record
+end
+
 return records

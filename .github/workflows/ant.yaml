@@ -113,7 +113,7 @@ jobs:
               - 'ao-build-config.yml'
   publish:
     runs-on: ubuntu-latest
-    environment: develop
+    environment: ${{ github.ref_name }}
     needs: [lint, unit, integration, check-should-publish]
     permissions:
       contents: write # to be able to publish a GitHub release

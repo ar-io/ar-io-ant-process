@@ -190,11 +190,11 @@ function ant.init()
 	createActionHandler(ActionMap.SetRecord, function(msg)
 		utils.assertHasPermission(msg.From)
 
-		local name, transactionId, ttlSeconds, priority =
-			string.lower(msg["Sub-Domain"]),
-			msg["Transaction-Id"],
-			tonumber(msg["TTL-Seconds"]),
-			tonumber(msg["Priority"])
+		local name = string.lower(msg.Tags["Sub-Domain"])
+		local transactionId = msg.Tags["Transaction-Id"]
+		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
+		local priority = tonumber(msg.Tags["Priority"])
+
 		assert(ttlSeconds, "Missing ttl seconds")
 		collectgarbage()
 		return records.setRecord(name, transactionId, ttlSeconds, priority)
@@ -245,18 +245,21 @@ function ant.init()
 		return utils.getState()
 	end)
 
-	-- IO Network Contract Handlers
-
+	-- ARIO Network Contract Handlers
+	--[[
+		These handlers expect and IO-Process-Id tag to be present in the message and can only be called by the owner of the ANT.
+		The handler acts as a proxy, and sends the corresponding message to the ARIO Network contract.
+	]]
 	createActionHandler(ActionMap.ReleaseName, function(msg)
 		utils.validateOwner(msg.From)
-		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid IO process ID")
 
 		assert(msg.Tags.Name, "Name is required")
 
 		local name = string.lower(msg.Tags.Name)
 		local ioProcess = msg.Tags["IO-Process-Id"]
 
-		-- send the release message to the provided IO Process Id
+		-- Sends a release message to the provided IO Process ID
 		utils.Send(msg, {
 			Target = ioProcess,
 			Action = "Release-Name",
@@ -274,15 +277,15 @@ function ant.init()
 
 	createActionHandler(ActionMap.ReassignName, function(msg)
 		utils.validateOwner(msg.From)
-		assert(utils.isValidArweaveAddress(msg.Tags["Process-Id"]), "Invalid Arweave ID")
-
+		assert(utils.isValidArweaveAddress(msg.Tags["Process-Id"]), "Invalid ANT process ID")
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid IO process ID")
 		assert(msg.Tags.Name, "Name is required")
 
 		local name = string.lower(msg.Tags.Name)
 		local ioProcess = msg.Tags["IO-Process-Id"]
 		local antProcessIdToReassign = msg.Tags["Process-Id"]
 
-		-- send the release message to the provided IO Process Id
+		-- Sends a reassign message to the provided IO Process ID
 		utils.Send(msg, {
 			Target = ioProcess,
 			Action = "Reassign-Name",
@@ -340,6 +343,8 @@ function ant.init()
 			Names = msg.Tags.Names,
 		})
 	end)
+
+	-- END ARIO Network Contract Handlers
 
 	--[[
 	AOS provides a _boot handler that is designed to load Lua code on boot.

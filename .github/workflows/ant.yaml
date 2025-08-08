@@ -112,7 +112,7 @@ jobs:
               - 'ao-build-config.yml'
   publish:
     runs-on: ubuntu-latest
-    environment: main
+    environment: ${{ github.ref_name }}
     needs: [lint, unit, integration, check-should-publish]
     permissions:
       contents: write # to be able to publish a GitHub release
@@ -121,8 +121,7 @@ jobs:
       published_module_id: ${{ steps.publish-module.outputs.moduleTxId }}
     if:
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
-      (github.event_name == 'workflow_dispatch' ||
-      needs.check-should-publish.outputs.should_publish == 'true')
+      needs.check-should-publish.outputs.should_publish == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4.0.2

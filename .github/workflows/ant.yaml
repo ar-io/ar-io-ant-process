@@ -113,7 +113,7 @@ jobs:
               - 'ao-build-config.yml'
   publish:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}
+    environment: develop
     needs: [lint, unit, integration, check-should-publish]
     permissions:
       contents: write # to be able to publish a GitHub release
@@ -169,7 +169,8 @@ jobs:
         env:
           WALLET: ${{ secrets.WALLET }}
           GITHUB_SHA: ${{ github.sha }}
-          DRY_RUN: ${{github.ref_name != 'main'}}
+          DRY_RUN:
+            ${{github.ref_name != 'main' && github.ref_name != 'develop'}}
         run: |
           PUBLISH_OUTPUT=$(yarn module:publish 2>&1)
           # This line extracts the transaction ID of the published Module ID from the output

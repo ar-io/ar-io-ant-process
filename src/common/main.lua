@@ -190,11 +190,11 @@ function ant.init()
 	createActionHandler(ActionMap.SetRecord, function(msg)
 		utils.assertHasPermission(msg.From)
 
-		local name, transactionId, ttlSeconds, priority =
-			string.lower(msg.Tags["Sub-Domain"]),
-			msg.Tags["Transaction-Id"],
-			tonumber(msg.Tags["TTL-Seconds"]),
-			tonumber(msg.Tags["Priority"])
+		local name = string.lower(msg.Tags["Sub-Domain"])
+		local transactionId = msg.Tags["Transaction-Id"]
+		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
+		local priority = tonumber(msg.Tags["Priority"])
+
 		assert(ttlSeconds, "Missing ttl seconds")
 		collectgarbage()
 		return records.setRecord(name, transactionId, ttlSeconds, priority)
@@ -248,7 +248,7 @@ function ant.init()
 	-- ARIO Network Contract Handlers
 	--[[
 		These handlers expect and IO-Process-Id tag to be present in the message and can only be called by the owner of the ANT.
-		The handler than acts as a proxy, and sends the corresponding message to the ARIO Network contract.
+		The handler acts as a proxy, and sends the corresponding message to the ARIO Network contract.
 	]]
 	createActionHandler(ActionMap.ReleaseName, function(msg)
 		utils.validateOwner(msg.From)

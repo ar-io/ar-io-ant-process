@@ -76,6 +76,7 @@ function ant.init()
 		RemoveNames = "Remove-Primary-Names",
 	}
 
+	-- https://github.com/permaweb/aos/blob/main/blueprints/token.lua
 	local TokenSpecActionMap = {
 		Info = "Info",
 		Balances = "Balances",

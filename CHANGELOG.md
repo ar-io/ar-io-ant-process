@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [23] - (2025-8-11)
+
+### Changed
+
+- Use `msg.Tags` for accessing tags instead of `msg` directly.
+
 ## [22] - (2025-7-27)
 
 ### Fixed

@@ -151,25 +151,26 @@ describe("utils.assertHasRecordPermission", function()
 	before_each(function()
 		-- Reset global state
 		_G.Owner = "BaMK_9bFWZMsRmk1L5h0UgO0p-xh_oUpqdCCPQhJlkI"
-		_G.Controllers = {"nX5LnVMl1sHs3Og7rU6nQDKSNVWKdMG_Y8dgHdXEqCw", "Fgd-RB8Fu7lnMpOH6EdZ6Rb0gLvD4EpJaGOaxDJBksU"}
+		_G.Controllers =
+			{ "nX5LnVMl1sHs3Og7rU6nQDKSNVWKdMG_Y8dgHdXEqCw", "Fgd-RB8Fu7lnMpOH6EdZ6Rb0gLvD4EpJaGOaxDJBksU" }
 		_G.Balances = { ["BaMK_9bFWZMsRmk1L5h0UgO0p-xh_oUpqdCCPQhJlkI"] = 1 }
 		_G.Records = {
 			["owned"] = {
 				transactionId = "QGWqtJdLLgm2ehFWiiPzMaoFLD50CnGuzZIPEdoDRGQ",
 				ttlSeconds = 900,
-				owner = "Th2GyXvBSav3fV6I_4RgjV-xXJZnN2LNYnzgIJQxgKg"
+				owner = "Th2GyXvBSav3fV6I_4RgjV-xXJZnN2LNYnzgIJQxgKg",
 			},
 			["unowned"] = {
 				transactionId = "xjMaPnMBPvfXqTCg4XLEkJ-5da8p1v7E9IwLHqGa-ck",
-				ttlSeconds = 900
-			}
+				ttlSeconds = 900,
+			},
 		}
 		_G.ao = {
 			env = {
 				Process = {
-					Id = "aWn0lF5sc8JLrBIGxQvBcUoXqFQCTh5ATaW6N4GNGxw"
-				}
-			}
+					Id = "aWn0lF5sc8JLrBIGxQvBcUoXqFQCTh5ATaW6N4GNGxw",
+				},
+			},
 		}
 	end)
 
@@ -248,7 +249,7 @@ describe("utils.assertHasRecordPermission", function()
 	it("should check ANT permissions before record permissions", function()
 		-- Even if someone is a record owner of one record,
 		-- if they're a controller, they can modify all records
-		_G.Controllers = {"Th2GyXvBSav3fV6I_4RgjV-xXJZnN2LNYnzgIJQxgKg"}
+		_G.Controllers = { "Th2GyXvBSav3fV6I_4RgjV-xXJZnN2LNYnzgIJQxgKg" }
 
 		assert.has_no.error(function()
 			utils.assertHasRecordPermission("Th2GyXvBSav3fV6I_4RgjV-xXJZnN2LNYnzgIJQxgKg", "unowned")
@@ -280,12 +281,29 @@ describe("utils.assertHasRecordPermission", function()
 		assert.has_error(function()
 			utils.assertHasRecordPermission("qPHOj3S4L7AxZW6NaKu_p1QFMzJsYK9zYLvr4KkNi2w", "owned")
 		end, "Sender does not have permission for this record.")
-		
+
 		-- Test with decimal
 		Balances["HvaMT3gGlmR7F3bFCBKqE5B0yC8jQMKwQwGsULQVYpw"] = 0.5
 
 		assert.has_error(function()
 			utils.assertHasRecordPermission("HvaMT3gGlmR7F3bFCBKqE5B0yC8jQMKwQwGsULQVYpw", "owned")
 		end, "Sender does not have permission for this record.")
+	end)
+end)
+
+describe("undernameForName", function()
+	it("should get the undername name for a name with an undername", function()
+		local undername = "undername"
+		local basename = "basename"
+		local name = undername .. "_" .. basename
+
+		local undernameFromName = utils.undernameForName(name)
+		assert.are.same(undernameFromName, undername)
+	end)
+
+	it("should return nil for a name with no undername", function()
+		local basename = "basename"
+		local undernameFromName = utils.undernameForName(basename)
+		assert.are.same(undernameFromName, nil)
 	end)
 end)

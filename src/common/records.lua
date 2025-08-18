@@ -37,7 +37,6 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, rec
 		end
 	end
 
-	collectgarbage("stop")
 	Records[name] = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
@@ -49,7 +48,6 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, rec
 		description = description,
 		keywords = keywords,
 	}
-	collectgarbage("restart")
 
 	return Records[name]
 end
@@ -88,75 +86,24 @@ end
 
 --- Transfer ownership of a record to a new owner
 ---@param name string The name of the record
----@param newOwner string The new owner address
+---@param recipient string The new owner address
 ---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
 ---@return table Transfer details
-function records.transferRecordOwnership(name, newOwner, allowUnsafeAddresses)
+function records.transferRecordOwnership(name, recipient, allowUnsafeAddresses)
 	utils.validateUndername(name)
 	assert(Records[name] ~= nil, "Record does not exist")
 	assert(Records[name].owner ~= nil, "Record has no owner")
-	assert(utils.isValidAOAddress(newOwner, allowUnsafeAddresses), "Invalid new owner address")
-	assert(newOwner ~= Records[name].owner, "New owner same as current owner")
+	assert(utils.isValidAOAddress(recipient, allowUnsafeAddresses), "Invalid new owner address")
+	assert(recipient ~= Records[name].owner, "New owner same as current owner")
 
 	local previousOwner = Records[name].owner
-	Records[name].owner = newOwner
+	Records[name].owner = recipient
 
 	return {
 		subdomain = name,
 		previousOwner = previousOwner,
-		newOwner = newOwner
+		recipient = recipient,
 	}
-end
-
---- Revoke ownership of a record (set owner to nil)
----@param name string The name of the record
----@return table Revocation details
-function records.revokeRecordOwnership(name)
-	utils.validateUndername(name)
-	assert(Records[name] ~= nil, "Record does not exist")
-
-	local previousOwner = Records[name].owner
-	Records[name].owner = nil
-
-	return {
-		subdomain = name,
-		previousOwner = previousOwner,
-		revoked = true
-	}
-end
-
---- Update only the metadata fields of a record.
----@param name string The subdomain of the record
----@param owner string|nil The new owner address
----@param recordName string|nil The display name
----@param logo string|nil The logo transaction ID
----@param description string|nil The description
----@param keywords table<string>|nil The keywords
----@return Record
-function records.updateRecordMetadata(name, owner, recordName, logo, description, keywords)
-	local record = Records[name]
-	assert(record, "Record does not exist")
-	
-	collectgarbage("stop")
-	-- Update only provided fields, preserve existing values
-	if owner ~= nil then
-		record.owner = owner
-	end
-	if recordName ~= nil then
-		record.name = recordName
-	end
-	if logo ~= nil then
-		record.logo = logo
-	end
-	if description ~= nil then
-		record.description = description
-	end
-	if keywords ~= nil then
-		record.keywords = keywords
-	end
-	collectgarbage("restart")
-	
-	return record
 end
 
 return records

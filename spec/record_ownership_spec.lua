@@ -17,8 +17,8 @@ describe("Record Ownership", function()
 			["@"] = {
 				transactionId = "test-tx-id",
 				ttlSeconds = 900,
-				priority = 0
-			}
+				priority = 0,
+			},
 		}
 		_G.Owner = validOwner
 		_G.Controllers = {}
@@ -36,7 +36,7 @@ describe("Record Ownership", function()
 				"Test Record",
 				validLogoTxId,
 				"Test description",
-				{"keyword1", "keyword2"}
+				{ "keyword1", "keyword2" }
 			)
 
 			assert.are.equal(validTxId, result.transactionId)
@@ -46,7 +46,7 @@ describe("Record Ownership", function()
 			assert.are.equal("Test Record", result.name)
 			assert.are.equal(validLogoTxId, result.logo)
 			assert.are.equal("Test description", result.description)
-			assert.are.same({"keyword1", "keyword2"}, result.keywords)
+			assert.are.same({ "keyword1", "keyword2" }, result.keywords)
 		end)
 
 		it("should allow setting a record without optional fields", function()
@@ -87,7 +87,7 @@ describe("Record Ownership", function()
 			_G.Records["owned"] = {
 				transactionId = validTxId,
 				ttlSeconds = 900,
-				owner = validRecordOwner
+				owner = validRecordOwner,
 			}
 		end)
 
@@ -96,7 +96,7 @@ describe("Record Ownership", function()
 
 			assert.are.equal("owned", result.subdomain)
 			assert.are.equal(validRecordOwner, result.previousOwner)
-			assert.are.equal(validNewOwner, result.newOwner)
+			assert.are.equal(validNewOwner, result.recipient)
 			assert.are.equal(validNewOwner, Records["owned"].owner)
 		end)
 
@@ -133,7 +133,7 @@ describe("Record Ownership", function()
 			_G.Records["revokable"] = {
 				transactionId = validTxId,
 				ttlSeconds = 900,
-				owner = validRecordOwner
+				owner = validRecordOwner,
 			}
 		end)
 
@@ -173,7 +173,7 @@ describe("Record Ownership", function()
 				name = "My Record",
 				logo = validLogoTxId,
 				description = "A test record",
-				keywords = {"test", "record"}
+				keywords = { "test", "record" },
 			}
 
 			local result = records.getRecord("metadata")
@@ -183,7 +183,7 @@ describe("Record Ownership", function()
 			assert.are.equal("My Record", result.name)
 			assert.are.equal(validLogoTxId, result.logo)
 			assert.are.equal("A test record", result.description)
-			assert.are.same({"test", "record"}, result.keywords)
+			assert.are.same({ "test", "record" }, result.keywords)
 		end)
 	end)
 
@@ -193,11 +193,11 @@ describe("Record Ownership", function()
 				transactionId = validTxId,
 				ttlSeconds = 900,
 				owner = validOwner2,
-				name = "Record One"
+				name = "Record One",
 			}
 			Records["two"] = {
 				transactionId = validTxId2,
-				ttlSeconds = 1800
+				ttlSeconds = 1800,
 				-- No owner or metadata
 			}
 
@@ -222,7 +222,7 @@ describe("Record Ownership", function()
 				name = "Original Name",
 				logo = validLogoTxId,
 				description = "Original description",
-				keywords = {"original", "keywords"}
+				keywords = { "original", "keywords" },
 			}
 		end)
 
@@ -235,7 +235,7 @@ describe("Record Ownership", function()
 			assert.are.equal("New Name", result.name)
 			assert.are.equal(validLogoTxId, result.logo)
 			assert.are.equal("New description", result.description)
-			assert.are.same({"original", "keywords"}, result.keywords)
+			assert.are.same({ "original", "keywords" }, result.keywords)
 		end)
 
 		it("should update owner field", function()
@@ -246,7 +246,7 @@ describe("Record Ownership", function()
 		end)
 
 		it("should update all metadata fields", function()
-			local newKeywords = {"new", "updated", "keywords"}
+			local newKeywords = { "new", "updated", "keywords" }
 			local result = records.updateRecordMetadata(
 				"meta",
 				validNewOwner,

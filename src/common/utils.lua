@@ -98,7 +98,7 @@ end
 
 --- Checks if an address is a valid AO address
 --- @param address string|nil The address to check
---- @param allowUnsafe boolean Whether to allow unsafe addresses, defaults to false
+--- @param allowUnsafe boolean|nil Whether to allow unsafe addresses, defaults to false
 --- @return boolean isValidAddress - whether the address is valid, depending on the allowUnsafe flag
 function utils.isValidAOAddress(address, allowUnsafe)
 	allowUnsafe = allowUnsafe or false -- default to false, only allow unsafe addresses if explicitly set
@@ -410,7 +410,10 @@ function utils.validateKeywords(keywords)
 
 	for _, keyword in ipairs(keywords) do
 		assert(type(keyword) == "string", "Each keyword must be a string")
-		assert(#keyword <= constants.MAX_KEYWORD_LENGTH, "Each keyword must not be longer than " .. constants.MAX_KEYWORD_LENGTH .. " characters")
+		assert(
+			#keyword <= constants.MAX_KEYWORD_LENGTH,
+			"Each keyword must not be longer than " .. constants.MAX_KEYWORD_LENGTH .. " characters"
+		)
 		assert(not keyword:find("%s"), "Keywords must not contain spaces")
 		assert(
 			keyword:match("^[%w-_#@]+$"),
@@ -433,6 +436,17 @@ function utils.Send(msg, response)
 	else
 		ao.send(response)
 	end
+end
+
+--- @param name string An ArNS name with or without an undername
+--- @return string|nil # The undername, if present, or nil
+function utils.undernameForName(name)
+	if not name:match("_") then
+		return nil
+	end
+
+	local baseName = utils.baseNameForName(name)
+	return string.gsub(name:reverse(), baseName:reverse() .. "_", "", 1):reverse()
 end
 
 return utils

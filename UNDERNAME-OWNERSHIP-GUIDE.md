@@ -43,7 +43,7 @@ Send({
   Target = antProcessId,
   Action = "Transfer-Record-Ownership",
   ["Sub-Domain"] = "alice",
-  ["New-Owner"] = "bobAddress456..."
+  ["Recipient"] = "bobAddress456..."
 })
 ```
 
@@ -149,7 +149,7 @@ Send({
   Target = antProcessId,
   Action = "Transfer-Record-Ownership",
   ["Sub-Domain"] = "example",
-  ["New-Owner"] = "newAddress456..."
+  ["Recipient"] = "newAddress456..."
 })
 ```
 
@@ -241,7 +241,7 @@ Send({
   Target = antProcessId,
   Action = "Transfer-Record-Ownership",
   ["Sub-Domain"] = "rare-name",
-  ["New-Owner"] = buyerAddress
+  ["Recipient"] = buyerAddress
 })
 ```
 

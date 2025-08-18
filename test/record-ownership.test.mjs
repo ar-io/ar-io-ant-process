@@ -162,7 +162,7 @@ describe('Record Ownership', async () => {
     const processId = 'test-process-003';
     const antOwner = 'ant-owner-address-123';
     const recordOwner = 'record-owner-address-456';
-    const newOwner = 'new-owner-address-789';
+    const recipient = 'Recipient-address-789';
 
     const handle = await createLoader({
       format: 'wasm64-unknown-emscripten-draft_2024_02_15',
@@ -219,7 +219,7 @@ describe('Record Ownership', async () => {
         Tags: [
           { name: 'Action', value: 'Transfer-Record-Ownership' },
           { name: 'Sub-Domain', value: 'transferable' },
-          { name: 'New-Owner', value: newOwner },
+          { name: 'Recipient', value: recipient },
         ],
       },
       env: {},
@@ -228,12 +228,12 @@ describe('Record Ownership', async () => {
     // Verify transfer
     const transferData = JSON.parse(transferResult.Messages[0].Data);
     assert.equal(transferData.previousOwner, recordOwner);
-    assert.equal(transferData.newOwner, newOwner);
+    assert.equal(transferData.recipient, recipient);
 
     // Verify ownership notice was sent
     const notice = transferResult.Messages.find(
       (m) =>
-        m.Target === newOwner &&
+        m.Target === recipient &&
         m.Tags.find(
           (t) =>
             t.name === 'Action' &&

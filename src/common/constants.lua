@@ -14,7 +14,7 @@ constants.INVALID_TTL_MESSAGE = "Invalid TTL. TLL must be an integer between "
 	.. " seconds"
 
 -- Shared metadata constants (used for both ANT and undername metadata)
-constants.MAX_NAME_LENGTH = 50
+constants.MAX_NAME_LENGTH = 61
 constants.MAX_DESCRIPTION_LENGTH = 512
 constants.MAX_KEYWORDS = 16
 constants.MAX_KEYWORD_LENGTH = 32

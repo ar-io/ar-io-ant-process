@@ -32,7 +32,7 @@
 --- ttlSeconds: integer,
 --- priority: integer|nil,
 --- owner: string|nil,
---- name: string|nil,
+--- displayName: string|nil,
 --- logo: string|nil,
 --- description: string|nil,
 --- keywords: table<string>|nil

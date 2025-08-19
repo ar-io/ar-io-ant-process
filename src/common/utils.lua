@@ -438,6 +438,10 @@ function utils.Send(msg, response)
 	end
 end
 
+function utils.baseNameForName(name)
+	return (name or ""):match("[^_]+$") or name
+end
+
 --- @param name string An ArNS name with or without an undername
 --- @return string|nil # The undername, if present, or nil
 function utils.undernameForName(name)

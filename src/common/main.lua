@@ -214,21 +214,22 @@ function ant.init()
 
 		-- Handle optional metadata fields
 		local owner = msg.Tags["Owner"]
-		local recordName = msg.Tags["Name"]
+		local displayName = msg.Tags["Name"]
 		local logo = msg.Tags["Logo"]
 		local description = msg.Tags["Description"]
-		local keywords = nil
+		local keywords = msg.Tags["Keywords"]
 
-		-- Owner assignment requires ANT-level permission
-		if owner then
+		-- Owner assignment requires ANT-level permission (only when explicitly setting a new owner)
+		local explicitOwner = msg.Tags["Owner"]
+		if explicitOwner then
 			utils.assertHasPermission(msg.From)
-			assert(utils.isValidAOAddress(owner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")
+			assert(utils.isValidAOAddress(explicitOwner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")
 		end
 
 		-- Validate optional metadata using existing patterns
-		if recordName then
+		if displayName then
 			assert(
-				type(recordName) == "string" and #recordName <= constants.MAX_NAME_LENGTH,
+				type(displayName) == "string" and #displayName <= constants.MAX_NAME_LENGTH,
 				"Record name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
 			)
 		end
@@ -241,8 +242,8 @@ function ant.init()
 				"Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters"
 			)
 		end
-		if msg.Tags["Keywords"] then
-			local success, decodedKeywords = pcall(json.decode, msg.Tags["Keywords"])
+		if keywords then
+			local success, decodedKeywords = pcall(json.decode, keywords)
 			assert(success and type(decodedKeywords) == "table", "Invalid JSON format for keywords")
 			utils.validateKeywords(decodedKeywords)
 			keywords = decodedKeywords
@@ -254,7 +255,7 @@ function ant.init()
 			ttlSeconds,
 			priority,
 			owner,
-			recordName,
+			displayName,
 			logo,
 			description,
 			keywords

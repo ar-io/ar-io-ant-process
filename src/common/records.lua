@@ -17,12 +17,12 @@ Records = Records
 ---@param ttlSeconds number The time-to-live in seconds for the record.
 ---@param priority integer|nil The sort order of the record - must be nil or 1 or greater
 ---@param owner string|nil The owner of the record
----@param recordName string|nil The display name of the record
+---@param displayName string|nil The display name of the record
 ---@param logo string|nil The logo transaction ID
 ---@param description string|nil The description of the record
 ---@param keywords table<string>|nil The keywords for the record
 ---@return Record
-function records.setRecord(name, transactionId, ttlSeconds, priority, owner, recordName, logo, description, keywords)
+function records.setRecord(name, transactionId, ttlSeconds, priority, owner, displayName, logo, description, keywords)
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
@@ -37,16 +37,19 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, rec
 		end
 	end
 
+	---@type RecordEntry|table<string, any>
+	local previousRecord = utils.deepCopy(Records[name]) or {}
+
 	Records[name] = {
-		transactionId = transactionId,
-		ttlSeconds = ttlSeconds,
-		priority = name == "@" and 0 or priority,
+		transactionId = transactionId or previousRecord.transactionId,
+		ttlSeconds = ttlSeconds or previousRecord.ttlSeconds,
+		priority = name == "@" and 0 or priority or previousRecord.priority,
 		-- Add optional fields only if provided
-		owner = owner,
-		name = recordName,
-		logo = logo,
-		description = description,
-		keywords = keywords,
+		owner = owner or previousRecord.owner,
+		displayName = displayName or previousRecord.displayName,
+		logo = logo or previousRecord.logo,
+		description = description or previousRecord.description,
+		keywords = keywords or previousRecord.keywords,
 	}
 
 	return Records[name]

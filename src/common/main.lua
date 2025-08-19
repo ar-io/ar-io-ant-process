@@ -403,8 +403,13 @@ function ant.init()
 
 	createActionHandler(ActionMap.ApproveName, function(msg)
 		local caller = msg.From
+		assert(msg.Tags.Name, "Name is required")
 		local name = string.lower(msg.Tags.Name)
 		local recipient = msg.Tags.Recipient
+		local ioProcess = msg.Tags["IO-Process-Id"]
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
+		assert(utils.isValidAOAddress(recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid AO Address")
+
 		local undername = utils.undernameForName(name)
 
 		if undername == nil then
@@ -414,12 +419,6 @@ function ant.init()
 			utils.assertHasRecordPermission(caller, undername)
 			assert(recipient == caller, "Undername owners can only approve names for themselves")
 		end
-
-		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
-		assert(utils.isValidAOAddress(recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid AO Address")
-		assert(msg.Tags.Name, "Name is required")
-
-		local ioProcess = msg.Tags["IO-Process-Id"]
 
 		utils.Send(msg, {
 			Target = ioProcess,
@@ -447,7 +446,6 @@ function ant.init()
 				utils.assertHasPermission(caller)
 			else
 				utils.assertHasRecordPermission(caller, undername)
-
 			end
 			utils.validateUndername(name)
 		end

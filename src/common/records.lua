@@ -16,8 +16,13 @@ Records = Records
 ---@param transactionId string The transaction ID of the record.
 ---@param ttlSeconds number The time-to-live in seconds for the record.
 ---@param priority integer|nil The sort order of the record - must be nil or 1 or greater
+---@param owner string|nil The owner of the record
+---@param recordName string|nil The display name of the record
+---@param logo string|nil The logo transaction ID
+---@param description string|nil The description of the record
+---@param keywords table<string>|nil The keywords for the record
 ---@return Record
-function records.setRecord(name, transactionId, ttlSeconds, priority)
+function records.setRecord(name, transactionId, ttlSeconds, priority, owner, recordName, logo, description, keywords)
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
@@ -37,14 +42,16 @@ function records.setRecord(name, transactionId, ttlSeconds, priority)
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
 		priority = name == "@" and 0 or priority,
+		-- Add optional fields only if provided
+		owner = owner,
+		name = recordName,
+		logo = logo,
+		description = description,
+		keywords = keywords,
 	}
 	collectgarbage("restart")
 
-	return {
-		transactionId = transactionId,
-		ttlSeconds = ttlSeconds,
-		priority = priority,
-	}
+	return Records[name]
 end
 
 --- Remove a record from the ANT.
@@ -77,6 +84,45 @@ function records.getRecords()
 	assert(antRecords, "Failed to copy Records")
 
 	return antRecords
+end
+
+--- Transfer ownership of a record to a new owner
+---@param name string The name of the record
+---@param newOwner string The new owner address
+---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
+---@return table Transfer details
+function records.transferRecordOwnership(name, newOwner, allowUnsafeAddresses)
+	utils.validateUndername(name)
+	assert(Records[name] ~= nil, "Record does not exist")
+	assert(Records[name].owner ~= nil, "Record has no owner")
+	assert(utils.isValidAOAddress(newOwner, allowUnsafeAddresses), "Invalid new owner address")
+	assert(newOwner ~= Records[name].owner, "New owner same as current owner")
+
+	local previousOwner = Records[name].owner
+	Records[name].owner = newOwner
+
+	return {
+		subdomain = name,
+		previousOwner = previousOwner,
+		newOwner = newOwner
+	}
+end
+
+--- Revoke ownership of a record (set owner to nil)
+---@param name string The name of the record
+---@return table Revocation details
+function records.revokeRecordOwnership(name)
+	utils.validateUndername(name)
+	assert(Records[name] ~= nil, "Record does not exist")
+
+	local previousOwner = Records[name].owner
+	Records[name].owner = nil
+
+	return {
+		subdomain = name,
+		previousOwner = previousOwner,
+		revoked = true
+	}
 end
 
 return records

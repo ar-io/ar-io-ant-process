@@ -64,6 +64,8 @@ function ant.init()
 		SetDescription = "Set-Description",
 		SetKeywords = "Set-Keywords",
 		SetLogo = "Set-Logo",
+		TransferRecordOwnership = "Transfer-Record-Ownership",
+		RevokeRecordOwnership = "Revoke-Record-Ownership",
 		-- read
 		Controllers = "Controllers",
 		Record = "Record",
@@ -188,7 +190,17 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.SetRecord, function(msg)
-		utils.assertHasPermission(msg.From)
+		local name = string.lower(msg["Sub-Domain"])
+
+		-- Check permissions based on whether record exists
+		local existingRecord = Records[name]
+		if existingRecord then
+			-- For existing records, check record-specific permission
+			utils.assertHasRecordPermission(msg.From, name)
+		else
+			-- For new records, only ANT owner/controllers can create
+			utils.assertHasPermission(msg.From)
+		end
 
 		local name = string.lower(msg.Tags["Sub-Domain"])
 		local transactionId = msg.Tags["Transaction-Id"]
@@ -196,8 +208,45 @@ function ant.init()
 		local priority = tonumber(msg.Tags["Priority"])
 
 		assert(ttlSeconds, "Missing ttl seconds")
+
+		-- Handle optional metadata fields
+		local owner = msg.Tags["Owner"]
+		local recordName = msg.Tags["Name"]
+		local logo = msg.Tags["Logo"]
+		local description = msg.Tags["Description"]
+		local keywords = nil
+
+		-- Owner assignment requires ANT-level permission
+		if owner then
+			utils.assertHasPermission(msg.From)
+			assert(utils.isValidAOAddress(owner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")
+		end
+
+		-- Validate optional metadata using existing patterns
+		if recordName then
+			assert(
+				type(recordName) == "string" and #recordName <= constants.MAX_NAME_LENGTH,
+				"Record name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
+			)
+		end
+		if logo then
+			assert(utils.isValidArweaveAddress(logo), "Invalid logo arweave ID")
+		end
+		if description then
+			assert(
+				type(description) == "string" and #description <= constants.MAX_DESCRIPTION_LENGTH,
+				"Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters"
+			)
+		end
+		if msg.Tags["Keywords"] then
+			local success, decodedKeywords = pcall(json.decode, msg.Tags["Keywords"])
+			assert(success and type(decodedKeywords) == "table", "Invalid JSON format for keywords")
+			utils.validateKeywords(decodedKeywords)
+			keywords = decodedKeywords
+		end
+
 		collectgarbage()
-		return records.setRecord(name, transactionId, ttlSeconds, priority)
+		return records.setRecord(name, transactionId, ttlSeconds, priority, owner, recordName, logo, description, keywords)
 	end)
 
 	createActionHandler(ActionMap.RemoveRecord, function(msg)
@@ -239,6 +288,82 @@ function ant.init()
 	createActionHandler(ActionMap.SetLogo, function(msg)
 		utils.assertHasPermission(msg.From)
 		return balances.setLogo(msg.Logo)
+	end)
+
+	createActionHandler(ActionMap.TransferRecordOwnership, function(msg)
+		local subdomain = string.lower(msg.Tags["Sub-Domain"])
+		local newOwner = msg.Tags["New-Owner"]
+		local caller = msg.From
+
+		-- Validate inputs
+		assert(subdomain, "Sub-Domain is required")
+		assert(newOwner, "New-Owner is required")
+
+		-- Check if record exists and has an owner
+		local record = Records[subdomain]
+		assert(record ~= nil, "Record does not exist")
+		assert(record.owner ~= nil, "Record has no owner")
+
+		-- Only current owner can transfer (ANT owner/controllers have god mode via assertHasRecordPermission)
+		assert(record.owner == caller, "Only record owner can transfer ownership")
+
+		-- Use existing transfer function with proper garbage collection
+		collectgarbage("stop")
+		local result = records.transferRecordOwnership(subdomain, newOwner, msg.Tags["Allow-Unsafe-Addresses"])
+		collectgarbage("restart")
+
+		-- Send ownership transfer notice to new owner
+		ao.send({
+			Target = newOwner,
+			Action = "Record-Ownership-Transfer-Notice",
+			["Sub-Domain"] = subdomain,
+			["Previous-Owner"] = result.previousOwner,
+			Data = json.encode(result)
+		})
+
+		-- Send response back to caller
+		utils.Send(msg, {
+			Target = msg.From,
+			Action = "Record-Ownership-Transferred",
+			Data = json.encode(result)
+		})
+	end)
+
+	createActionHandler(ActionMap.RevokeRecordOwnership, function(msg)
+		local subdomain = string.lower(msg.Tags["Sub-Domain"])
+		local caller = msg.From
+
+		-- Only ANT owner can revoke ownership
+		utils.validateOwner(caller)
+
+		assert(subdomain, "Sub-Domain is required")
+
+		local record = Records[subdomain]
+		assert(record ~= nil, "Record does not exist")
+
+		local previousOwner = record.owner
+
+		-- Use existing revoke function with proper garbage collection
+		collectgarbage("stop")
+		local result = records.revokeRecordOwnership(subdomain)
+		collectgarbage("restart")
+
+		-- Send revocation notice if there was an owner
+		if previousOwner then
+			ao.send({
+				Target = previousOwner,
+				Action = "Record-Ownership-Revoke-Notice",
+				["Sub-Domain"] = subdomain,
+				Data = json.encode(result)
+			})
+		end
+
+		-- Send response back to caller
+		utils.Send(msg, {
+			Target = msg.From,
+			Action = "Record-Ownership-Revoked",
+			Data = json.encode(result)
+		})
 	end)
 
 	createActionHandler(ActionMap.State, function()
@@ -304,16 +429,33 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.ApproveName, function(msg)
-		--- NOTE: this could be modified to allow specific users/controllers to create claims
-		utils.validateOwner(msg.From)
-
-		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
-		assert(utils.isValidAOAddress(msg.Tags.Recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid AO Address")
-
-		assert(msg.Tags.Name, "Name is required")
-
+		local caller = msg.From
 		local name = string.lower(msg.Tags.Name)
 		local recipient = msg.Tags.Recipient
+		local isAuthorized = false
+
+		-- Check if caller is ANT owner
+		if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
+			isAuthorized = true
+		else
+			-- Check if caller owns a subdomain AND is setting it for themselves
+			-- Names follow pattern: subdomain_antname
+			local underscorePos = string.find(name, "_")
+			if underscorePos and underscorePos > 1 then
+				local subdomain = string.sub(name, 1, underscorePos - 1)
+				local record = Records[subdomain]
+				-- CRITICAL: Record owner can only set primary name for themselves
+				if record and record.owner == caller and recipient == caller then
+					isAuthorized = true
+				end
+			end
+		end
+
+		assert(isAuthorized, "Sender is not authorized to approve this name")
+		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
+		assert(utils.isValidAOAddress(recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid AO Address")
+		assert(msg.Tags.Name, "Name is required")
+
 		local ioProcess = msg.Tags["IO-Process-Id"]
 
 		utils.Send(msg, {
@@ -325,15 +467,36 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.RemoveNames, function(msg)
-		--- NOTE: this could be modified to allow specific users/controllers to remove primary names
-		utils.validateOwner(msg.From)
+		local caller = msg.From
 		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
-
 		assert(msg.Tags.Names, "Names are required")
 
 		local ioProcess = msg.Tags["IO-Process-Id"]
 		local names = utils.splitString(msg.Tags.Names)
+		local isAntOwner = Owner == caller or Balances[caller] or ao.env.Process.Id == caller
+
+		-- Validate each name
 		for _, name in ipairs(names) do
+			local lowerName = string.lower(name)
+			local isAuthorized = false
+
+			if isAntOwner then
+				-- ANT owner can remove any primary name
+				isAuthorized = true
+			else
+				-- Check if caller owns this specific subdomain
+				local underscorePos = string.find(lowerName, "_")
+				if underscorePos and underscorePos > 1 then
+					local subdomain = string.sub(lowerName, 1, underscorePos - 1)
+					local record = Records[subdomain]
+					-- Record owner can only remove their own subdomain primary name
+					if record and record.owner == caller then
+						isAuthorized = true
+					end
+				end
+			end
+
+			assert(isAuthorized, "Sender is not authorized to remove name: " .. name)
 			utils.validateUndername(name)
 		end
 

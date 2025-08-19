@@ -1,0 +1,206 @@
+local records = require("src.common.records")
+local constants = require("src.common.constants")
+
+describe("Record Ownership", function()
+	before_each(function()
+		-- Reset global state before each test
+		_G.Records = {
+			["@"] = {
+				transactionId = "test-tx-id",
+				ttlSeconds = 900,
+				priority = 0
+			}
+		}
+		_G.Owner = "test-owner"
+		_G.Controllers = {}
+		_G.Balances = { ["test-owner"] = 1 }
+	end)
+
+	describe("setRecord with ownership", function()
+		it("should allow setting a record with an owner", function()
+			local result = records.setRecord(
+				"test",
+				"new-tx-id",
+				1800,
+				1,
+				"record-owner-123",
+				"Test Record",
+				"logo-tx-id",
+				"Test description",
+				{"keyword1", "keyword2"}
+			)
+
+			assert.are.equal("new-tx-id", result.transactionId)
+			assert.are.equal(1800, result.ttlSeconds)
+			assert.are.equal(1, result.priority)
+			assert.are.equal("record-owner-123", result.owner)
+			assert.are.equal("Test Record", result.name)
+			assert.are.equal("logo-tx-id", result.logo)
+			assert.are.equal("Test description", result.description)
+			assert.are.same({"keyword1", "keyword2"}, result.keywords)
+		end)
+
+		it("should allow setting a record without optional fields", function()
+			local result = records.setRecord("minimal", "min-tx-id", 900)
+
+			assert.are.equal("min-tx-id", result.transactionId)
+			assert.are.equal(900, result.ttlSeconds)
+			assert.is_nil(result.priority)
+			assert.is_nil(result.owner)
+			assert.is_nil(result.name)
+			assert.is_nil(result.logo)
+			assert.is_nil(result.description)
+			assert.is_nil(result.keywords)
+		end)
+
+		it("should validate undername", function()
+			assert.has_error(function()
+				records.setRecord("invalid-name-too-long-" .. string.rep("a", 50), "tx-id", 900)
+			end, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
+		end)
+
+		it("should validate transaction ID", function()
+			assert.has_error(function()
+				records.setRecord("test", "invalid-tx", 900)
+			end, "Invalid Arweave ID")
+		end)
+
+		it("should validate TTL seconds", function()
+			assert.has_error(function()
+				records.setRecord("test", "valid-tx-id-43-chars-xxxxxxxxxxxxxxxxxx", 30)
+			end, constants.INVALID_TTL_MESSAGE)
+		end)
+	end)
+
+	describe("transferRecordOwnership", function()
+		before_each(function()
+			-- Create a record with an owner
+			_G.Records["owned"] = {
+				transactionId = "tx-id",
+				ttlSeconds = 900,
+				owner = "current-owner"
+			}
+		end)
+
+		it("should transfer ownership to new owner", function()
+			local result = records.transferRecordOwnership("owned", "new-owner-123")
+
+			assert.are.equal("owned", result.subdomain)
+			assert.are.equal("current-owner", result.previousOwner)
+			assert.are.equal("new-owner-123", result.newOwner)
+			assert.are.equal("new-owner-123", Records["owned"].owner)
+		end)
+
+		it("should fail if record does not exist", function()
+			assert.has_error(function()
+				records.transferRecordOwnership("nonexistent", "new-owner")
+			end, "Record does not exist")
+		end)
+
+		it("should fail if record has no owner", function()
+			Records["owned"].owner = nil
+
+			assert.has_error(function()
+				records.transferRecordOwnership("owned", "new-owner")
+			end, "Record has no owner")
+		end)
+
+		it("should fail if new owner is invalid", function()
+			assert.has_error(function()
+				records.transferRecordOwnership("owned", "invalid")
+			end, "Invalid new owner address")
+		end)
+
+		it("should fail if new owner is same as current", function()
+			assert.has_error(function()
+				records.transferRecordOwnership("owned", "current-owner")
+			end, "New owner same as current owner")
+		end)
+	end)
+
+	describe("revokeRecordOwnership", function()
+		before_each(function()
+			-- Create a record with an owner
+			_G.Records["revokable"] = {
+				transactionId = "tx-id",
+				ttlSeconds = 900,
+				owner = "owner-to-revoke"
+			}
+		end)
+
+		it("should revoke ownership", function()
+			local result = records.revokeRecordOwnership("revokable")
+
+			assert.are.equal("revokable", result.subdomain)
+			assert.are.equal("owner-to-revoke", result.previousOwner)
+			assert.is_true(result.revoked)
+			assert.is_nil(Records["revokable"].owner)
+		end)
+
+		it("should handle record with no owner", function()
+			Records["revokable"].owner = nil
+
+			local result = records.revokeRecordOwnership("revokable")
+
+			assert.are.equal("revokable", result.subdomain)
+			assert.is_nil(result.previousOwner)
+			assert.is_true(result.revoked)
+		end)
+
+		it("should fail if record does not exist", function()
+			assert.has_error(function()
+				records.revokeRecordOwnership("nonexistent")
+			end, "Record does not exist")
+		end)
+	end)
+
+	describe("getRecord with ownership", function()
+		it("should return record with all metadata", function()
+			Records["metadata"] = {
+				transactionId = "tx-id",
+				ttlSeconds = 900,
+				priority = 1,
+				owner = "record-owner",
+				name = "My Record",
+				logo = "logo-id",
+				description = "A test record",
+				keywords = {"test", "record"}
+			}
+
+			local result = records.getRecord("metadata")
+
+			assert.are.equal("tx-id", result.transactionId)
+			assert.are.equal("record-owner", result.owner)
+			assert.are.equal("My Record", result.name)
+			assert.are.equal("logo-id", result.logo)
+			assert.are.equal("A test record", result.description)
+			assert.are.same({"test", "record"}, result.keywords)
+		end)
+	end)
+
+	describe("getRecords with ownership", function()
+		it("should return all records including metadata", function()
+			Records["one"] = {
+				transactionId = "tx-1",
+				ttlSeconds = 900,
+				owner = "owner-1",
+				name = "Record One"
+			}
+			Records["two"] = {
+				transactionId = "tx-2",
+				ttlSeconds = 1800
+				-- No owner or metadata
+			}
+
+			local result = records.getRecords()
+
+			assert.are.equal("tx-1", result["one"].transactionId)
+			assert.are.equal("owner-1", result["one"].owner)
+			assert.are.equal("Record One", result["one"].name)
+
+			assert.are.equal("tx-2", result["two"].transactionId)
+			assert.is_nil(result["two"].owner)
+			assert.is_nil(result["two"].name)
+		end)
+	end)
+end)

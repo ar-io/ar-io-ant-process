@@ -146,3 +146,121 @@ describe("utils.validateUndername", function()
 		end
 	end)
 end)
+
+describe("utils.assertHasRecordPermission", function()
+	before_each(function()
+		-- Reset global state
+		_G.Owner = "ant-owner"
+		_G.Controllers = {"controller-1", "controller-2"}
+		_G.Balances = { ["ant-owner"] = 1 }
+		_G.Records = {
+			["owned"] = {
+				transactionId = "tx-id",
+				ttlSeconds = 900,
+				owner = "record-owner"
+			},
+			["unowned"] = {
+				transactionId = "tx-id-2",
+				ttlSeconds = 900
+			}
+		}
+		_G.ao = {
+			env = {
+				Process = {
+					Id = "process-id"
+				}
+			}
+		}
+	end)
+
+	it("should allow ANT owner to modify any record", function()
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("ant-owner", "owned")
+		end)
+
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("ant-owner", "unowned")
+		end)
+	end)
+
+	it("should allow controllers to modify any record", function()
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("controller-1", "owned")
+		end)
+
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("controller-2", "unowned")
+		end)
+	end)
+
+	it("should allow process ID to modify any record", function()
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("process-id", "owned")
+		end)
+	end)
+
+	it("should allow record owner to modify their own record", function()
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("record-owner", "owned")
+		end)
+	end)
+
+	it("should deny record owner from modifying other records", function()
+		assert.has_error(function()
+			utils.assertHasRecordPermission("record-owner", "unowned")
+		end, "Sender does not have permission for this record.")
+	end)
+
+	it("should deny random user from modifying any record", function()
+		assert.has_error(function()
+			utils.assertHasRecordPermission("random-user", "owned")
+		end, "Sender does not have permission for this record.")
+
+		assert.has_error(function()
+			utils.assertHasRecordPermission("random-user", "unowned")
+		end, "Sender does not have permission for this record.")
+	end)
+
+	it("should handle non-existent records", function()
+		assert.has_error(function()
+			utils.assertHasRecordPermission("random-user", "nonexistent")
+		end, "Sender does not have permission for this record.")
+	end)
+
+	it("should handle records with nil owner", function()
+		Records["owned"].owner = nil
+
+		-- Only ANT-level permissions should work
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("ant-owner", "owned")
+		end)
+
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("controller-1", "owned")
+		end)
+
+		-- Record owner should fail since owner is nil
+		assert.has_error(function()
+			utils.assertHasRecordPermission("record-owner", "owned")
+		end, "Sender does not have permission for this record.")
+	end)
+
+	it("should check ANT permissions before record permissions", function()
+		-- Even if someone is a record owner of one record,
+		-- if they're a controller, they can modify all records
+		_G.Controllers = {"record-owner"}
+
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("record-owner", "unowned")
+		end)
+	end)
+
+	it("should allow owner via Balances check", function()
+		-- Test the Balances check for ownership
+		Balances["another-owner"] = 1
+
+		assert.has_no.error(function()
+			utils.assertHasRecordPermission("another-owner", "owned")
+		end)
+	end)
+end)

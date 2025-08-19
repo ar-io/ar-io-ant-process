@@ -37,8 +37,7 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, dis
 		end
 	end
 
-	---@type RecordEntry|table<string, any>
-	local previousRecord = utils.deepCopy(Records[name]) or {}
+	local previousRecord = Records[name]
 
 	Records[name] = {
 		transactionId = transactionId or previousRecord.transactionId,

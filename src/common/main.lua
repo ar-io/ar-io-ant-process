@@ -194,6 +194,11 @@ function ant.init()
 		local transactionId = msg["Transaction-Id"]
 		local ttlSeconds = tonumber(msg["TTL-Seconds"])
 		local priority = tonumber(msg["Priority"])
+		local owner = msg.Tags["Owner"]
+		local displayName = msg.Tags["Name"]
+		local logo = msg.Tags["Logo"]
+		local description = msg.Tags["Description"]
+		local keywords = msg.Tags["Keywords"]
 		-- Check permissions based on whether record exists
 		local existingRecord = Records[name]
 		-- only ANT owner/controllers can set priority for existing records - this is to prevent  undername owners from setting priority
@@ -205,19 +210,9 @@ function ant.init()
 			utils.assertHasPermission(msg.From)
 		end
 
-		local name = string.lower(msg.Tags["Sub-Domain"])
-		local transactionId = msg.Tags["Transaction-Id"]
-		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
-		local priority = tonumber(msg.Tags["Priority"])
-
 		assert(ttlSeconds, "Missing ttl seconds")
 
 		-- Handle optional metadata fields
-		local owner = msg.Tags["Owner"]
-		local displayName = msg.Tags["Name"]
-		local logo = msg.Tags["Logo"]
-		local description = msg.Tags["Description"]
-		local keywords = msg.Tags["Keywords"]
 
 		-- Owner assignment requires ANT-level permission (only when explicitly setting a new owner)
 		local explicitOwner = msg.Tags["Owner"]

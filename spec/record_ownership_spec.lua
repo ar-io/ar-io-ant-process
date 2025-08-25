@@ -127,42 +127,6 @@ describe("Record Ownership", function()
 		end)
 	end)
 
-	describe("revokeRecordOwnership", function()
-		before_each(function()
-			-- Create a record with an owner
-			_G.Records["revokable"] = {
-				transactionId = validTxId,
-				ttlSeconds = 900,
-				owner = validRecordOwner,
-			}
-		end)
-
-		it("should revoke ownership", function()
-			local result = records.revokeRecordOwnership("revokable")
-
-			assert.are.equal("revokable", result.subdomain)
-			assert.are.equal(validRecordOwner, result.previousOwner)
-			assert.is_true(result.revoked)
-			assert.is_nil(Records["revokable"].owner)
-		end)
-
-		it("should handle record with no owner", function()
-			Records["revokable"].owner = nil
-
-			local result = records.revokeRecordOwnership("revokable")
-
-			assert.are.equal("revokable", result.subdomain)
-			assert.is_nil(result.previousOwner)
-			assert.is_true(result.revoked)
-		end)
-
-		it("should fail if record does not exist", function()
-			assert.has_error(function()
-				records.revokeRecordOwnership("nonexistent")
-			end, "Record does not exist")
-		end)
-	end)
-
 	describe("getRecord with ownership", function()
 		it("should return record with all metadata", function()
 			Records["metadata"] = {

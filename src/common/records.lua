@@ -39,17 +39,44 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, dis
 
 	local previousRecord = Records[name]
 
-	Records[name] = {
-		transactionId = transactionId or previousRecord.transactionId,
-		ttlSeconds = ttlSeconds or previousRecord.ttlSeconds,
-		priority = name == "@" and 0 or priority or previousRecord.priority,
-		-- Add optional fields only if provided
-		owner = owner or previousRecord.owner,
-		displayName = displayName or previousRecord.displayName,
-		logo = logo or previousRecord.logo,
-		description = description or previousRecord.description,
-		keywords = keywords or previousRecord.keywords,
+	local record = {
+		transactionId = transactionId,
+		ttlSeconds = ttlSeconds,
+		priority = name == "@" and 0 or priority,
 	}
+
+	-- Add optional fields only if provided
+	if owner then
+		record.owner = owner
+	elseif previousRecord and previousRecord.owner then
+		record.owner = previousRecord.owner
+	end
+
+	if displayName then
+		record.name = displayName
+	elseif previousRecord and previousRecord.name then
+		record.name = previousRecord.name
+	end
+
+	if logo then
+		record.logo = logo
+	elseif previousRecord and previousRecord.logo then
+		record.logo = previousRecord.logo
+	end
+
+	if description then
+		record.description = description
+	elseif previousRecord and previousRecord.description then
+		record.description = previousRecord.description
+	end
+
+	if keywords then
+		record.keywords = keywords
+	elseif previousRecord and previousRecord.keywords then
+		record.keywords = previousRecord.keywords
+	end
+
+	Records[name] = record
 
 	return Records[name]
 end

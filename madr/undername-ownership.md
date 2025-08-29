@@ -84,7 +84,8 @@ ownership or remove the record entirely.
 
 ## Record Metadata
 
-Records can now include optional metadata:
+Records can now include optional metadata. This shows the actual stored record
+structure:
 
 ```lua
 {
@@ -92,12 +93,15 @@ Records can now include optional metadata:
   ttlSeconds = 3600,              -- Required: Time to live
   priority = 10,                  -- Optional: Priority (ANT owner/controllers only)
   owner = "address123...",        -- Optional: Record owner
-  name = "Alice's Site",          -- Optional: Display name (max 61 chars)
-  logo = "logoTx123...",          -- Optional: Logo TX ID
-  description = "Personal site",   -- Optional: Description (max 512 chars)
-  keywords = {"blog", "personal"} -- Optional: Keywords array (max 16, each max 32 chars)
+  name = "Alice's Site",          -- Optional: name (max 61 chars) - from API parameter "Name"
+  logo = "logoTx123...",          -- Optional: Logo TX ID - from API parameter "Logo"
+  description = "Personal site",   -- Optional: Description (max 512 chars) - from API parameter "Description"
+  keywords = {"blog", "personal"} -- Optional: Keywords array (max 16, each max 32 chars) - from API parameter "Keywords"
 }
 ```
+
+**Note**: The API uses different parameter names than the stored field names.
+The stored record uses `name` for what the API calls `Name` (display name).
 
 ## API Reference
 

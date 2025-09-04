@@ -37,7 +37,7 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, dis
 		end
 	end
 
-	local previousRecord = Records[name]
+	local previousRecord = Records[name] or {}
 
 	local record = {
 		transactionId = transactionId,
@@ -53,9 +53,9 @@ function records.setRecord(name, transactionId, ttlSeconds, priority, owner, dis
 	end
 
 	if displayName then
-		record.name = displayName
-	elseif previousRecord and previousRecord.name then
-		record.name = previousRecord.name
+		record.displayName = displayName
+	elseif previousRecord and previousRecord.displayName then
+		record.displayName = previousRecord.displayName
 	end
 
 	if logo then

@@ -190,10 +190,10 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.SetRecord, function(msg)
-		local name = string.lower(msg["Sub-Domain"])
-		local transactionId = msg["Transaction-Id"]
-		local ttlSeconds = tonumber(msg["TTL-Seconds"])
-		local priority = tonumber(msg["Priority"])
+		local name = string.lower(msg.Tags["Sub-Domain"])
+		local transactionId = msg.Tags["Transaction-Id"]
+		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
+		local priority = tonumber(msg.Tags["Priority"])
 		local owner = msg.Tags["Owner"]
 		local displayName = msg.Tags["Name"]
 		local logo = msg.Tags["Logo"]
@@ -210,7 +210,7 @@ function ant.init()
 			utils.assertHasPermission(msg.From)
 		end
 
-		assert(ttlSeconds, "Missing ttl seconds")
+		assert(ttlSeconds ~= nil, "Missing ttl seconds")
 
 		-- Handle optional metadata fields
 

@@ -441,9 +441,9 @@ function ant.init()
 				-- Only ANT owner can approve base names
 				utils.assertHasPermission(caller)
 			else
+				utils.validateUndername(undername)
 				utils.assertHasRecordPermission(caller, undername)
 			end
-			utils.validateUndername(name)
 		end
 
 		utils.Send(msg, {

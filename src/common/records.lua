@@ -25,6 +25,7 @@ Records = Records
 function records.setRecord(name, transactionId, ttlSeconds, priority, owner, displayName, logo, description, keywords)
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
+	-- TODO: allow TTL seconds to be nil and default to 900
 	utils.validateTTLSeconds(ttlSeconds)
 	if priority then
 		if name == "@" then
@@ -131,7 +132,8 @@ function records.transferRecord(name, recipient, allowUnsafeAddresses)
 	return {
 		subdomain = name,
 		previousOwner = previousOwner,
-		recipient = recipient,
+		newOwner = recipient,
+		record = Records[name],
 	}
 end
 

@@ -81,7 +81,7 @@ describe("Record Ownership", function()
 		end)
 	end)
 
-	describe("transferRecordOwnership", function()
+	describe("transferRecord", function()
 		before_each(function()
 			-- Create a record with an owner
 			_G.Records["owned"] = {
@@ -92,7 +92,7 @@ describe("Record Ownership", function()
 		end)
 
 		it("should transfer ownership to new owner", function()
-			local result = records.transferRecordOwnership("owned", validNewOwner)
+			local result = records.transferRecord("owned", validNewOwner)
 
 			assert.are.equal("owned", result.subdomain)
 			assert.are.equal(validRecordOwner, result.previousOwner)
@@ -102,7 +102,7 @@ describe("Record Ownership", function()
 
 		it("should fail if record does not exist", function()
 			assert.has_error(function()
-				records.transferRecordOwnership("nonexistent", validNewOwner)
+				records.transferRecord("nonexistent", validNewOwner)
 			end, "Record does not exist")
 		end)
 
@@ -110,19 +110,19 @@ describe("Record Ownership", function()
 			Records["owned"].owner = nil
 
 			assert.has_error(function()
-				records.transferRecordOwnership("owned", validNewOwner)
+				records.transferRecord("owned", validNewOwner)
 			end, "Record has no owner")
 		end)
 
 		it("should fail if new owner is invalid", function()
 			assert.has_error(function()
-				records.transferRecordOwnership("owned", "invalid")
+				records.transferRecord("owned", "invalid")
 			end, "Invalid new owner address")
 		end)
 
 		it("should fail if new owner is same as current", function()
 			assert.has_error(function()
-				records.transferRecordOwnership("owned", validRecordOwner)
+				records.transferRecord("owned", validRecordOwner)
 			end, "New owner same as current owner")
 		end)
 	end)

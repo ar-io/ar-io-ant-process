@@ -118,7 +118,7 @@ end
 ---@param recipient string The new owner address
 ---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
 ---@return table Transfer details
-function records.transferRecordOwnership(name, recipient, allowUnsafeAddresses)
+function records.transferRecord(name, recipient, allowUnsafeAddresses)
 	utils.validateUndername(name)
 	assert(Records[name] ~= nil, "Record does not exist")
 	assert(Records[name].owner ~= nil, "Record has no owner")

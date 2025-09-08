@@ -64,7 +64,7 @@ function ant.init()
 		SetDescription = "Set-Description",
 		SetKeywords = "Set-Keywords",
 		SetLogo = "Set-Logo",
-		TransferRecordOwnership = "Transfer-Record-Ownership",
+		TransferRecord = "Transfer-Record",
 
 		-- read
 		Controllers = "Controllers",
@@ -299,7 +299,7 @@ function ant.init()
 		return balances.setLogo(msg.Logo)
 	end)
 
-	createActionHandler(ActionMap.TransferRecordOwnership, function(msg)
+	createActionHandler(ActionMap.TransferRecord, function(msg)
 		local subdomain = string.lower(msg.Tags["Sub-Domain"])
 		local recipient = msg.Tags["Recipient"]
 		local caller = msg.From
@@ -317,7 +317,7 @@ function ant.init()
 		utils.assertHasRecordPermission(caller, subdomain)
 
 		-- Use existing transfer function with proper garbage collection
-		local result = records.transferRecordOwnership(subdomain, recipient, msg.Tags["Allow-Unsafe-Addresses"])
+		local result = records.transferRecord(subdomain, recipient, msg.Tags["Allow-Unsafe-Addresses"])
 
 		-- Send ownership transfer notice to new owner
 		ao.send({

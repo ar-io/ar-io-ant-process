@@ -123,7 +123,7 @@ describe('Record Ownership', async () => {
         From: recordOwner,
         Owner: recordOwner,
         Tags: [
-          { name: 'Action', value: 'Transfer-Record-Ownership' },
+          { name: 'Action', value: 'Transfer-Record' },
           { name: 'Sub-Domain', value: 'transferable' },
           { name: 'Recipient', value: recipient },
         ],
@@ -160,7 +160,7 @@ describe('Record Ownership', async () => {
         From: recordOwner,
         Owner: recordOwner,
         Tags: [
-          { name: 'Action', value: 'Transfer-Record-Ownership' },
+          { name: 'Action', value: 'Transfer-Record' },
           { name: 'Sub-Domain', value: 'nonexistent' },
           { name: 'Recipient', value: recipient },
         ],
@@ -202,7 +202,7 @@ describe('Record Ownership', async () => {
           From: recordOwner,
           Owner: recordOwner,
           Tags: [
-            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Action', value: 'Transfer-Record' },
             { name: 'Sub-Domain', value: 'noowner' },
             { name: 'Recipient', value: recipient },
           ],
@@ -240,7 +240,7 @@ describe('Record Ownership', async () => {
           From: recordOwner,
           Owner: recordOwner,
           Tags: [
-            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Action', value: 'Transfer-Record' },
             { name: 'Sub-Domain', value: 'invalidrecipient' },
             { name: 'Recipient', value: 'invalid-address' }, // Too short
           ],
@@ -280,7 +280,7 @@ describe('Record Ownership', async () => {
           From: recordOwner,
           Owner: recordOwner,
           Tags: [
-            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Action', value: 'Transfer-Record' },
             { name: 'Sub-Domain', value: 'sameowner' },
             { name: 'Recipient', value: recordOwner }, // Same as current owner
           ],
@@ -322,7 +322,7 @@ describe('Record Ownership', async () => {
           From: randomUser,
           Owner: randomUser,
           Tags: [
-            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Action', value: 'Transfer-Record' },
             { name: 'Sub-Domain', value: 'unauthorized' },
             { name: 'Recipient', value: recipient },
           ],
@@ -364,7 +364,7 @@ describe('Record Ownership', async () => {
           From: STUB_ADDRESS,
           Owner: STUB_ADDRESS,
           Tags: [
-            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Action', value: 'Transfer-Record' },
             { name: 'Sub-Domain', value: 'antowntransfer' },
             { name: 'Recipient', value: recipient },
           ],
@@ -412,7 +412,7 @@ describe('Record Ownership', async () => {
           From: recordOwner,
           Owner: recordOwner,
           Tags: [
-            { name: 'Action', value: 'Transfer-Record-Ownership' },
+            { name: 'Action', value: 'Transfer-Record' },
             { name: 'Sub-Domain', value: 'verify' },
             { name: 'Recipient', value: recipient },
           ],

@@ -305,7 +305,7 @@ function ant.init()
 
 		-- Validate inputs
 		assert(subdomain, "Sub-Domain is required")
-		assert(recipient, "Recipient is required")
+		assert(utils.isValidAOAddress(recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid recipient address")
 
 		-- Check if record exists and has an owner
 		local record = Records[subdomain]

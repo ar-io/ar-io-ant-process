@@ -412,6 +412,7 @@ function ant.init()
 			-- Only ANT owner can approve the @ record
 			utils.assertHasPermission(caller)
 		else
+			utils.validateUndername(undername)
 			utils.assertHasRecordPermission(caller, undername)
 			assert(recipient == caller, "Undername owners can only approve names for themselves")
 		end
@@ -441,9 +442,9 @@ function ant.init()
 				-- Only ANT owner can approve base names
 				utils.assertHasPermission(caller)
 			else
+				utils.validateUndername(undername)
 				utils.assertHasRecordPermission(caller, undername)
 			end
-			utils.validateUndername(name)
 		end
 
 		utils.Send(msg, {

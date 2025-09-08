@@ -190,11 +190,12 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.SetRecord, function(msg)
+		print("SetRecord", json.encode(msg.Tags))
 		local name = string.lower(msg.Tags["Sub-Domain"])
 		local transactionId = msg.Tags["Transaction-Id"]
 		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
 		local priority = tonumber(msg.Tags["Priority"])
-		local owner = msg.Tags["Owner"]
+		local owner = msg.Tags["Record-Owner"]
 		local displayName = msg.Tags["Name"]
 		local logo = msg.Tags["Logo"]
 		local description = msg.Tags["Description"]
@@ -210,12 +211,12 @@ function ant.init()
 			utils.assertHasPermission(msg.From)
 		end
 
-		assert(ttlSeconds ~= nil, "Missing ttl seconds")
+		assert(type(ttlSeconds) == "number", "Missing ttl seconds, received: " .. json.encode(msg.Tags))
 
 		-- Handle optional metadata fields
 
 		-- Owner assignment requires ANT-level permission (only when explicitly setting a new owner)
-		local explicitOwner = msg.Tags["Owner"]
+		local explicitOwner = msg.Tags["Record-Owner"]
 		if explicitOwner then
 			utils.assertHasPermission(msg.From)
 			assert(utils.isValidAOAddress(explicitOwner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")

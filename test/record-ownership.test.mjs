@@ -38,6 +38,8 @@ describe('Record Ownership', async () => {
       ],
     });
 
+    console.dir(setRecordResult, { depth: null });
+
     assertPatchMessage(setRecordResult);
 
     // Verify record was created with ownership

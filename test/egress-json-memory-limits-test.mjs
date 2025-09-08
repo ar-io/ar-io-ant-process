@@ -1,11 +1,37 @@
 import { createAntAosLoader, createHandleWrapper } from './utils.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const CHECKPOINT_FILE = path.join(__dirname, 'checkpoint.binary');
 
 describe('egress-json-memory-limits', async () => {
-  const { handle: originalHandle, memory: startMemory } =
-    await createAntAosLoader();
+  // Initialize loader/handle with optional checkpointed memory
+  let initialMemory = null;
+  if (fs.existsSync(CHECKPOINT_FILE)) {
+    try {
+      const buf = fs.readFileSync(CHECKPOINT_FILE);
+      // Node Buffer -> Uint8Array view for ao-loader
+      initialMemory = new Uint8Array(
+        buf.buffer,
+        buf.byteOffset,
+        buf.byteLength,
+      );
+      console.log(
+        `💾 Loaded checkpoint memory (${(buf.byteLength / 1024 / 1024).toFixed(1)}MB)`,
+      );
+    } catch (e) {
+      console.warn('Failed to read checkpoint file, starting fresh', e);
+    }
+  }
 
+  const { handle: originalHandle, memory: freshMemory } =
+    await createAntAosLoader();
+  const startMemory = initialMemory ?? freshMemory;
   const handle = createHandleWrapper(originalHandle, startMemory);
 
   /**
@@ -138,7 +164,8 @@ describe('egress-json-memory-limits', async () => {
       let recordCount = 0;
       try {
         const state = JSON.parse(stateMessage.Data);
-        recordCount = state.records ? Object.keys(state.records).length : 0;
+        const recordsTable = state.records || state.Records;
+        recordCount = recordsTable ? Object.keys(recordsTable).length : 0;
       } catch (parseError) {
         console.log(`    Failed to parse state JSON: ${parseError.message}`);
         return {
@@ -174,6 +201,24 @@ describe('egress-json-memory-limits', async () => {
 
     console.log(`🚀 Starting with ${lastMemorySize}MB memory`);
 
+    // If we loaded from checkpoint, discover current record count via State and resume
+    if (initialMemory) {
+      const {
+        success,
+        recordCount: chkCount,
+        memory,
+      } = await testStateCall(currentMemory);
+      if (success) {
+        recordCount = chkCount;
+        currentMemory = memory ?? currentMemory;
+        console.log(
+          `⏩ Resuming from checkpoint at ${recordCount.toLocaleString()} records`,
+        );
+      } else {
+        console.warn('Checkpoint invalid or unreadable, starting from scratch');
+      }
+    }
+
     // Phase 1: Build up to 9000 records first
     console.log('📈 Phase 1: Building up to 9000 records...');
 
@@ -208,6 +253,22 @@ describe('egress-json-memory-limits', async () => {
           lastMemoryChangeRecordCount = recordCount;
         }
 
+        // Checkpoint every 500 records (from the very start)
+        if (recordCount % 500 === 0) {
+          try {
+            fs.writeFileSync(CHECKPOINT_FILE, Buffer.from(currentMemory));
+            console.log(
+              `💾 Checkpoint at ${recordCount.toLocaleString()} records (${(
+                currentMemory.byteLength /
+                1024 /
+                1024
+              ).toFixed(1)}MB)`,
+            );
+          } catch (e) {
+            console.warn('Failed to write checkpoint', e);
+          }
+        }
+
         // Log progress every 10 records with timing info
         if (recordCount % 10 === 0) {
           const currentTime = performance.now();
@@ -235,6 +296,20 @@ describe('egress-json-memory-limits', async () => {
     console.log(
       `✅ Successfully added ${recordCount.toLocaleString()} records`,
     );
+
+    // Write initial checkpoint at ~9k
+    try {
+      fs.writeFileSync(CHECKPOINT_FILE, Buffer.from(currentMemory));
+      console.log(
+        `💾 Wrote checkpoint at ${recordCount.toLocaleString()} records (${(
+          currentMemory.byteLength /
+          1024 /
+          1024
+        ).toFixed(1)}MB)`,
+      );
+    } catch (e) {
+      console.warn('Failed to write initial checkpoint', e);
+    }
 
     // Phase 2: Add records in batches of 300 and test State call each time
     console.log(
@@ -330,6 +405,22 @@ describe('egress-json-memory-limits', async () => {
         // Update memory if State call was successful
         if (stateResult.memory) {
           currentMemory = stateResult.memory;
+        }
+
+        // Write checkpoint every 500 records
+        if (recordCount % 500 === 0) {
+          try {
+            fs.writeFileSync(CHECKPOINT_FILE, Buffer.from(currentMemory));
+            console.log(
+              `💾 Checkpoint at ${recordCount.toLocaleString()} records (${(
+                currentMemory.byteLength /
+                1024 /
+                1024
+              ).toFixed(1)}MB)`,
+            );
+          } catch (e) {
+            console.warn('Failed to write checkpoint', e);
+          }
         }
       } else {
         console.log(

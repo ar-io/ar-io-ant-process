@@ -21,3 +21,4 @@ temp-build
 build
 aos-process
 ._*
+checkpoint.binary

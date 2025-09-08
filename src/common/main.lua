@@ -190,7 +190,6 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.SetRecord, function(msg)
-		print("SetRecord", json.encode(msg.Tags))
 		local name = string.lower(msg.Tags["Sub-Domain"])
 		local transactionId = msg.Tags["Transaction-Id"]
 		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])

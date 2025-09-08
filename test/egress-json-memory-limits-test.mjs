@@ -40,7 +40,7 @@ describe('egress-json-memory-limits', async () => {
     if (index % 5 === 0) {
       // Add owner for some records (valid AO address format)
       tags.push({
-        name: 'Owner',
+        name: 'Record-Owner',
         value: ''.padEnd(43, (index % 10).toString()),
       });
     }

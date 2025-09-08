@@ -32,7 +32,7 @@ describe('Record Ownership', async () => {
         { name: 'Sub-Domain', value: 'test' },
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
-        { name: 'Owner', value: recordOwner },
+        { name: 'Record-Owner', value: recordOwner },
         { name: 'Name', value: 'Test Subdomain' },
         { name: 'Description', value: 'A test subdomain with ownership' },
       ],
@@ -69,7 +69,7 @@ describe('Record Ownership', async () => {
         { name: 'Sub-Domain', value: 'owned' },
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
-        { name: 'Owner', value: recordOwner },
+        { name: 'Record-Owner', value: recordOwner },
       ],
     });
 
@@ -111,7 +111,7 @@ describe('Record Ownership', async () => {
         { name: 'Sub-Domain', value: 'transferable' },
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
-        { name: 'Owner', value: recordOwner },
+        { name: 'Record-Owner', value: recordOwner },
       ],
     });
 
@@ -229,7 +229,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'invalidrecipient' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       });
 
@@ -269,7 +269,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'sameowner' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       });
 
@@ -311,7 +311,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'unauthorized' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       });
 
@@ -352,7 +352,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'antowntransfer' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       });
 
@@ -401,7 +401,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'verify' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       });
 
@@ -473,7 +473,7 @@ describe('Record Ownership', async () => {
         { name: 'Sub-Domain', value: 'protected' },
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
-        { name: 'Owner', value: recordOwner },
+        { name: 'Record-Owner', value: recordOwner },
       ],
     });
 
@@ -516,7 +516,7 @@ describe('Record Ownership', async () => {
         { name: 'Sub-Domain', value: 'myname' },
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
-        { name: 'Owner', value: recordOwner },
+        { name: 'Record-Owner', value: recordOwner },
       ],
     });
 
@@ -568,7 +568,7 @@ describe('Record Ownership', async () => {
         { name: 'Sub-Domain', value: 'secured' },
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
-        { name: 'Owner', value: recordOwner },
+        { name: 'Record-Owner', value: recordOwner },
       ],
     });
 
@@ -911,7 +911,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'multifield' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
           { name: 'Name', value: 'Multi Field Record' },
           {
             name: 'Description',
@@ -960,7 +960,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'preserve' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
           { name: 'Name', value: 'Original Name' },
           { name: 'Description', value: 'Original description' },
           { name: 'Logo', value: 'original-logo-'.padEnd(43, '3') },
@@ -1097,7 +1097,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'owned' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Owner', value: recordOwner },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       },
       addControllerResult.Memory,

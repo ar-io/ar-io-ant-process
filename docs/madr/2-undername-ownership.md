@@ -279,12 +279,6 @@ Send({
 - `-` No delegation possible
 - `-` Restricts adoption
 
-## Links
-
-- [Original Proposal](../../UNDERNAME-OWNERSHIP.md)
-- [Implementation Plan](../../UNDERNAME-OWNERSHIP-SECURE-IMPLEMENTATION.md)
-- [Code Changes Plan](../../UNDERNAME-OWNERSHIP-CODE-PLAN.md)
-
 ## Related Decisions
 
 - [ADR-1](1-reassign-evolve.md) - Reassign and Evolve Pattern

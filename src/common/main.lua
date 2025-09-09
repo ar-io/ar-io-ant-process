@@ -195,7 +195,7 @@ function ant.init()
 		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
 		local priority = tonumber(msg.Tags["Priority"])
 		local owner = msg.Tags["Record-Owner"]
-		local displayName = msg.Tags["Name"]
+		local displayName = msg.Tags["Display-Name"]
 		local logo = msg.Tags["Logo"]
 		local description = msg.Tags["Description"]
 		local keywords = msg.Tags["Keywords"]
@@ -225,7 +225,7 @@ function ant.init()
 		if displayName then
 			assert(
 				type(displayName) == "string" and #displayName <= constants.MAX_NAME_LENGTH,
-				"Record name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
+				"Record display name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
 			)
 		end
 		if logo then

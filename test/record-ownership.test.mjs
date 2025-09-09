@@ -33,7 +33,7 @@ describe('Record Ownership', async () => {
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
         { name: 'Record-Owner', value: recordOwner },
-        { name: 'Name', value: 'Test Subdomain' },
+        { name: 'Display-Name', value: 'Test Subdomain' },
         { name: 'Description', value: 'A test subdomain with ownership' },
       ],
     });
@@ -85,7 +85,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'owned' },
           { name: 'Transaction-Id', value: 'updated-tx-id-'.padEnd(43, '2') },
           { name: 'TTL-Seconds', value: '1800' },
-          { name: 'Name', value: 'Updated by Owner' },
+          { name: 'Display-Name', value: 'Updated by Owner' },
         ],
       },
       createResult.Memory,
@@ -449,7 +449,7 @@ describe('Record Ownership', async () => {
               value: 'new-owner-update-'.padEnd(43, '5'),
             },
             { name: 'TTL-Seconds', value: '1800' },
-            { name: 'Name', value: 'Updated by New Owner' },
+            { name: 'Display-Name', value: 'Updated by New Owner' },
           ],
         },
         transferResult.Memory,
@@ -529,7 +529,7 @@ describe('Record Ownership', async () => {
         Owner: recordOwner,
         Tags: [
           { name: 'Action', value: 'Approve-Primary-Name' },
-          { name: 'Name', value: 'myname_testant' },
+          { name: 'Display-Name', value: 'myname_testant' },
           { name: 'Recipient', value: recordOwner },
           { name: 'IO-Process-Id', value: ioProcessId },
         ],
@@ -581,7 +581,7 @@ describe('Record Ownership', async () => {
         Owner: recordOwner,
         Tags: [
           { name: 'Action', value: 'Approve-Primary-Name' },
-          { name: 'Name', value: 'secured_testant' },
+          { name: 'Display-Name', value: 'secured_testant' },
           { name: 'Recipient', value: someoneElse },
           { name: 'IO-Process-Id', value: ioProcessId },
         ],
@@ -609,7 +609,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'validname' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'Valid Display Name' },
+          { name: 'Display-Name', value: 'Valid Display Name' },
         ],
       });
 
@@ -635,7 +635,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'metadata1' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'A'.repeat(62) }, // Too long
+          { name: 'Display-Name', value: 'A'.repeat(62) }, // Too long
         ],
       });
 
@@ -651,7 +651,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'exactlimit' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'A'.repeat(61) }, // Exactly at limit
+          { name: 'Display-Name', value: 'A'.repeat(61) }, // Exactly at limit
         ],
       });
 
@@ -912,7 +912,7 @@ describe('Record Ownership', async () => {
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
           { name: 'Record-Owner', value: recordOwner },
-          { name: 'Name', value: 'Multi Field Record' },
+          { name: 'Display-Name', value: 'Multi Field Record' },
           {
             name: 'Description',
             value: 'A record with multiple metadata fields',
@@ -961,7 +961,7 @@ describe('Record Ownership', async () => {
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
           { name: 'Record-Owner', value: recordOwner },
-          { name: 'Name', value: 'Original Name' },
+          { name: 'Display-Name', value: 'Original Name' },
           { name: 'Description', value: 'Original description' },
           { name: 'Logo', value: 'original-logo-'.padEnd(43, '3') },
           { name: 'Keywords', value: originalKeywords },
@@ -980,7 +980,7 @@ describe('Record Ownership', async () => {
             { name: 'Sub-Domain', value: 'preserve' },
             { name: 'Transaction-Id', value: 'updated-tx-id-'.padEnd(43, '4') },
             { name: 'TTL-Seconds', value: '1800' },
-            { name: 'Name', value: 'Updated Name' },
+            { name: 'Display-Name', value: 'Updated Name' },
           ],
         },
         createResult.Memory,
@@ -1017,7 +1017,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'unicode' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'Unicode Test 🌟 ñáéíóú' },
+          { name: 'Display-Name', value: 'Unicode Test 🌟 ñáéíóú' },
           {
             name: 'Description',
             value: 'Description with émojis 🎉 and spëcial chars: !@#$%^&*()',
@@ -1052,7 +1052,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'emptystrings' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: '' },
+          { name: 'Display-Name', value: '' },
           { name: 'Description', value: '' },
         ],
       });

@@ -453,4 +453,11 @@ function utils.undernameForName(name)
 	return string.gsub(name:reverse(), baseName:reverse() .. "_", "", 1):reverse()
 end
 
+---@param jsonString string
+---@return table|nil
+function utils.safeJsonDecode(jsonString)
+	local ok, parsed = pcall(json.decode, jsonString)
+	return ok and parsed or nil
+end
+
 return utils

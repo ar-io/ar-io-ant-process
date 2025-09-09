@@ -190,6 +190,9 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.SetRecord, function(msg)
+		local caller = msg.From
+		local allowUnsafeAddresses = msg.Tags["Allow-Unsafe-Addresses"]
+
 		local name = string.lower(msg.Tags["Sub-Domain"])
 		local transactionId = msg.Tags["Transaction-Id"]
 		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
@@ -198,51 +201,7 @@ function ant.init()
 		local displayName = msg.Tags["Display-Name"]
 		local logo = msg.Tags["Logo"]
 		local description = msg.Tags["Description"]
-		local keywords = msg.Tags["Keywords"]
-		-- Check permissions based on whether record exists
-		local existingRecord = Records[name]
-		-- only ANT owner/controllers can set priority for existing records - this is to prevent  undername owners from setting priority
-		if existingRecord and priority == nil then
-			-- For existing records, check record-specific permission
-			utils.assertHasRecordPermission(msg.From, name)
-		else
-			-- For new records, only ANT owner/controllers can create
-			utils.assertHasPermission(msg.From)
-		end
-
-		assert(type(ttlSeconds) == "number", "Missing ttl seconds, received: " .. json.encode(msg.Tags))
-
-		-- Handle optional metadata fields
-
-		-- Owner assignment requires ANT-level permission (only when explicitly setting a new owner)
-		local explicitOwner = msg.Tags["Record-Owner"]
-		if explicitOwner then
-			utils.assertHasPermission(msg.From)
-			assert(utils.isValidAOAddress(explicitOwner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")
-		end
-
-		-- Validate optional metadata using existing patterns
-		if displayName then
-			assert(
-				type(displayName) == "string" and #displayName <= constants.MAX_NAME_LENGTH,
-				"Record display name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
-			)
-		end
-		if logo then
-			assert(utils.isValidArweaveAddress(logo), "Invalid logo arweave ID")
-		end
-		if description then
-			assert(
-				type(description) == "string" and #description <= constants.MAX_DESCRIPTION_LENGTH,
-				"Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters"
-			)
-		end
-		if keywords then
-			local success, decodedKeywords = pcall(json.decode, keywords)
-			assert(success and type(decodedKeywords) == "table", "Invalid JSON format for keywords")
-			utils.validateKeywords(decodedKeywords)
-			keywords = decodedKeywords
-		end
+		local keywords = msg.Tags["Keywords"] and json.decode(msg.Tags["Keywords"]) or nil
 
 		return records.setRecord(
 			name,
@@ -253,7 +212,9 @@ function ant.init()
 			displayName,
 			logo,
 			description,
-			keywords
+			keywords,
+			caller,
+			allowUnsafeAddresses
 		)
 	end)
 
@@ -319,7 +280,7 @@ function ant.init()
 		local transferResult = records.transferRecord(subdomain, recipient, msg.Tags["Allow-Unsafe-Addresses"])
 
 		-- send an additional notice to the new owner to notify them of the ownership transfer
-		ao.send({
+		utils.Send(msg, {
 			Target = recipient,
 			Action = "Transfer-Record-Notice",
 			["Sub-Domain"] = subdomain,

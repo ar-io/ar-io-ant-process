@@ -38,8 +38,6 @@ describe('Record Ownership', async () => {
       ],
     });
 
-    console.dir(setRecordResult, { depth: null });
-
     assertPatchMessage(setRecordResult);
 
     // Verify record was created with ownership
@@ -143,9 +141,7 @@ describe('Record Ownership', async () => {
       (m) =>
         m.Target === recipient &&
         m.Tags.find(
-          (t) =>
-            t.name === 'Action' &&
-            t.value === 'Record-Ownership-Transfer-Notice',
+          (t) => t.name === 'Action' && t.value === 'Transfer-Record-Notice',
         ),
     );
     assert(notice, 'Ownership transfer notice should be sent to new owner');
@@ -254,7 +250,7 @@ describe('Record Ownership', async () => {
       );
       assert(
         transferInvalidResult.Messages[0].Data.includes(
-          'Invalid new owner address',
+          'Invalid recipient address',
         ),
         'Error should mention invalid address',
       );
@@ -383,9 +379,7 @@ describe('Record Ownership', async () => {
         (m) =>
           m.Target === recipient &&
           m.Tags.find(
-            (t) =>
-              t.name === 'Action' &&
-              t.value === 'Record-Ownership-Transfer-Notice',
+            (t) => t.name === 'Action' && t.value === 'Transfer-Record-Notice',
           ),
       );
       assert(notice, 'Ownership transfer notice should be sent to new owner');
@@ -529,7 +523,7 @@ describe('Record Ownership', async () => {
         Owner: recordOwner,
         Tags: [
           { name: 'Action', value: 'Approve-Primary-Name' },
-          { name: 'Display-Name', value: 'myname_testant' },
+          { name: 'Name', value: 'myname_testant' },
           { name: 'Recipient', value: recordOwner },
           { name: 'IO-Process-Id', value: ioProcessId },
         ],

@@ -595,8 +595,8 @@ describe('Record Ownership', async () => {
     // Should have error
     const errorMsg = approveResult.Messages[0];
     assert(
-      errorMsg.Tags.find((t) => t.name === 'Action'),
-      'Invalid-Approve-Primary-Name-Notice',
+      errorMsg.Tags.find((t) => t.name === 'Action')?.value ===
+        'Invalid-Approve-Primary-Name-Notice',
     );
   });
 

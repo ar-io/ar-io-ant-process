@@ -51,22 +51,15 @@ function records.setRecord(
 		utils.assertHasPermission(caller)
 	end
 
-	-- Validate priority for @ record before setting
-	if name == "@" and priority ~= nil and tonumber(priority) ~= 0 then
-		assert(false, "Priority for @ record must be 0")
-	end
-
-	local previousRecord = Records[name] or {}
-
 	local newRecord = {
-		transactionId = transactionId or previousRecord.transactionId or constants.DEFAULT_TRANSACTION_ID,
-		ttlSeconds = tonumber(ttlSeconds) or previousRecord.ttlSeconds or constants.DEFAULT_TTL_SECONDS,
-		priority = name == "@" and 0 or tonumber(priority) or previousRecord.priority, -- set below with validation
-		owner = owner or previousRecord.owner,
-		displayName = displayName or previousRecord.displayName,
-		logo = logo or previousRecord.logo,
-		description = description or previousRecord.description,
-		keywords = keywords or previousRecord.keywords,
+		transactionId = transactionId or constants.DEFAULT_TRANSACTION_ID,
+		ttlSeconds = tonumber(ttlSeconds) or constants.DEFAULT_TTL_SECONDS,
+		priority = name == "@" and 0 or tonumber(priority), -- set below with validation
+		owner = owner,
+		displayName = displayName,
+		logo = logo,
+		description = description,
+		keywords = keywords,
 	}
 	-- Accept keywords as a formatted Lua table; validate if provided
 

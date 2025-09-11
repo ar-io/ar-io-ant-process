@@ -54,6 +54,17 @@ function records.setRecord(
 
 	-- Validate @ record priority before creating the record
 	assert(name == "@" and priority == nil or priority == 0, "Cannot assign priority to @ record")
+	utils.validateKeywords(keywords or {})
+	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
+	utils.validateTTLSeconds(ttlSeconds or 0)
+	assert(
+		(priority == nil or ((priority == 0 or priority > 0) and math.type(priority) == "integer")),
+		"Priority must be an integer greater than or equal to 0"
+	)
+	assert(owner == nil or utils.isValidAOAddress(owner, allowUnsafeAddresses), "Invalid owner address")
+	assert(displayName == nil or #displayName <= constants.MAX_NAME_LENGTH, "Invalid display name")
+	assert(logo == nil or utils.isValidArweaveAddress(logo), "Invalid logo")
+	assert(description == nil or #description <= constants.MAX_DESCRIPTION_LENGTH, "Invalid description")
 
 	local newRecord = {
 		transactionId = transactionId,
@@ -65,27 +76,6 @@ function records.setRecord(
 		description = description,
 		keywords = keywords,
 	}
-
-	utils.validateKeywords(newRecord.keywords or {})
-	assert(utils.isValidArweaveAddress(newRecord.transactionId), "Invalid Arweave ID")
-	utils.validateTTLSeconds(newRecord.ttlSeconds)
-	assert(
-		(
-			newRecord.priority == nil
-			or ((newRecord.priority == 0 or newRecord.priority > 0) and math.type(newRecord.priority) == "integer")
-		),
-		"Priority must be an integer greater than or equal to 0"
-	)
-	assert(
-		newRecord.owner == nil or utils.isValidAOAddress(newRecord.owner, allowUnsafeAddresses),
-		"Invalid owner address"
-	)
-	assert(newRecord.displayName == nil or #newRecord.displayName <= constants.MAX_NAME_LENGTH, "Invalid display name")
-	assert(newRecord.logo == nil or utils.isValidArweaveAddress(newRecord.logo), "Invalid logo")
-	assert(
-		newRecord.description == nil or #newRecord.description <= constants.MAX_DESCRIPTION_LENGTH,
-		"Invalid description"
-	)
 
 	Records[name] = newRecord
 

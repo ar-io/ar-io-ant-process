@@ -193,7 +193,7 @@ function ant.init()
 		local caller = msg.From
 		local allowUnsafeAddresses = msg.Tags["Allow-Unsafe-Addresses"]
 
-		local name = string.lower(msg.Tags["Sub-Domain"])
+		local name = assert(msg.Tags["Sub-Domain"], "Sub-Domain is required") and string.lower(msg.Tags["Sub-Domain"])
 		local transactionId = msg.Tags["Transaction-Id"]
 		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
 		local priority = tonumber(msg.Tags["Priority"])

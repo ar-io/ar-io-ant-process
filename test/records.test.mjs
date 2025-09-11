@@ -115,17 +115,28 @@ describe('aos Records', async () => {
   });
 
   it('should set the record of an ANT', async () => {
-    const setRecordResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Set-Record' },
-        { name: 'Sub-Domain', value: '@' },
-        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
-        { name: 'TTL-Seconds', value: 900 },
-      ],
+    // Get initial state of @ record
+    const initialRecordsResult = await handle({
+      Tags: [{ name: 'Action', value: 'Records' }],
     });
+    const initialRecords = JSON.parse(initialRecordsResult.Messages[0].Data);
+    const initialRecord = initialRecords['@'];
+
+    const setRecordResult = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: '@' },
+          { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+          { name: 'TTL-Seconds', value: 900 },
+        ],
+      },
+      initialRecordsResult.Memory,
+    );
 
     assertPatchMessage(setRecordResult);
 
+    // Verify the record was updated correctly
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
@@ -135,8 +146,24 @@ describe('aos Records', async () => {
 
     const records = JSON.parse(recordsResult.Messages[0].Data);
     const record = records['@'];
-    assert(record.transactionId === ''.padEnd(43, '3'));
-    assert(record.ttlSeconds === 900);
+
+    // Verify the changes
+    assert.strictEqual(
+      record.transactionId,
+      ''.padEnd(43, '3'),
+      'Transaction ID should be updated',
+    );
+    assert.strictEqual(record.ttlSeconds, 900, 'TTL should be updated');
+    assert.strictEqual(record.priority, 0, '@ record priority should remain 0');
+
+    // Verify other fields remain unchanged if they existed
+    if (initialRecord.owner !== undefined) {
+      assert.strictEqual(
+        record.owner,
+        initialRecord.owner,
+        'Owner should remain unchanged',
+      );
+    }
   });
 
   it('should remove the record of an ANT', async () => {
@@ -382,6 +409,14 @@ describe('aos Records', async () => {
         infoBefore.Owner,
         'Non-owner parameter should not be the current owner',
       );
+
+      // Get initial records state before unauthorized attempt
+      const recordsBeforeAttempt = await getRecords(startMemory);
+      assert(
+        !recordsBeforeAttempt['unauthorized-test'],
+        'Record should not exist initially',
+      );
+
       const setRecordResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -406,18 +441,24 @@ describe('aos Records', async () => {
       );
       assertPatchMessage(setRecordResult);
 
-      // Verify the record was not actually set
-      const recordsResult = await handle(
-        {
-          Tags: [{ name: 'Action', value: 'Records' }],
-        },
+      // Verify the record was not actually set and state remains unchanged
+      const recordsAfterFailedAttempt = await getRecords(
         setRecordResult.Memory,
       );
-      const records = JSON.parse(recordsResult.Messages[0].Data);
       assert(
-        !records['unauthorized-test'],
+        !recordsAfterFailedAttempt['unauthorized-test'],
         'Record should not be set by unauthorized user',
       );
+
+      // Verify existing records remain unchanged
+      const existingRecordNames = Object.keys(recordsBeforeAttempt);
+      existingRecordNames.forEach((recordName) => {
+        assert.deepStrictEqual(
+          recordsAfterFailedAttempt[recordName],
+          recordsBeforeAttempt[recordName],
+          `Existing record '${recordName}' should remain unchanged`,
+        );
+      });
     });
 
     it('should fail to remove record when called by non-owner/non-controller', async () => {

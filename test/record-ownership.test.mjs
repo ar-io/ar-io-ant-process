@@ -136,6 +136,27 @@ describe('Record Ownership', async () => {
 
     assertPatchMessage(createResult);
 
+    // Verify initial record state before transfer
+    const recordBeforeTransfer = await getRecord(
+      'transferable',
+      createResult.Memory,
+    );
+    assert.strictEqual(
+      recordBeforeTransfer.owner,
+      recordOwner,
+      'Record should initially be owned by recordOwner',
+    );
+    assert.strictEqual(
+      recordBeforeTransfer.transactionId,
+      STUB_ADDRESS,
+      'Record should have correct initial transaction ID',
+    );
+    assert.strictEqual(
+      recordBeforeTransfer.ttlSeconds,
+      900,
+      'Record should have correct initial TTL',
+    );
+
     // Transfer ownership
     const transferResult = await handle(
       {
@@ -166,6 +187,32 @@ describe('Record Ownership', async () => {
         ),
     );
     assert(notice, 'Ownership transfer notice should be sent to new owner');
+
+    // Verify final record state after successful transfer
+    const recordAfterTransfer = await getRecord(
+      'transferable',
+      transferResult.Memory,
+    );
+    assert.strictEqual(
+      recordAfterTransfer.owner,
+      recipient,
+      'Record ownership should be transferred to recipient',
+    );
+    assert.strictEqual(
+      recordAfterTransfer.transactionId,
+      STUB_ADDRESS,
+      'Record transaction ID should remain unchanged',
+    );
+    assert.strictEqual(
+      recordAfterTransfer.ttlSeconds,
+      900,
+      'Record TTL should remain unchanged',
+    );
+    assert.strictEqual(
+      recordAfterTransfer.priority,
+      recordBeforeTransfer.priority,
+      'Record priority should remain unchanged',
+    );
   });
 
   describe('Transfer Ownership Edge Cases', () => {
@@ -311,6 +358,22 @@ describe('Record Ownership', async () => {
 
       assertPatchMessage(createResult);
 
+      // Verify initial record state before failed transfer attempt
+      const recordBeforeTransfer = await getRecord(
+        'invalidrecipient',
+        createResult.Memory,
+      );
+      assert.strictEqual(
+        recordBeforeTransfer.owner,
+        recordOwner,
+        'Record should initially be owned by recordOwner',
+      );
+      assert.strictEqual(
+        recordBeforeTransfer.transactionId,
+        STUB_ADDRESS,
+        'Record should have correct initial transaction ID',
+      );
+
       const transferInvalidResult = await handle(
         {
           From: recordOwner,
@@ -333,6 +396,27 @@ describe('Record Ownership', async () => {
           'Invalid recipient address',
         ),
         'Error should mention invalid address',
+      );
+
+      // Verify record state remains unchanged after failed transfer
+      const recordAfterFailedTransfer = await getRecord(
+        'invalidrecipient',
+        transferInvalidResult.Memory,
+      );
+      assert.strictEqual(
+        recordAfterFailedTransfer.owner,
+        recordOwner,
+        'Record ownership should remain unchanged',
+      );
+      assert.strictEqual(
+        recordAfterFailedTransfer.transactionId,
+        STUB_ADDRESS,
+        'Record transaction ID should remain unchanged',
+      );
+      assert.strictEqual(
+        recordAfterFailedTransfer.ttlSeconds,
+        900,
+        'Record TTL should remain unchanged',
       );
     });
 
@@ -463,6 +547,11 @@ describe('Record Ownership', async () => {
           ),
       );
       assert(notice, 'Ownership transfer notice should be sent to new owner');
+      const recordRes = await getRecord(
+        'antowntransfer',
+        antOwnerTransferResult.Memory,
+      );
+      assert.equal(recordRes.owner, recipient);
     });
 
     it('should verify ownership actually changes after transfer', async () => {

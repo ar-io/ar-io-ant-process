@@ -57,8 +57,8 @@ function records.setRecord(
 
 	local newRecord = {
 		transactionId = transactionId,
-		ttlSeconds = tonumber(ttlSeconds),
-		priority = name == "@" and 0 or tonumber(priority),
+		ttlSeconds = ttlSeconds,
+		priority = name == "@" and 0 or priority,
 		owner = owner,
 		displayName = displayName,
 		logo = logo,

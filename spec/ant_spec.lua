@@ -46,7 +46,7 @@ describe("Arweave Name Token", function()
 
 	it("Transfers tokens between accounts", function()
 		local to = "1111111111111111111111111111111111111111112"
-		balances.transfer(to) -- happy path
+		balances.transfer(to, false) -- happy path
 
 		assert.are.same(_G.Balances[fake_address], nil)
 		assert.are.same(_G.Balances[to], 1)
@@ -54,7 +54,7 @@ describe("Arweave Name Token", function()
 
 	it("sets a controller", function()
 		local newController = "1111111111111111111111111111111111111111112"
-		controllers.setController(newController) -- happy path
+		controllers.setController(newController, false) -- happy path
 
 		local hasController = nil
 		for _, controller in ipairs(_G.Controllers) do
@@ -82,14 +82,14 @@ describe("Arweave Name Token", function()
 		-- TTL
 		it("sets a record with min ttl", function()
 			local name, transactionId, ttlSeconds = "@", fake_address, 60
-			records.setRecord(name, transactionId, ttlSeconds) -- happy path
+			records.setRecord(name, transactionId, ttlSeconds, nil, nil, nil, nil, nil, nil, fake_address, false) -- happy path
 			assert.are.same(_G.Records["@"].transactionId, fake_address)
 			assert.are.same(_G.Records["@"].ttlSeconds, 60)
 		end)
 
 		it("sets a record with max ttl", function()
 			local name, transactionId, ttlSeconds = "@", fake_address, 86400
-			records.setRecord(name, transactionId, ttlSeconds) -- happy path
+			records.setRecord(name, transactionId, ttlSeconds, nil, nil, nil, nil, nil, nil, fake_address, false) -- happy path
 			assert.are.same(_G.Records["@"].transactionId, fake_address)
 			assert.are.same(_G.Records["@"].ttlSeconds, 86400)
 		end)
@@ -97,7 +97,7 @@ describe("Arweave Name Token", function()
 		-- Priority order
 		it("sets a record with a priority order", function()
 			local name, transactionId, ttlSeconds, priority = "name", fake_address, 60, 1
-			records.setRecord(name, transactionId, ttlSeconds, priority) -- happy path
+			records.setRecord(name, transactionId, ttlSeconds, priority, nil, nil, nil, nil, nil, fake_address, false) -- happy path
 			assert.are.same(_G.Records[name].transactionId, fake_address)
 			assert.are.same(_G.Records[name].ttlSeconds, ttlSeconds)
 			assert.are.same(_G.Records[name].priority, priority)
@@ -105,7 +105,7 @@ describe("Arweave Name Token", function()
 
 		it("sets a record without a priority order", function()
 			local name, transactionId, ttlSeconds, priority = "name", fake_address, 60, nil
-			records.setRecord(name, transactionId, ttlSeconds, priority) -- happy path
+			records.setRecord(name, transactionId, ttlSeconds, priority, nil, nil, nil, nil, nil, fake_address, false) -- happy path
 			assert.are.same(_G.Records[name].transactionId, fake_address)
 			assert.are.same(_G.Records[name].ttlSeconds, ttlSeconds)
 			assert.are.same(_G.Records[name].priority, priority)
@@ -113,19 +113,32 @@ describe("Arweave Name Token", function()
 
 		it("fails to set @ record with priority order greater than 0", function()
 			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 1
-			local status, _ = pcall(records.setRecord, name, transactionId, ttlSeconds, priority)
+			local status, _ = pcall(
+				records.setRecord,
+				name,
+				transactionId,
+				ttlSeconds,
+				priority,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				fake_address,
+				false
+			)
 			assert.is_false(status)
 		end)
 
 		it("sets @ record with priority order of 0", function()
 			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, 0
-			records.setRecord(name, transactionId, ttlSeconds, priority)
+			records.setRecord(name, transactionId, ttlSeconds, priority, nil, nil, nil, nil, nil, fake_address, false)
 			assert.are.same(_G.Records[name].priority, priority)
 		end)
 
 		it("sets @ record with priority order of 0 when priority is nil", function()
 			local name, transactionId, ttlSeconds, priority = "@", fake_address, 60, nil
-			records.setRecord(name, transactionId, ttlSeconds, priority)
+			records.setRecord(name, transactionId, ttlSeconds, priority, nil, nil, nil, nil, nil, fake_address, false)
 			assert.are.same(_G.Records[name].priority, 0)
 		end)
 

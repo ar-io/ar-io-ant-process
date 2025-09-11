@@ -109,7 +109,8 @@ describe('aos Evolve', async () => {
     assert(!fooRes.Output?.output?.includes('bar'));
   });
 
-  it('should evolve the old aos-ant module for backwards compatibility', async () => {
+  // No longer needed, will handle this as a different pattern elsewhere (sdk/arns portal)
+  it.skip('should evolve the old aos-ant module for backwards compatibility', async () => {
     const { handle: tempOriginalHandle, memory: tempStartMemory } =
       await createAntAosLoader(AOS_ANT_OLD_WASM);
 

@@ -2,6 +2,7 @@
 -- @module balances
 
 local utils = require(".common.utils")
+local constants = require(".common.constants")
 
 local balances = {}
 
@@ -42,6 +43,7 @@ end
 ---@return table<string, string>
 function balances.setName(name)
 	assert(type(name) == "string", "Name must be a string")
+	assert(#name <= constants.MAX_NAME_LENGTH, "Name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters")
 	Name = name
 	return { Name = Name }
 end
@@ -60,7 +62,7 @@ end
 ---@return table<string, string>
 function balances.setDescription(description)
 	assert(type(description) == "string", "Description must be a string")
-	assert(#description <= 512, "Description must not be longer than 512 characters")
+	assert(#description <= constants.MAX_DESCRIPTION_LENGTH, "Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters")
 	Description = description
 	return { Description = Description }
 end

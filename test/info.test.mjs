@@ -67,6 +67,7 @@ describe('aos Info', async () => {
       'setDescription',
       'setKeywords',
       'setLogo',
+      'transferRecord',
       'state',
       'releaseName',
       'reassignName',

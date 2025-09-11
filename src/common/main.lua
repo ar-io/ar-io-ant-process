@@ -260,12 +260,13 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.TransferRecord, function(msg)
-		local subdomain = string.lower(msg.Tags["Sub-Domain"])
+		local subdomain = assert(msg.Tags["Sub-Domain"], "Sub-Domain is required")
+			and string.lower(msg.Tags["Sub-Domain"])
 		local recipient = msg.Tags["Recipient"]
 		local caller = msg.From
 
 		-- Validate inputs
-		assert(subdomain, "Sub-Domain is required")
+
 		assert(utils.isValidAOAddress(recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid recipient address")
 
 		-- Check if record exists and has an owner

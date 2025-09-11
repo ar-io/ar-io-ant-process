@@ -108,9 +108,9 @@ describe("Record Ownership", function()
 		it("should transfer ownership to new owner", function()
 			local result = records.transferRecord("owned", validNewOwner)
 
-			assert.are.equal("owned", result.subdomain)
+			assert.are.equal("owned", result.subDomain)
 			assert.are.equal(validRecordOwner, result.previousOwner)
-			assert.are.equal(validNewOwner, result.recipient)
+			assert.are.equal(validNewOwner, result.newOwner)
 			assert.are.equal(validNewOwner, Records["owned"].owner)
 		end)
 

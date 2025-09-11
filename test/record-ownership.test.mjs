@@ -135,7 +135,7 @@ describe('Record Ownership', async () => {
     // Verify transfer
     const transferData = JSON.parse(transferResult.Messages[0].Data);
     assert.equal(transferData.previousOwner, recordOwner);
-    assert.equal(transferData.recipient, recipient);
+    assert.equal(transferData.newOwner, recipient);
 
     // Verify ownership notice was sent
     const notice = transferResult.Messages.find(
@@ -149,6 +149,31 @@ describe('Record Ownership', async () => {
   });
 
   describe('Transfer Ownership Edge Cases', () => {
+    it('should fail when Sub-Domain is missing', async () => {
+      const recipient = 'recipient-addr-'.padEnd(43, '3');
+
+      const transferMissingSubdomainResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Transfer-Record' },
+          // Missing Sub-Domain tag
+          { name: 'Recipient', value: recipient },
+        ],
+      });
+
+      assert(
+        transferMissingSubdomainResult.Messages[0].Tags.find(
+          (t) => t.name === 'Error',
+        ),
+        'Should error when Sub-Domain is missing',
+      );
+      assert(
+        transferMissingSubdomainResult.Messages[0].Data.includes(
+          'Sub-Domain is required',
+        ),
+        'Error should mention Sub-Domain is required',
+      );
+    });
+
     it('should prevent transferring record that does not exist', async () => {
       const recordOwner = 'record-owner-addr-'.padEnd(43, '2');
       const recipient = 'recipient-addr-'.padEnd(43, '3');
@@ -373,7 +398,7 @@ describe('Record Ownership', async () => {
 
       const transferData = JSON.parse(antOwnerTransferResult.Messages[0].Data);
       assert.equal(transferData.previousOwner, recordOwner);
-      assert.equal(transferData.recipient, recipient);
+      assert.equal(transferData.newOwner, recipient);
 
       // Verify ownership notice was sent
       const notice = antOwnerTransferResult.Messages.find(

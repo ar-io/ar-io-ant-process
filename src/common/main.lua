@@ -271,7 +271,7 @@ function ant.init()
 		-- Check if record exists and has an owner
 		local record = Records[subdomain]
 		assert(record ~= nil, "Record does not exist")
-		assert(record.owner ~= nil, "Record has no owner")
+		assert(record.owner ~= nil, "Record has no owner - must have an owner to transfer")
 
 		-- Check permissions (ANT owner/controllers can transfer any record, record owners can transfer their own)
 		utils.assertHasRecordPermission(caller, subdomain)

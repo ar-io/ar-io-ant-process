@@ -11,6 +11,9 @@
     "aos:publish": "node tools/bundle-aos.mjs && node tools/publish-aos.mjs",
     "aos:load": "node tools/bundle-aos.mjs && node tools/load-aos.mjs",
     "aos:spawn": "node tools/spawn-aos.mjs",
+    "hyper:build": "yarn aos:build && node tools/bundle-hyper-ant.mjs",
+    "hyper:publish": "yarn hyper:build && node tools/publish-hyper-ant.mjs",
+    "hyper:spawn": "node tools/spawn-hyper-ant.mjs",
     "test": "yarn aos:build && node --test --experimental-wasm-memory64 **/*.test.mjs",
     "install-lua-deps": "sh tools/install-lua-deps.sh && luarocks install ar-io-ao-0.1-1.rockspec",
     "propose-version": "node tools/propose-version.mjs",
@@ -25,7 +28,8 @@
     "js-yaml": "^4.1.0",
     "lint-staged": "^15.2.10",
     "markdown-toc-gen": "^1.1.0",
-    "prettier": "^3.3.2"
+    "prettier": "^3.3.2",
+    "wao": "^0.35.6"
   },
   "lint-staged": {
     "*.lua": [

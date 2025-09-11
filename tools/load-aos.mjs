@@ -1,4 +1,4 @@
-import AoLoader from '@permaweb/ao-loader';
+import { AoLoader } from '@permaweb/ao-loader';
 import { AOS_ANT_WASM } from './constants.mjs';
 
 const {
@@ -38,6 +38,7 @@ async function main() {
     );
 
     programState = result.Memory;
+    console.dir({ method, result }, { depth: null });
   }
 }
 main();

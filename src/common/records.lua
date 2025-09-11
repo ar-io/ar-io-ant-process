@@ -52,11 +52,17 @@ function records.setRecord(
 		utils.assertHasPermission(caller)
 	end
 
-	-- Validate @ record priority before creating the record
-	assert(name == "@" and priority == nil or priority == 0, "Cannot assign priority to @ record")
+	-- Validate @ record priority - users cannot set non-zero priority for @ record
+	if name == "@" then
+		assert(
+			priority == nil or priority == 0,
+			"Cannot assign non-zero priority to @ record. @ record priority must be 0."
+		)
+	end
 	utils.validateKeywords(keywords or {})
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
-	utils.validateTTLSeconds(ttlSeconds or 0)
+	assert(ttlSeconds ~= nil, "TTL-Seconds is required")
+	utils.validateTTLSeconds(ttlSeconds)
 	assert(
 		(priority == nil or ((priority == 0 or priority > 0) and math.type(priority) == "integer")),
 		"Priority must be an integer greater than or equal to 0"

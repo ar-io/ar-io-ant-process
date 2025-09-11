@@ -22,6 +22,26 @@ describe('Record Ownership', async () => {
     );
   }
 
+  async function getRecord(name, mem) {
+    const res = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Record' },
+          { name: 'Sub-Domain', value: name },
+        ],
+      },
+      mem,
+    );
+
+    // Check if it's an error message
+    const message = res.Messages[0];
+    if (message.Tags.find((tag) => tag.name === 'Error')) {
+      throw new Error(`Failed to get record: ${message.Data}`);
+    }
+
+    return JSON.parse(message.Data);
+  }
+
   it('should allow ANT owner to assign record ownership', async () => {
     const recordOwner = 'record-owner-addr-'.padEnd(43, '2');
 
@@ -219,6 +239,24 @@ describe('Record Ownership', async () => {
 
       assertPatchMessage(createResult);
 
+      // Verify the record was created without an owner
+      const recordAfterCreate = await getRecord('noowner', createResult.Memory);
+      assert.strictEqual(
+        recordAfterCreate.owner,
+        undefined,
+        'Record should not have an owner',
+      );
+      assert.strictEqual(
+        recordAfterCreate.transactionId,
+        STUB_ADDRESS,
+        'Record should have the correct transaction ID',
+      );
+      assert.strictEqual(
+        recordAfterCreate.ttlSeconds,
+        900,
+        'Record should have the correct TTL',
+      );
+
       const transferNoOwnerResult = await handle(
         {
           From: recordOwner,
@@ -239,6 +277,22 @@ describe('Record Ownership', async () => {
       assert(
         transferNoOwnerResult.Messages[0].Data.includes('Record has no owner'),
         'Error should mention record has no owner',
+      );
+
+      // Verify the record still exists and was not transferred
+      const recordAfterFailedTransfer = await getRecord(
+        'noowner',
+        transferNoOwnerResult.Memory,
+      );
+      assert.strictEqual(
+        recordAfterFailedTransfer.owner,
+        undefined,
+        'Record should still have no owner after failed transfer',
+      );
+      assert.strictEqual(
+        recordAfterFailedTransfer.transactionId,
+        STUB_ADDRESS,
+        'Record transaction ID should remain unchanged',
       );
     });
 

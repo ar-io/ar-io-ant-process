@@ -148,7 +148,7 @@ function records.transferRecord(name, recipient, allowUnsafeAddresses)
 	Records[name].owner = recipient
 
 	return {
-		subdomain = name,
+		subDomain = name,
 		previousOwner = previousOwner,
 		newOwner = recipient,
 		recipient = recipient,

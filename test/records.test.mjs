@@ -256,6 +256,38 @@ describe('aos Records', async () => {
     assertPatchMessage(recordsResult);
   });
 
+  it('should fail when Sub-Domain is missing', async () => {
+    const setRecordResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        // Missing Sub-Domain tag
+        { name: 'TTL-Seconds', value: '900' },
+        { name: 'Transaction-Id', value: STUB_ADDRESS },
+      ],
+    });
+
+    assert.equal(
+      setRecordResult.Messages.length,
+      2,
+      'Expected patch and error message',
+    );
+    assertPatchMessage(setRecordResult);
+
+    const errorMessage = setRecordResult.Messages[0];
+    assert.strictEqual(
+      errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+      'Set-Record-Error',
+      'Expected error tag in response',
+    );
+
+    assert(
+      errorMessage.Data.includes(
+        "bad argument #1 to 'lower' (string expected, got nil)",
+      ),
+      `Error message should indicate Sub-Domain is missing. Actual: ${errorMessage.Data}`,
+    );
+  });
+
   describe('Authorization Tests', () => {
     const UNAUTHORIZED_ADDRESS = 'unauthorized-address-'.padEnd(43, '9');
 

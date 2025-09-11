@@ -17,7 +17,7 @@ local initialize = {}
 ---}
 
 --- Initializes the ANT state from a JSON string
----@param state InitialANTState
+---@param state string
 ---@return string JSON representation of the initialized ANT State
 function initialize.initializeANTState(state)
 	local encoded = json.decode(state)

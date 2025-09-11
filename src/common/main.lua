@@ -74,8 +74,8 @@ function ant.init()
 		-- IO Network Contract Handlers
 		ReleaseName = "Release-Name",
 		ReassignName = "Reassign-Name",
-		ApproveName = "Approve-Primary-Name",
-		RemoveNames = "Remove-Primary-Names",
+		ApprovePrimaryName = "Approve-Primary-Name",
+		RemovePrimaryNames = "Remove-Primary-Names",
 	}
 
 	local TokenSpecActionMap = {
@@ -190,59 +190,18 @@ function ant.init()
 	end)
 
 	createActionHandler(ActionMap.SetRecord, function(msg)
+		local caller = msg.From
+		local allowUnsafeAddresses = msg.Tags["Allow-Unsafe-Addresses"]
+
 		local name = string.lower(msg.Tags["Sub-Domain"])
 		local transactionId = msg.Tags["Transaction-Id"]
 		local ttlSeconds = tonumber(msg.Tags["TTL-Seconds"])
 		local priority = tonumber(msg.Tags["Priority"])
 		local owner = msg.Tags["Record-Owner"]
-		local displayName = msg.Tags["Name"]
+		local displayName = msg.Tags["Display-Name"]
 		local logo = msg.Tags["Logo"]
 		local description = msg.Tags["Description"]
-		local keywords = msg.Tags["Keywords"]
-		-- Check permissions based on whether record exists
-		local existingRecord = Records[name]
-		-- only ANT owner/controllers can set priority for existing records - this is to prevent  undername owners from setting priority
-		if existingRecord and priority == nil then
-			-- For existing records, check record-specific permission
-			utils.assertHasRecordPermission(msg.From, name)
-		else
-			-- For new records, only ANT owner/controllers can create
-			utils.assertHasPermission(msg.From)
-		end
-
-		assert(type(ttlSeconds) == "number", "Missing ttl seconds, received: " .. json.encode(msg.Tags))
-
-		-- Handle optional metadata fields
-
-		-- Owner assignment requires ANT-level permission (only when explicitly setting a new owner)
-		local explicitOwner = msg.Tags["Record-Owner"]
-		if explicitOwner then
-			utils.assertHasPermission(msg.From)
-			assert(utils.isValidAOAddress(explicitOwner, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid owner address")
-		end
-
-		-- Validate optional metadata using existing patterns
-		if displayName then
-			assert(
-				type(displayName) == "string" and #displayName <= constants.MAX_NAME_LENGTH,
-				"Record name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
-			)
-		end
-		if logo then
-			assert(utils.isValidArweaveAddress(logo), "Invalid logo arweave ID")
-		end
-		if description then
-			assert(
-				type(description) == "string" and #description <= constants.MAX_DESCRIPTION_LENGTH,
-				"Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters"
-			)
-		end
-		if keywords then
-			local success, decodedKeywords = pcall(json.decode, keywords)
-			assert(success and type(decodedKeywords) == "table", "Invalid JSON format for keywords")
-			utils.validateKeywords(decodedKeywords)
-			keywords = decodedKeywords
-		end
+		local keywords = msg.Tags["Keywords"] and json.decode(msg.Tags["Keywords"]) or nil
 
 		return records.setRecord(
 			name,
@@ -253,7 +212,9 @@ function ant.init()
 			displayName,
 			logo,
 			description,
-			keywords
+			keywords,
+			caller,
+			allowUnsafeAddresses
 		)
 	end)
 
@@ -316,23 +277,19 @@ function ant.init()
 		utils.assertHasRecordPermission(caller, subdomain)
 
 		-- Use existing transfer function with proper garbage collection
-		local result = records.transferRecord(subdomain, recipient, msg.Tags["Allow-Unsafe-Addresses"])
+		local transferResult = records.transferRecord(subdomain, recipient, msg.Tags["Allow-Unsafe-Addresses"])
 
-		-- Send ownership transfer notice to new owner
-		ao.send({
-			Target = recipient,
-			Action = "Record-Ownership-Transfer-Notice",
-			["Sub-Domain"] = subdomain,
-			["Previous-Owner"] = result.previousOwner,
-			Data = json.encode(result),
-		})
-
-		-- Send response back to caller
+		-- send an additional notice to the new owner to notify them of the ownership transfer
 		utils.Send(msg, {
-			Target = msg.From,
-			Action = "Record-Ownership-Transferred",
-			Data = json.encode(result),
+			Target = recipient,
+			Action = "Transfer-Record-Notice",
+			["Sub-Domain"] = subdomain,
+			["Previous-Owner"] = transferResult.previousOwner,
+			Data = json.encode(transferResult),
 		})
+
+		-- return the result so createActionHandler sends a notice to the caller
+		return transferResult
 	end)
 
 	createActionHandler(ActionMap.State, function()
@@ -397,35 +354,49 @@ function ant.init()
 		})
 	end)
 
-	createActionHandler(ActionMap.ApproveName, function(msg)
+	createActionHandler(ActionMap.ApprovePrimaryName, function(msg)
 		local caller = msg.From
 		assert(msg.Tags.Name, "Name is required")
 		local name = string.lower(msg.Tags.Name)
-		local recipient = msg.Tags.Recipient
 		local ioProcess = msg.Tags["IO-Process-Id"]
 		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
+
+		local recipient = msg.Tags.Recipient
 		assert(utils.isValidAOAddress(recipient, msg.Tags["Allow-Unsafe-Addresses"]), "Invalid AO Address")
 
 		local undername = utils.undernameForName(name)
+		local isAntOwner = caller == Owner
+		local isRecordOwner = Records[undername] ~= nil and Records[undername].owner == caller
 
-		if undername == nil then
-			-- Only ANT owner can approve the @ record
-			utils.assertHasPermission(caller)
-		else
-			utils.validateUndername(undername)
-			utils.assertHasRecordPermission(caller, undername)
-			assert(recipient == caller, "Undername owners can only approve names for themselves")
+		assert(
+			isAntOwner or isRecordOwner,
+			"Only the ANT owner or the record owner can approve primary name requests for " .. name
+		)
+
+		if isAntOwner then
+			utils.Send(msg, {
+				Target = ioProcess,
+				Action = "Approve-Primary-Name-Request",
+				Name = name,
+				Recipient = recipient,
+			})
+			return
 		end
 
-		utils.Send(msg, {
-			Target = ioProcess,
-			Action = "Approve-Primary-Name-Request",
-			Name = name,
-			Recipient = recipient,
-		})
+		if isRecordOwner then
+			assert(undername ~= nil, "Undername must be provided")
+			assert(recipient == caller, "Undername owners can only approve names for themselves")
+			utils.Send(msg, {
+				Target = ioProcess,
+				Action = "Approve-Primary-Name-Request",
+				Name = name,
+				Recipient = recipient,
+			})
+			return
+		end
 	end)
 
-	createActionHandler(ActionMap.RemoveNames, function(msg)
+	createActionHandler(ActionMap.RemovePrimaryNames, function(msg)
 		local caller = msg.From
 		assert(utils.isValidArweaveAddress(msg.Tags["IO-Process-Id"]), "Invalid Arweave ID")
 		assert(msg.Tags.Names, "Names are required")
@@ -435,16 +406,16 @@ function ant.init()
 
 		-- Validate each name
 		for _, name in ipairs(names) do
+			utils.validateUndername(name)
 			local lowerName = string.lower(name)
 			local undername = utils.undernameForName(lowerName)
+			local isAntOwner = caller == Owner
+			local isRecordOwner = Records[undername] ~= nil and Records[undername].owner == caller
 
-			if undername == nil then
-				-- Only ANT owner can approve base names
-				utils.assertHasPermission(caller)
-			else
-				utils.validateUndername(undername)
-				utils.assertHasRecordPermission(caller, undername)
-			end
+			assert(
+				isAntOwner or isRecordOwner,
+				"Only the ANT owner or the record owner can remove primary names for " .. name
+			)
 		end
 
 		utils.Send(msg, {

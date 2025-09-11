@@ -36,7 +36,9 @@ describe("Record Ownership", function()
 				"Test Record",
 				validLogoTxId,
 				"Test description",
-				{ "keyword1", "keyword2" }
+				{ "keyword1", "keyword2" },
+				validOwner,
+				false
 			)
 
 			assert.are.equal(validTxId, result.transactionId)
@@ -50,13 +52,13 @@ describe("Record Ownership", function()
 		end)
 
 		it("should allow setting a record without optional fields", function()
-			local result = records.setRecord("minimal", validTxId, 900)
+			local result = records.setRecord("minimal", validTxId, 900, nil, nil, nil, nil, nil, nil, validOwner, false)
 
 			assert.are.equal(validTxId, result.transactionId)
 			assert.are.equal(900, result.ttlSeconds)
 			assert.is_nil(result.priority)
 			assert.is_nil(result.owner)
-			assert.is_nil(result.name)
+			assert.is_nil(result.displayName)
 			assert.is_nil(result.logo)
 			assert.is_nil(result.description)
 			assert.is_nil(result.keywords)
@@ -64,19 +66,31 @@ describe("Record Ownership", function()
 
 		it("should validate undername", function()
 			assert.has_error(function()
-				records.setRecord("invalid-name-too-long-" .. string.rep("a", 50), "tx-id", 900)
+				records.setRecord(
+					"invalid-name-too-long-" .. string.rep("a", 50),
+					"tx-id",
+					900,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					validOwner,
+					false
+				)
 			end, constants.UNDERNAME_DOES_NOT_EXIST_MESSAGE)
 		end)
 
 		it("should validate transaction ID", function()
 			assert.has_error(function()
-				records.setRecord("test", "invalid-tx", 900)
+				records.setRecord("test", "invalid-tx", 900, nil, nil, nil, nil, nil, nil, validOwner, false)
 			end, "Invalid Arweave ID")
 		end)
 
 		it("should validate TTL seconds", function()
 			assert.has_error(function()
-				records.setRecord("test", validTxId, 30)
+				records.setRecord("test", validTxId, 30, nil, nil, nil, nil, nil, nil, validOwner, false)
 			end, constants.INVALID_TTL_MESSAGE)
 		end)
 	end)
@@ -134,7 +148,7 @@ describe("Record Ownership", function()
 				ttlSeconds = 900,
 				priority = 1,
 				owner = validRecordOwner,
-				name = "My Record",
+				displayName = "My Record",
 				logo = validLogoTxId,
 				description = "A test record",
 				keywords = { "test", "record" },
@@ -144,7 +158,7 @@ describe("Record Ownership", function()
 
 			assert.are.equal(validTxId, result.transactionId)
 			assert.are.equal(validRecordOwner, result.owner)
-			assert.are.equal("My Record", result.name)
+			assert.are.equal("My Record", result.displayName)
 			assert.are.equal(validLogoTxId, result.logo)
 			assert.are.equal("A test record", result.description)
 			assert.are.same({ "test", "record" }, result.keywords)
@@ -157,7 +171,7 @@ describe("Record Ownership", function()
 				transactionId = validTxId,
 				ttlSeconds = 900,
 				owner = validOwner2,
-				name = "Record One",
+				displayName = "Record One",
 			}
 			Records["two"] = {
 				transactionId = validTxId2,
@@ -169,11 +183,11 @@ describe("Record Ownership", function()
 
 			assert.are.equal(validTxId, result["one"].transactionId)
 			assert.are.equal(validOwner2, result["one"].owner)
-			assert.are.equal("Record One", result["one"].name)
+			assert.are.equal("Record One", result["one"].displayName)
 
 			assert.are.equal(validTxId2, result["two"].transactionId)
 			assert.is_nil(result["two"].owner)
-			assert.is_nil(result["two"].name)
+			assert.is_nil(result["two"].displayName)
 		end)
 	end)
 end)

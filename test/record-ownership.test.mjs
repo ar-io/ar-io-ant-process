@@ -33,12 +33,10 @@ describe('Record Ownership', async () => {
         { name: 'Transaction-Id', value: STUB_ADDRESS },
         { name: 'TTL-Seconds', value: '900' },
         { name: 'Record-Owner', value: recordOwner },
-        { name: 'Name', value: 'Test Subdomain' },
+        { name: 'Display-Name', value: 'Test Subdomain' },
         { name: 'Description', value: 'A test subdomain with ownership' },
       ],
     });
-
-    console.dir(setRecordResult, { depth: null });
 
     assertPatchMessage(setRecordResult);
 
@@ -85,7 +83,8 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'owned' },
           { name: 'Transaction-Id', value: 'updated-tx-id-'.padEnd(43, '2') },
           { name: 'TTL-Seconds', value: '1800' },
-          { name: 'Name', value: 'Updated by Owner' },
+          { name: 'Display-Name', value: 'Updated by Owner' },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       },
       createResult.Memory,
@@ -143,9 +142,7 @@ describe('Record Ownership', async () => {
       (m) =>
         m.Target === recipient &&
         m.Tags.find(
-          (t) =>
-            t.name === 'Action' &&
-            t.value === 'Record-Ownership-Transfer-Notice',
+          (t) => t.name === 'Action' && t.value === 'Transfer-Record-Notice',
         ),
     );
     assert(notice, 'Ownership transfer notice should be sent to new owner');
@@ -254,7 +251,7 @@ describe('Record Ownership', async () => {
       );
       assert(
         transferInvalidResult.Messages[0].Data.includes(
-          'Invalid new owner address',
+          'Invalid recipient address',
         ),
         'Error should mention invalid address',
       );
@@ -383,9 +380,7 @@ describe('Record Ownership', async () => {
         (m) =>
           m.Target === recipient &&
           m.Tags.find(
-            (t) =>
-              t.name === 'Action' &&
-              t.value === 'Record-Ownership-Transfer-Notice',
+            (t) => t.name === 'Action' && t.value === 'Transfer-Record-Notice',
           ),
       );
       assert(notice, 'Ownership transfer notice should be sent to new owner');
@@ -449,7 +444,8 @@ describe('Record Ownership', async () => {
               value: 'new-owner-update-'.padEnd(43, '5'),
             },
             { name: 'TTL-Seconds', value: '1800' },
-            { name: 'Name', value: 'Updated by New Owner' },
+            { name: 'Display-Name', value: 'Updated by New Owner' },
+            { name: 'Record-Owner', value: recipient },
           ],
         },
         transferResult.Memory,
@@ -581,7 +577,7 @@ describe('Record Ownership', async () => {
         Owner: recordOwner,
         Tags: [
           { name: 'Action', value: 'Approve-Primary-Name' },
-          { name: 'Name', value: 'secured_testant' },
+          { name: 'Display-Name', value: 'secured_testant' },
           { name: 'Recipient', value: someoneElse },
           { name: 'IO-Process-Id', value: ioProcessId },
         ],
@@ -595,8 +591,8 @@ describe('Record Ownership', async () => {
     // Should have error
     const errorMsg = approveResult.Messages[0];
     assert(
-      errorMsg.Tags.find((t) => t.name === 'Action'),
-      'Invalid-Approve-Primary-Name-Notice',
+      errorMsg.Tags.find((t) => t.name === 'Action')?.value ===
+        'Invalid-Approve-Primary-Name-Notice',
     );
   });
 
@@ -609,7 +605,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'validname' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'Valid Display Name' },
+          { name: 'Display-Name', value: 'Valid Display Name' },
         ],
       });
 
@@ -635,7 +631,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'metadata1' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'A'.repeat(62) }, // Too long
+          { name: 'Display-Name', value: 'A'.repeat(62) }, // Too long
         ],
       });
 
@@ -651,7 +647,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'exactlimit' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'A'.repeat(61) }, // Exactly at limit
+          { name: 'Display-Name', value: 'A'.repeat(61) }, // Exactly at limit
         ],
       });
 
@@ -912,7 +908,7 @@ describe('Record Ownership', async () => {
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
           { name: 'Record-Owner', value: recordOwner },
-          { name: 'Name', value: 'Multi Field Record' },
+          { name: 'Display-Name', value: 'Multi Field Record' },
           {
             name: 'Description',
             value: 'A record with multiple metadata fields',
@@ -949,7 +945,7 @@ describe('Record Ownership', async () => {
       ]);
     });
 
-    it('should preserve metadata fields during partial updates', async () => {
+    it('should update metadata fields when all fields are provided', async () => {
       const recordOwner = 'preserve-owner-'.padEnd(43, '4');
       const originalKeywords = JSON.stringify(['original', 'keywords']);
 
@@ -961,7 +957,7 @@ describe('Record Ownership', async () => {
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
           { name: 'Record-Owner', value: recordOwner },
-          { name: 'Name', value: 'Original Name' },
+          { name: 'Display-Name', value: 'Original Name' },
           { name: 'Description', value: 'Original description' },
           { name: 'Logo', value: 'original-logo-'.padEnd(43, '3') },
           { name: 'Keywords', value: originalKeywords },
@@ -970,7 +966,7 @@ describe('Record Ownership', async () => {
 
       assertPatchMessage(createResult);
 
-      // Update only displayName and TTL, should preserve other fields
+      // Update displayName and TTL, must provide all fields now
       const updateResult = await handle(
         {
           From: recordOwner,
@@ -980,7 +976,11 @@ describe('Record Ownership', async () => {
             { name: 'Sub-Domain', value: 'preserve' },
             { name: 'Transaction-Id', value: 'updated-tx-id-'.padEnd(43, '4') },
             { name: 'TTL-Seconds', value: '1800' },
-            { name: 'Name', value: 'Updated Name' },
+            { name: 'Display-Name', value: 'Updated Name' },
+            { name: 'Record-Owner', value: recordOwner },
+            { name: 'Description', value: 'Original description' },
+            { name: 'Logo', value: 'original-logo-'.padEnd(43, '3') },
+            { name: 'Keywords', value: originalKeywords },
           ],
         },
         createResult.Memory,
@@ -1003,7 +1003,7 @@ describe('Record Ownership', async () => {
       assert.equal(recordData.transactionId, 'updated-tx-id-'.padEnd(43, '4'));
       assert.equal(recordData.ttlSeconds, 1800);
       assert.equal(recordData.displayName, 'Updated Name');
-      // Preserved fields
+      // All fields should be as provided
       assert.equal(recordData.owner, recordOwner);
       assert.equal(recordData.description, 'Original description');
       assert.equal(recordData.logo, 'original-logo-'.padEnd(43, '3'));
@@ -1017,7 +1017,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'unicode' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: 'Unicode Test 🌟 ñáéíóú' },
+          { name: 'Display-Name', value: 'Unicode Test 🌟 ñáéíóú' },
           {
             name: 'Description',
             value: 'Description with émojis 🎉 and spëcial chars: !@#$%^&*()',
@@ -1052,7 +1052,7 @@ describe('Record Ownership', async () => {
           { name: 'Sub-Domain', value: 'emptystrings' },
           { name: 'Transaction-Id', value: STUB_ADDRESS },
           { name: 'TTL-Seconds', value: '900' },
-          { name: 'Name', value: '' },
+          { name: 'Display-Name', value: '' },
           { name: 'Description', value: '' },
         ],
       });

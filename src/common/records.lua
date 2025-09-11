@@ -1,4 +1,5 @@
 local utils = require(".common.utils")
+local constants = require(".common.constants")
 
 local records = {}
 -- defaults to landing page txid
@@ -12,71 +13,83 @@ Records = Records
 	}
 
 --- Set a record in the Records of the ANT.
----@param name string The name of the record.
----@param transactionId string The transaction ID of the record.
----@param ttlSeconds number The time-to-live in seconds for the record.
----@param priority integer|nil The sort order of the record - must be nil or 1 or greater
+---@param name string The name of the record to set
+---@param transactionId string The transaction ID of the record
+---@param ttlSeconds integer|nil The TTL seconds of the record
+---@param priority integer|nil The priority of the record
 ---@param owner string|nil The owner of the record
 ---@param displayName string|nil The display name of the record
----@param logo string|nil The logo transaction ID
+---@param logo string|nil The logo of the record
 ---@param description string|nil The description of the record
----@param keywords table<string>|nil The keywords for the record
+---@param keywords table<string>|nil The keywords of the record
+---@param caller string The caller of the record
+---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
 ---@return Record
-function records.setRecord(name, transactionId, ttlSeconds, priority, owner, displayName, logo, description, keywords)
+function records.setRecord(
+	name,
+	transactionId,
+	ttlSeconds,
+	priority,
+	owner,
+	displayName,
+	logo,
+	description,
+	keywords,
+	caller,
+	allowUnsafeAddresses
+)
 	utils.validateUndername(name)
-	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
-	utils.validateTTLSeconds(ttlSeconds)
-	if priority then
-		if name == "@" then
-			assert(priority == 0, "Priority for '@' must be 0, but received " .. tostring(priority))
-		else
-			assert(
-				math.type(priority) == "integer" and priority > 0,
-				"Priority must be an integer greater than 0, but received " .. tostring(priority)
-			)
-		end
+
+	-- Check permissions based on whether record exists
+	local recordDoesExist = Records[name] ~= nil
+
+	-- only ANT owner/controllers can set priority for existing records - this is to prevent  undername owners from setting priority
+	if recordDoesExist and priority == nil then
+		-- For existing records, check record-specific permission
+		utils.assertHasRecordPermission(caller, name)
+	else
+		-- For new records, only ANT owner/controllers can create
+		utils.assertHasPermission(caller)
 	end
 
-	local previousRecord = Records[name] or {}
+	-- Validate @ record priority before creating the record
+	if name == "@" and priority ~= nil and priority ~= 0 then
+		error("Cannot assign priority to @ record")
+	end
 
-	local record = {
+	local newRecord = {
 		transactionId = transactionId,
-		ttlSeconds = ttlSeconds,
-		priority = name == "@" and 0 or priority,
+		ttlSeconds = tonumber(ttlSeconds),
+		priority = name == "@" and 0 or tonumber(priority),
+		owner = owner,
+		displayName = displayName,
+		logo = logo,
+		description = description,
+		keywords = keywords,
 	}
 
-	-- Add optional fields only if provided
-	if owner then
-		record.owner = owner
-	elseif previousRecord and previousRecord.owner then
-		record.owner = previousRecord.owner
-	end
+	utils.validateKeywords(newRecord.keywords or {})
+	assert(utils.isValidArweaveAddress(newRecord.transactionId), "Invalid Arweave ID")
+	utils.validateTTLSeconds(newRecord.ttlSeconds)
+	assert(
+		(
+			newRecord.priority == nil
+			or ((newRecord.priority == 0 or newRecord.priority > 0) and math.type(newRecord.priority) == "integer")
+		),
+		"Priority must be an integer greater than 0"
+	)
+	assert(
+		newRecord.owner == nil or utils.isValidAOAddress(newRecord.owner, allowUnsafeAddresses),
+		"Invalid owner address"
+	)
+	assert(newRecord.displayName == nil or #newRecord.displayName <= constants.MAX_NAME_LENGTH, "Invalid display name")
+	assert(newRecord.logo == nil or utils.isValidArweaveAddress(newRecord.logo), "Invalid logo")
+	assert(
+		newRecord.description == nil or #newRecord.description <= constants.MAX_DESCRIPTION_LENGTH,
+		"Invalid description"
+	)
 
-	if displayName then
-		record.displayName = displayName
-	elseif previousRecord and previousRecord.displayName then
-		record.displayName = previousRecord.displayName
-	end
-
-	if logo then
-		record.logo = logo
-	elseif previousRecord and previousRecord.logo then
-		record.logo = previousRecord.logo
-	end
-
-	if description then
-		record.description = description
-	elseif previousRecord and previousRecord.description then
-		record.description = previousRecord.description
-	end
-
-	if keywords then
-		record.keywords = keywords
-	elseif previousRecord and previousRecord.keywords then
-		record.keywords = previousRecord.keywords
-	end
-
-	Records[name] = record
+	Records[name] = newRecord
 
 	return Records[name]
 end
@@ -131,7 +144,9 @@ function records.transferRecord(name, recipient, allowUnsafeAddresses)
 	return {
 		subdomain = name,
 		previousOwner = previousOwner,
+		newOwner = recipient,
 		recipient = recipient,
+		record = Records[name],
 	}
 end
 

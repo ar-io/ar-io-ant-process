@@ -1,9 +1,9 @@
 # Undername Ownership - Delegated Control for ANT Records
 
 - Status: accepted
-- Approvers: [to be determined]
+- Approvers: [Dylan, Phil]
 - Date: 2025-08-01
-- Authors: Claude Code, Contributors
+- Authors: Claude Code, Atticus, Dylan, Phil
 
 ## Context and Problem Statement
 
@@ -68,18 +68,18 @@ We implemented the **Hierarchical Permission Model** where:
 
 ### Extended Record Type
 
-Records now support optional ownership and metadata fields:
+Records support optional ownership and metadata fields:
 
 ```lua
 ---@alias Record {
 --- transactionId: string,
 --- ttlSeconds: integer,
---- priority: integer|nil,
---- owner: string|nil,           -- NEW: Record owner address
---- name: string|nil,             -- NEW: Display name (max 50 chars)
---- logo: string|nil,             -- NEW: Arweave TX ID for logo
---- description: string|nil,      -- NEW: Description (max 300 chars)
---- keywords: table<string>|nil   -- NEW: Keywords array
+--- priority: integer|nil,        -- For non-@ undernames (> 0); '@' must be 0
+--- owner: string|nil,            -- Record owner address
+--- displayName: string|nil,      -- Display name (max 61 chars)
+--- logo: string|nil,             -- Arweave TX ID for logo
+--- description: string|nil,      -- Description (max 512 chars)
+--- keywords: table<string>|nil   -- Up to 16 keywords; each <= 32 chars
 ---}
 ```
 
@@ -89,80 +89,89 @@ Records now support optional ownership and metadata fields:
 2. **Controllers**: Full control via Controllers array
 3. **Record Owners**: Control only their specific record
 
-### New Handlers
+### Transfer-Record
 
-#### Transfer-Record
+Transfers ownership of a specific record to a new address.
 
-Transfers ownership of a specific record to a new address:
-
-```lua
-{
-  Action = "Transfer-Record",
-  SubDomain = "example",
-  NewOwner = "address123..."
-}
-```
-
-#### Revoke-Record-Ownership
-
-ANT owner/controllers can revoke any record ownership:
+Request tags (Action: `Transfer-Record`):
 
 ```lua
 {
-  Action = "Revoke-Record-Ownership",
-  SubDomain = "example"
+  ["Sub-Domain"] = "example",
+  Recipient = "address123..."
 }
 ```
 
-#### Set-Record-Metadata
+Permissions:
 
-Update only metadata fields without requiring transactionId:
-
-```lua
-{
-  Action = "Set-Record-Metadata",
-  SubDomain = "example",
-  Owner = "address123...",         -- Optional (ANT owner/controllers only)
-  ["Record-Name"] = "New Name",    -- Optional
-  ["Record-Logo"] = "logoTx123...",-- Optional
-  ["Record-Description"] = "...",  -- Optional
-  ["Record-Keywords"] = '["blog"]' -- Optional (JSON array)
-}
-```
+- ANT owner/controllers may transfer any record
+- Record owner may transfer their own record
 
 ### Updated Handlers
 
 #### Set-Record
 
-Now accepts optional ownership and metadata parameters:
+Set or update a record. Optional ownership and metadata fields are supported.
+
+Request tags (Action: `Set-Record`):
 
 ```lua
 {
-  Action = "Set-Record",
-  SubDomain = "example",
-  TransactionId = "tx123...",
-  TtlSeconds = "3600",
-  Owner = "address123...",      -- Optional
-  Name = "Example Site",         -- Optional
-  Logo = "logoTx123...",         -- Optional
-  Description = "...",           -- Optional
-  Keywords = '["defi","dao"]'    -- Optional, JSON array
+  ["Sub-Domain"] = "example",
+  ["Transaction-Id"] = "tx123...",
+  ["TTL-Seconds"] = "3600",
+  ["Priority"] = "1",                  -- Optional; only ANT owner/controllers
+  ["Record-Owner"] = "address123...",  -- Optional; only ANT owner/controllers
+  ["Display-Name"] = "Example Site",   -- Optional (<= 61 chars)
+  Logo = "logoTx123...",                -- Optional (valid Arweave TX)
+  Description = "...",                  -- Optional (<= 512 chars)
+  Keywords = '["defi","dao"]'        -- Optional (JSON array)
 }
 ```
 
+Permissions:
+
+- New records: only ANT owner/controllers can create
+- Existing records: record owner may update (ANT owner/controllers retain full
+  control)
+- Priority and explicit owner assignment require ANT owner/controllers
+
 #### Approve-Primary-Name / Remove-Primary-Names
 
-Record owners can only set/remove primary names for themselves:
+Approve-Primary-Name (Action: `Approve-Primary-Name`):
 
-- Must be the record owner
-- Recipient must match the caller's address
+```lua
+{
+  Name = "alice",                     -- undername or base name
+  ["IO-Process-Id"] = "ioTx...",     -- required IO process id
+  Recipient = "ownerAddress"           -- must be a valid AO address
+}
+```
+
+Permissions:
+
+- ANT owner OR record owner may approve
+- If record owner approves, `Recipient` must equal the caller
+
+Remove-Primary-Names (Action: `Remove-Primary-Names`):
+
+```lua
+{
+  ["IO-Process-Id"] = "ioTx...",
+  Names = "name1,name2,name3"
+}
+```
+
+Permissions:
+
+- ANT owner OR corresponding record owner for each name
 
 ### Security Measures
 
-1. **Atomic Operations**: All state changes wrapped with `collectgarbage()`
-2. **Permission Validation**: New `assertHasRecordPermission()` utility
-3. **Input Validation**: All addresses, metadata, and parameters validated
-4. **Notice System**: Proper notices sent for all ownership changes
+1. **Permission Validation**: `assertHasPermission()` and
+   `assertHasRecordPermission()`
+2. **Input Validation**: All addresses, metadata, and parameters validated
+3. **Notice System**: Proper notices sent for all ownership changes
 
 ### State Management
 
@@ -173,21 +182,14 @@ Records = {
   ["example"] = {
     transactionId = "...",
     ttlSeconds = 3600,
-    owner = "address123...",        -- Record owner
-    name = "Example Site",
+    owner = "address123...",
+    displayName = "Example Site",
     logo = "logoTx...",
     description = "A sample site",
     keywords = {"sample", "example"}
   }
 }
 ```
-
-### Registry Integration
-
-When ANT ownership transfers occur, the registry receives the complete state
-including all record ownership data. Individual record ownership changes do not
-trigger registry notifications - the registry is updated on the next ANT-level
-state change.
 
 ## Usage Examples
 
@@ -198,11 +200,11 @@ state change.
 Send({
   Target = antProcessId,
   Action = "Set-Record",
-  SubDomain = "alice",
-  TransactionId = "tx123...",
-  TtlSeconds = "86400",
-  Owner = "aliceAddress123...",
-  Name = "Alice's Site"
+  ["Sub-Domain"] = "alice",
+  ["Transaction-Id"] = "tx123...",
+  ["TTL-Seconds"] = "86400",
+  ["Record-Owner"] = "aliceAddress123...",
+  ["Display-Name"] = "Alice's Site"
 })
 ```
 
@@ -213,84 +215,33 @@ Send({
 Send({
   Target = antProcessId,
   Action = "Set-Record",
-  SubDomain = "alice",
-  TransactionId = "newTx456...",
-  TtlSeconds = "3600"
-})
-
--- Alice updates only metadata (new handler)
-Send({
-  Target = antProcessId,
-  Action = "Set-Record-Metadata",
-  SubDomain = "alice",
-  ["Record-Name"] = "Alice's Updated Site",
-  ["Record-Description"] = "New description"
+  ["Sub-Domain"] = "alice",
+  ["Transaction-Id"] = "newTx456...",
+  ["TTL-Seconds"] = "3600"
 })
 ```
 
 ### Transferring Record Ownership
 
 ```lua
--- Alice transfers her record to Bob
+-- Transfer a record to Bob (ANT owner/controller or current record owner)
 Send({
   Target = antProcessId,
   Action = "Transfer-Record",
-  SubDomain = "alice",
-  NewOwner = "bobAddress456..."
+  ["Sub-Domain"] = "alice",
+  Recipient = "bobAddress456..."
 })
 ```
 
 ### Setting as Primary Name
 
 ```lua
--- Alice sets her undername as her primary identity
+-- Approve primary name (by ANT owner or record owner)
 Send({
   Target = antProcessId,
   Action = "Approve-Primary-Name",
   Name = "alice",
-  Recipient = "aliceAddress123..."  -- Must match sender
+  ["IO-Process-Id"] = "ioTx...",
+  Recipient = "aliceAddress123..."  -- If record owner: must equal msg.From
 })
 ```
-
-## Pros and Cons of the Options
-
-### Hierarchical Permission Model (Chosen)
-
-- `+` Maintains ANT owner authority
-- `+` Enables delegation use cases
-- `+` Backward compatible
-- `+` Consistent with ANT security model
-- `-` More complex permission checks
-- `-` Requires careful state management
-
-### Full Delegation Model
-
-- `+` Simpler ownership model
-- `+` True ownership transfer
-- `-` ANT owner loses control
-- `-` Security risks for ANT integrity
-- `-` Breaks existing trust model
-
-### No Change
-
-- `+` Simplest - no new code
-- `+` No compatibility concerns
-- `-` Limits ANT use cases
-- `-` No delegation possible
-- `-` Restricts adoption
-
-## Links
-
-- [Original Proposal](../../UNDERNAME-OWNERSHIP.md)
-- [Implementation Plan](../../UNDERNAME-OWNERSHIP-SECURE-IMPLEMENTATION.md)
-- [Code Changes Plan](../../UNDERNAME-OWNERSHIP-CODE-PLAN.md)
-
-## Related Decisions
-
-- [ADR-1](1-reassign-evolve.md) - Reassign and Evolve Pattern
-
-## Notes
-
-This implementation carefully balances flexibility with security, enabling new
-use cases while preserving the fundamental security properties of ANTs. The
-optional nature of all new fields ensures zero impact on existing deployments.

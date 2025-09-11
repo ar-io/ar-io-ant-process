@@ -84,6 +84,7 @@ describe('Record Ownership', async () => {
           { name: 'Transaction-Id', value: 'updated-tx-id-'.padEnd(43, '2') },
           { name: 'TTL-Seconds', value: '1800' },
           { name: 'Display-Name', value: 'Updated by Owner' },
+          { name: 'Record-Owner', value: recordOwner },
         ],
       },
       createResult.Memory,
@@ -444,6 +445,7 @@ describe('Record Ownership', async () => {
             },
             { name: 'TTL-Seconds', value: '1800' },
             { name: 'Display-Name', value: 'Updated by New Owner' },
+            { name: 'Record-Owner', value: recipient },
           ],
         },
         transferResult.Memory,
@@ -943,7 +945,7 @@ describe('Record Ownership', async () => {
       ]);
     });
 
-    it('should preserve metadata fields during partial updates', async () => {
+    it('should update metadata fields when all fields are provided', async () => {
       const recordOwner = 'preserve-owner-'.padEnd(43, '4');
       const originalKeywords = JSON.stringify(['original', 'keywords']);
 
@@ -964,7 +966,7 @@ describe('Record Ownership', async () => {
 
       assertPatchMessage(createResult);
 
-      // Update only displayName and TTL, should preserve other fields
+      // Update displayName and TTL, must provide all fields now
       const updateResult = await handle(
         {
           From: recordOwner,
@@ -975,6 +977,10 @@ describe('Record Ownership', async () => {
             { name: 'Transaction-Id', value: 'updated-tx-id-'.padEnd(43, '4') },
             { name: 'TTL-Seconds', value: '1800' },
             { name: 'Display-Name', value: 'Updated Name' },
+            { name: 'Record-Owner', value: recordOwner },
+            { name: 'Description', value: 'Original description' },
+            { name: 'Logo', value: 'original-logo-'.padEnd(43, '3') },
+            { name: 'Keywords', value: originalKeywords },
           ],
         },
         createResult.Memory,
@@ -997,7 +1003,7 @@ describe('Record Ownership', async () => {
       assert.equal(recordData.transactionId, 'updated-tx-id-'.padEnd(43, '4'));
       assert.equal(recordData.ttlSeconds, 1800);
       assert.equal(recordData.displayName, 'Updated Name');
-      // Preserved fields
+      // All fields should be as provided
       assert.equal(recordData.owner, recordOwner);
       assert.equal(recordData.description, 'Original description');
       assert.equal(recordData.logo, 'original-logo-'.padEnd(43, '3'));

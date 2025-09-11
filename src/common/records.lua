@@ -42,6 +42,7 @@ function records.setRecord(
 
 	-- Check permissions based on whether record exists
 	local recordDoesExist = Records[name] ~= nil
+
 	-- only ANT owner/controllers can set priority for existing records - this is to prevent  undername owners from setting priority
 	if recordDoesExist and priority == nil then
 		-- For existing records, check record-specific permission
@@ -51,17 +52,21 @@ function records.setRecord(
 		utils.assertHasPermission(caller)
 	end
 
+	-- Validate @ record priority before creating the record
+	if name == "@" and priority ~= nil and priority ~= 0 then
+		error("Cannot assign priority to @ record")
+	end
+
 	local newRecord = {
-		transactionId = transactionId or constants.DEFAULT_TRANSACTION_ID,
-		ttlSeconds = tonumber(ttlSeconds) or constants.DEFAULT_TTL_SECONDS,
-		priority = name == "@" and 0 or tonumber(priority), -- set below with validation
+		transactionId = transactionId,
+		ttlSeconds = tonumber(ttlSeconds),
+		priority = name == "@" and 0 or tonumber(priority),
 		owner = owner,
 		displayName = displayName,
 		logo = logo,
 		description = description,
 		keywords = keywords,
 	}
-	-- Accept keywords as a formatted Lua table; validate if provided
 
 	utils.validateKeywords(newRecord.keywords or {})
 	assert(utils.isValidArweaveAddress(newRecord.transactionId), "Invalid Arweave ID")

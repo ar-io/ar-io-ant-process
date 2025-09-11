@@ -151,7 +151,6 @@ function records.transferRecord(name, recipient, allowUnsafeAddresses)
 		subDomain = name,
 		previousOwner = previousOwner,
 		newOwner = recipient,
-		recipient = recipient,
 		record = Records[name],
 	}
 end

@@ -2,7 +2,8 @@ allow_defined = true
 exclude_files = {
 	"dist/",
 	"src/common/crypto",
-	"tools/fixtures/aos-process"
+	"tools/fixtures/aos-process",
+	"*/._*",
 }
 globals = {
 	"Handlers",
@@ -18,6 +19,6 @@ globals = {
 	"Description",
 	"Keywords",
 	"Denomination",
-	"Initialized"
+	"Initialized",
 }
 max_line_length = 185

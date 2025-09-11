@@ -16,8 +16,13 @@ Records = Records
 ---@param transactionId string The transaction ID of the record.
 ---@param ttlSeconds number The time-to-live in seconds for the record.
 ---@param priority integer|nil The sort order of the record - must be nil or 1 or greater
+---@param owner string|nil The owner of the record
+---@param displayName string|nil The display name of the record
+---@param logo string|nil The logo transaction ID
+---@param description string|nil The description of the record
+---@param keywords table<string>|nil The keywords for the record
 ---@return Record
-function records.setRecord(name, transactionId, ttlSeconds, priority)
+function records.setRecord(name, transactionId, ttlSeconds, priority, owner, displayName, logo, description, keywords)
 	utils.validateUndername(name)
 	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
 	utils.validateTTLSeconds(ttlSeconds)
@@ -32,19 +37,48 @@ function records.setRecord(name, transactionId, ttlSeconds, priority)
 		end
 	end
 
-	collectgarbage("stop")
-	Records[name] = {
+	local previousRecord = Records[name] or {}
+
+	local record = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
 		priority = name == "@" and 0 or priority,
 	}
-	collectgarbage("restart")
 
-	return {
-		transactionId = transactionId,
-		ttlSeconds = ttlSeconds,
-		priority = priority,
-	}
+	-- Add optional fields only if provided
+	if owner then
+		record.owner = owner
+	elseif previousRecord and previousRecord.owner then
+		record.owner = previousRecord.owner
+	end
+
+	if displayName then
+		record.displayName = displayName
+	elseif previousRecord and previousRecord.displayName then
+		record.displayName = previousRecord.displayName
+	end
+
+	if logo then
+		record.logo = logo
+	elseif previousRecord and previousRecord.logo then
+		record.logo = previousRecord.logo
+	end
+
+	if description then
+		record.description = description
+	elseif previousRecord and previousRecord.description then
+		record.description = previousRecord.description
+	end
+
+	if keywords then
+		record.keywords = keywords
+	elseif previousRecord and previousRecord.keywords then
+		record.keywords = previousRecord.keywords
+	end
+
+	Records[name] = record
+
+	return Records[name]
 end
 
 --- Remove a record from the ANT.
@@ -77,6 +111,28 @@ function records.getRecords()
 	assert(antRecords, "Failed to copy Records")
 
 	return antRecords
+end
+
+--- Transfer ownership of a record to a new owner
+---@param name string The name of the record
+---@param recipient string The new owner address
+---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
+---@return table Transfer details
+function records.transferRecordOwnership(name, recipient, allowUnsafeAddresses)
+	utils.validateUndername(name)
+	assert(Records[name] ~= nil, "Record does not exist")
+	assert(Records[name].owner ~= nil, "Record has no owner")
+	assert(utils.isValidAOAddress(recipient, allowUnsafeAddresses), "Invalid new owner address")
+	assert(recipient ~= Records[name].owner, "New owner same as current owner")
+
+	local previousOwner = Records[name].owner
+	Records[name].owner = recipient
+
+	return {
+		subdomain = name,
+		previousOwner = previousOwner,
+		recipient = recipient,
+	}
 end
 
 return records

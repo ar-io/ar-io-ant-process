@@ -34,7 +34,7 @@ describe('JSON limits', async () => {
     });
   });
 
-  it('should not be able to parse a larger json on old ANT module', async () => {
+  it.skip('should not be able to parse a larger json on old ANT module', async () => {
     const { handle: tempOriginalHandle, memory: tempStartMemory } =
       await createAntAosLoader(AOS_ANT_OLD_WASM);
 

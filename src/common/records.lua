@@ -53,9 +53,7 @@ function records.setRecord(
 	end
 
 	-- Validate @ record priority before creating the record
-	if name == "@" and priority ~= nil and priority ~= 0 then
-		error("Cannot assign priority to @ record")
-	end
+	assert(name == "@" and priority == nil or priority == 0, "Cannot assign priority to @ record")
 
 	local newRecord = {
 		transactionId = transactionId,

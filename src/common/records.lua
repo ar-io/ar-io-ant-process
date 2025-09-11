@@ -76,7 +76,7 @@ function records.setRecord(
 			newRecord.priority == nil
 			or ((newRecord.priority == 0 or newRecord.priority > 0) and math.type(newRecord.priority) == "integer")
 		),
-		"Priority must be an integer greater than 0"
+		"Priority must be an integer greater than or equal to 0"
 	)
 	assert(
 		newRecord.owner == nil or utils.isValidAOAddress(newRecord.owner, allowUnsafeAddresses),
@@ -117,8 +117,14 @@ end
 ---@alias RecordEntry {
 --- transactionId: string,
 --- ttlSeconds: integer,
+--- priority: integer|nil,
+--- owner: string|nil,
+--- displayName: string|nil,
+--- logo: string|nil,
+--- description: string|nil,
+--- keywords: table<string>|nil
 ---}
----@return table<string, RecordEntry> The sorted records of the ANT
+---@return table<string, RecordEntry> antRecords The complete records of the ANT
 function records.getRecords()
 	local antRecords = utils.deepCopy(Records)
 	assert(antRecords, "Failed to copy Records")

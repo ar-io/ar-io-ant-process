@@ -135,6 +135,7 @@ Permissions:
 - Existing records: record owner may update (ANT owner/controllers retain full
   control)
 - Priority and explicit owner assignment require ANT owner/controllers
+- The "@" record priority must always be 0 (cannot be changed)
 
 #### Approve-Primary-Name / Remove-Primary-Names
 

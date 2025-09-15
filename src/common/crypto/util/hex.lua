@@ -3,6 +3,7 @@
 --- @param ln? number - The number of characters per line. If not provided, the output will be a single line.
 --- @param sep? string - The separator between each pair of hexadecimal characters. Defaults to an empty string.
 --- @return string The - hexadecimal representation of the input string.
+
 local function stringToHex(s, ln, sep)
 	if #s == 0 then
 		return ""

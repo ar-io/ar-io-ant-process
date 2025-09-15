@@ -33,9 +33,9 @@ const jwk = JSON.parse(
 );
 
 const signer = createSigner(jwk);
-const hyperAntModuleId = 'CiOsHx68AAuyEf5tC3qJX1WXlz1O_3q_niWLL-tBTIE';
+const hyperAntModuleId = 'F8lSkK2HO8lTLcpqKg1d5uLnohIPfGf2f5EssYk-gVk';
 const antRegistryId = 'i_le_yKKPVstLTDSmkHRqf-wYphMnwB9OhleiTgMkWc';
-const hbUrl = 'https://scheduler.forward.computer';
+const hbUrl = 'https://hyperbeam.permaweb.black';
 const gatewayUrl = 'https://arweave.net';
 const cuUrl = 'https://cu.ardrive.io';
 

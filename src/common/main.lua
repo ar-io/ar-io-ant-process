@@ -1,6 +1,8 @@
 local ant = {}
 
+--error("shit")
 function ant.init()
+	--error("fuck")
 	-- main.lua
 	-- utils
 	local json = require(".common.json")
@@ -14,6 +16,19 @@ function ant.init()
 	local records = require(".common.records")
 	local controllers = require(".common.controllers")
 	local constants = require(".common.constants")
+
+	ao.env = ao.env
+		or {
+			Process = {
+				Id = id,
+				id = id,
+				Owner = owner,
+				Tags = {
+					["ant-registry-id"] = process["ant-registry-id"],
+				},
+			},
+			send = send,
+		}
 
 	---@alias Owner string
 	---@description The owner of the ANT

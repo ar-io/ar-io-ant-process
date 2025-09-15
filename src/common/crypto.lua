@@ -4,6 +4,10 @@
 	load the process memory blows up. Putting the deps in one file here fixes this, and allows us to maintain
 	a small memory footprint.
 ]]
+
+-- Import bitwise operations for Luerl compatibility
+local bit = bit or require("bit32") or {}
+local band, bor, bxor, bnot, lshift, rshift = bit.band, bit.bor, bit.bxor, bit.bnot, bit.lshift, bit.rshift
 --- Converts a string to its hexadecimal representation.
 --- @param s string The input string.
 --- @param ln? number - The number of characters per line. If not provided, the output will be a single line.
@@ -75,51 +79,51 @@ local function keccakF(st)
 			parities[x] = 0
 			local sx = st[x]
 			for y = 1, 5 do
-				parities[x] = parities[x] ~ sx[y]
+				parities[x] = bxor(parities[x], sx[y])
 			end
 		end
 		--
 		-- unroll the following loop
 		--for x = 1,5 do
 		--	local p5 = parities[(x)%5 + 1]
-		--	local flip = parities[(x-2)%5 + 1] ~ ( p5 << 1 | p5 >> 63)
-		--	for y = 1,5 do st[x][y] = st[x][y] ~ flip end
+		--	local flip = bxor(parities[(x-2)%5 + 1], bor(lshift(p5, 1), rshift(p5, 63)))
+		--	for y = 1,5 do st[x][y] = bxor(st[x][y], flip) end
 		--end
 		local p5, flip, s
 		--x=1
 		p5 = parities[2]
-		flip = parities[5] ~ (p5 << 1 | p5 >> 63)
+		flip = bxor(parities[5], bor(lshift(p5, 1), rshift(p5, 63)))
 		s = st[1]
 		for y = 1, 5 do
-			s[y] = s[y] ~ flip
+			s[y] = bxor(s[y], flip)
 		end
 		--x=2
 		p5 = parities[3]
-		flip = parities[1] ~ (p5 << 1 | p5 >> 63)
+		flip = bxor(parities[1], bor(lshift(p5, 1), rshift(p5, 63)))
 		s = st[2]
 		for y = 1, 5 do
-			s[y] = s[y] ~ flip
+			s[y] = bxor(s[y], flip)
 		end
 		--x=3
 		p5 = parities[4]
-		flip = parities[2] ~ (p5 << 1 | p5 >> 63)
+		flip = bxor(parities[2], bor(lshift(p5, 1), rshift(p5, 63)))
 		s = st[3]
 		for y = 1, 5 do
-			s[y] = s[y] ~ flip
+			s[y] = bxor(s[y], flip)
 		end
 		--x=4
 		p5 = parities[5]
-		flip = parities[3] ~ (p5 << 1 | p5 >> 63)
+		flip = bxor(parities[3], bor(lshift(p5, 1), rshift(p5, 63)))
 		s = st[4]
 		for y = 1, 5 do
-			s[y] = s[y] ~ flip
+			s[y] = bxor(s[y], flip)
 		end
 		--x=5
 		p5 = parities[1]
-		flip = parities[4] ~ (p5 << 1 | p5 >> 63)
+		flip = bxor(parities[4], bor(lshift(p5, 1), rshift(p5, 63)))
 		s = st[5]
 		for y = 1, 5 do
-			s[y] = s[y] ~ flip
+			s[y] = bxor(s[y], flip)
 		end
 
 		-- rhopi()
@@ -128,15 +132,15 @@ local function keccakF(st)
 			local r
 			for x = 1, 5 do
 				s, r = st[x][y], rotationOffsets[x][y]
-				py[(2 * x + 3 * y) % 5 + 1] = (s << r | s >> (64 - r))
+				py[(2 * x + 3 * y) % 5 + 1] = bor(lshift(s, r), rshift(s, 64 - r))
 			end
 		end
 
 		-- chi() - unroll the loop
 		--for x = 1,5 do
 		--	for y = 1,5 do
-		--		local combined = (~ permuted[(x)%5 +1][y]) & permuted[(x+1)%5 +1][y]
-		--		st[x][y] = permuted[x][y] ~ combined
+		--		local combined = band(bnot(permuted[(x)%5 +1][y]), permuted[(x+1)%5 +1][y])
+		--		st[x][y] = bxor(permuted[x][y], combined)
 		--	end
 		--end
 
@@ -144,31 +148,31 @@ local function keccakF(st)
 		--x=1
 		s, p, p1, p2 = st[1], permuted[1], permuted[2], permuted[3]
 		for y = 1, 5 do
-			s[y] = p[y] ~ ~p1[y] & p2[y]
+			s[y] = bxor(p[y], band(bnot(p1[y]), p2[y]))
 		end
 		--x=2
 		s, p, p1, p2 = st[2], permuted[2], permuted[3], permuted[4]
 		for y = 1, 5 do
-			s[y] = p[y] ~ ~p1[y] & p2[y]
+			s[y] = bxor(p[y], band(bnot(p1[y]), p2[y]))
 		end
 		--x=3
 		s, p, p1, p2 = st[3], permuted[3], permuted[4], permuted[5]
 		for y = 1, 5 do
-			s[y] = p[y] ~ ~p1[y] & p2[y]
+			s[y] = bxor(p[y], band(bnot(p1[y]), p2[y]))
 		end
 		--x=4
 		s, p, p1, p2 = st[4], permuted[4], permuted[5], permuted[1]
 		for y = 1, 5 do
-			s[y] = p[y] ~ ~p1[y] & p2[y]
+			s[y] = bxor(p[y], band(bnot(p1[y]), p2[y]))
 		end
 		--x=5
 		s, p, p1, p2 = st[5], permuted[5], permuted[1], permuted[2]
 		for y = 1, 5 do
-			s[y] = p[y] ~ ~p1[y] & p2[y]
+			s[y] = bxor(p[y], band(bnot(p1[y]), p2[y]))
 		end
 
 		-- iota()
-		st[1][1] = st[1][1] ~ roundConstants[round]
+		st[1][1] = bxor(st[1][1], roundConstants[round])
 	end
 end
 
@@ -199,7 +203,7 @@ local function absorb(st, buffer, algorithm)
 
 	local totalWords = #words
 	-- OR final word with 0x80000000 to set last bit of state to 1
-	words[totalWords] = words[totalWords] | 0x8000000000000000
+	words[totalWords] = bor(words[totalWords], 0x8000000000000000)
 
 	-- XOR blocks into state
 	for startBlock = 1, totalWords, blockWords do
@@ -208,7 +212,7 @@ local function absorb(st, buffer, algorithm)
 			for x = 1, 5 do
 				if offset < blockWords then
 					local index = startBlock + offset
-					st[x][y] = st[x][y] ~ words[index]
+					st[x][y] = bxor(st[x][y], words[index])
 					offset = offset + 1
 				end
 			end

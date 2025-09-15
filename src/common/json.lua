@@ -101,7 +101,9 @@ end
 
 local function encode_number(val)
 	-- Check for NaN, -inf and inf
-	if val ~= val or val <= -math.huge or val >= math.huge then
+	-- Use large number constants instead of math.huge for Luerl compatibility
+	local HUGE_NUMBER = 1e308
+	if val ~= val or val <= -HUGE_NUMBER or val >= HUGE_NUMBER then
 		error("unexpected number value '" .. tostring(val) .. "'")
 	end
 	return string.format("%.14g", val)

@@ -292,74 +292,75 @@ function utils.createHandler(tagName, tagValue, handler, position)
 		position == nil or position == "add" or position == "prepend" or position == "append",
 		"Position must be one of 'add', 'prepend', 'append'"
 	)
-	local lowerTagName = string.lower(tagName)
-	local lowerTagValue = string.lower(tagValue)
-	return Handlers[position or "add"](
-		utils.camelCase(tagValue),
-		Handlers.utils.continue(Handlers.utils.hasMatchingTag(lowerTagName, lowerTagValue)),
-		function(msg)
-			-- handling for eth EIP-55 format, returns address if is not eth address
-			msg.From = utils.formatAddress(msg.From)
-			local knownAddressTags = {
-				"Recipient",
-				"Controller",
-			}
-			for _, tName in ipairs(knownAddressTags) do
-				-- Format all incoming addresses
-				msg.Tags[tName] = msg.Tags[tName] and utils.formatAddress(msg.Tags[tName]) or nil
-				-- aos assigns tag values to the base message level as well
-				msg[tName] = msg[tName] and utils.formatAddress(msg[tName]) or nil
-			end
-
-			-- sometimes the message id is not present on dryrun so we add a stub string to prevent issues with concat string
-
-			local prevOwner = tostring(Owner)
-			local prevControllers = utils.deepCopy(Controllers)
-			assert(prevControllers, "Unable to deep copy controllers")
-
-			local handlerStatus, handlerRes = xpcall(function()
-				return handler(msg)
-			end, utils.errorHandler)
-
-			local resultNotice = nil
-			if not handlerStatus then
-				resultNotice = notices.addForwardedTags(msg, {
-					Target = msg.From,
-					Action = "Invalid-" .. tagValue .. "-Notice",
-					Error = tagValue .. "-Error",
-					["Message-Id"] = msg.Id,
-					Data = handlerRes,
-				})
-			elseif handlerRes then
-				resultNotice = notices.addForwardedTags(msg, {
-					Target = msg.From,
-					Action = tagValue .. "-Notice",
-					Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
-				})
-			end
-
-			if resultNotice then
-				utils.Send(msg, resultNotice)
-			end
-
-			local hasNewOwner = Owner ~= prevOwner
-			local hasDifferentControllers = #utils.keys(Controllers) ~= #utils.keys(prevControllers)
-			--luacheck: ignore
-			if (hasNewOwner or hasDifferentControllers) and tagValue ~= "State" and AntRegistryId ~= nil then
-				--luacheck: ignore
-				notices.notifyState(msg, AntRegistryId)
-			end
-
-			-- send a patch notice on any action that changes the state
-			-- note: did not add to notices to avoid circular dependency between notices and utils
-			ao.send({
-				device = "patch@1.0",
-				cache = utils.getState(), -- serialization is done by hyperbeam ~seralize@1.0 device, so no need to spend compute here to do it
-			})
-
-			return handlerRes
+	local lowerTagName = tagName
+	local lowerTagValue = tagValue
+	return Handlers[position or "add"](utils.camelCase(tagValue), function(msg)
+		if msg.Tags and msg.Tags[lowerTagName] and msg.Tags[lowerTagName] == lowerTagValue then
+			return "continue"
 		end
-	)
+		return false
+	end, function(msg)
+		-- handling for eth EIP-55 format, returns address if is not eth address
+		msg.From = utils.formatAddress(msg.From)
+		local knownAddressTags = {
+			"Recipient",
+			"Controller",
+		}
+		for _, tName in ipairs(knownAddressTags) do
+			-- Format all incoming addresses
+			msg.Tags[tName] = msg.Tags[tName] and utils.formatAddress(msg.Tags[tName]) or nil
+			-- aos assigns tag values to the base message level as well
+			msg[tName] = msg[tName] and utils.formatAddress(msg[tName]) or nil
+		end
+
+		-- sometimes the message id is not present on dryrun so we add a stub string to prevent issues with concat string
+
+		local prevOwner = tostring(Owner)
+		local prevControllers = utils.deepCopy(Controllers)
+		assert(prevControllers, "Unable to deep copy controllers")
+
+		local handlerStatus, handlerRes = xpcall(function()
+			return handler(msg)
+		end, utils.errorHandler)
+
+		local resultNotice = nil
+		if not handlerStatus then
+			resultNotice = notices.addForwardedTags(msg, {
+				Target = msg.From,
+				Action = "Invalid-" .. tagValue .. "-Notice",
+				Error = tagValue .. "-Error",
+				["Message-Id"] = msg.Id,
+				Data = handlerRes,
+			})
+		elseif handlerRes then
+			resultNotice = notices.addForwardedTags(msg, {
+				Target = msg.From,
+				Action = tagValue .. "-Notice",
+				Data = type(handlerRes) == "string" and handlerRes or json.encode(handlerRes),
+			})
+		end
+
+		if resultNotice then
+			utils.Send(msg, resultNotice)
+		end
+
+		local hasNewOwner = Owner ~= prevOwner
+		local hasDifferentControllers = #utils.keys(Controllers) ~= #utils.keys(prevControllers)
+		--luacheck: ignore
+		if (hasNewOwner or hasDifferentControllers) and tagValue ~= "State" and AntRegistryId ~= nil then
+			--luacheck: ignore
+			notices.notifyState(msg, AntRegistryId)
+		end
+
+		-- send a patch notice on any action that changes the state
+		-- note: did not add to notices to avoid circular dependency between notices and utils
+		ao.send({
+			device = "patch@1.0",
+			cache = utils.getState(), -- serialization is done by hyperbeam ~seralize@1.0 device, so no need to spend compute here to do it
+		})
+
+		return handlerRes
+	end)
 end
 
 ---@param action string

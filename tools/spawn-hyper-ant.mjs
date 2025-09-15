@@ -33,7 +33,7 @@ const jwk = JSON.parse(
 );
 
 const signer = createSigner(jwk);
-const hyperAntModuleId = 'F8lSkK2HO8lTLcpqKg1d5uLnohIPfGf2f5EssYk-gVk';
+const hyperAntModuleId = '16AJgTgY29cNDIMqVAZ3LZCq3luCjJBSuRSFg2-2DIw';
 const antRegistryId = 'i_le_yKKPVstLTDSmkHRqf-wYphMnwB9OhleiTgMkWc';
 const hbUrl = 'https://hyperbeam.permaweb.black';
 const gatewayUrl = 'https://arweave.net';
@@ -75,6 +75,37 @@ async function spawnHyperProcess({
     params.data = data;
   }
   console.log('Spawning Hyper-ANT with params: \n\n');
+  console.dir(params, { depth: null });
+
+  const result = await ao.request(params);
+
+  return result;
+}
+
+async function messageHyperProcess(processId, tags, data) {
+  const ao = connect({
+    MODE: 'mainnet',
+    URL: hbUrl,
+    GATEWAY_URL: gatewayUrl,
+    signer: signer,
+    device: AO_PROTO_MAP.DEVICES.process,
+  });
+
+  const params = {
+    ...AO_PROTO_MAP.TAGS,
+    ...tags,
+    path: `/${processId}/push`,
+    method: 'POST',
+    type: 'Message',
+    target: processId,
+    'signing-format': 'ANS-104',
+    accept: 'application/json',
+  };
+
+  if (data) {
+    params.data = data;
+  }
+  console.log('Messaging Hyper-ANT with params: \n\n');
   console.dir(params, { depth: null });
 
   const result = await ao.request(params);
@@ -128,12 +159,17 @@ async function main() {
   });
 
   try {
-    const res = await fetch(
-      `${hbUrl}/${result.process}~${AO_PROTO_MAP.DEVICES.process}/now/records/~json@1.0/serialize`,
+    const stateRes = await messageHyperProcess(
+      result.process,
+      {
+        action: 'State',
+      },
+      ' ',
     );
-    const records = await res.json();
-    console.log('hyper-ant records: \n');
-    console.dir(records, { depth: null });
+    console.dir(stateRes, { depth: null });
+    const state = JSON.parse(await stateRes.body);
+    console.log('hyper-ant state: \n');
+    console.dir(state, { depth: null });
   } catch (error) {
     console.error('Hyper-ANT threw an error: ', error);
   }

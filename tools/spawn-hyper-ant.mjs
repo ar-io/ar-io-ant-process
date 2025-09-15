@@ -2,7 +2,13 @@ import { createSigner, connect } from '@permaweb/aoconnect';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { AO_AUTHORITY } from '@ar.io/sdk';
+import {
+  ANT,
+  AOProcess,
+  AO_AUTHORITY,
+  ArweaveSigner,
+  createAoSigner,
+} from '@ar.io/sdk';
 
 const AO_PROTO_MAP = {
   DEVICES: {
@@ -109,11 +115,27 @@ async function main() {
     module: hyperAntModuleId,
     tags: { ['ant-registry-id']: antRegistryId },
   });
-  if (result.process) {
-    console.log('Hyper-ANT spawned with id: ' + result.process + '\n');
-  } else {
-    console.log('Hyper-ANT failed to spawn: ' + result.error + '\n');
-    console.error(result, { depth: null });
+
+  console.log('Hyper-ANT spawned with id: ' + result.process + '\n');
+
+  const ant = ANT.init({
+    hyperbeamUrl: hbUrl,
+    process: new AOProcess({
+      processId: result.process,
+      ao,
+    }),
+    signer: createAoSigner(new ArweaveSigner(jwk)),
+  });
+
+  try {
+    const res = await fetch(
+      `${hbUrl}/${result.process}~${AO_PROTO_MAP.DEVICES.process}/now/records/~json@1.0/serialize`,
+    );
+    const records = await res.json();
+    console.log('hyper-ant records: \n');
+    console.dir(records, { depth: null });
+  } catch (error) {
+    console.error('Hyper-ANT threw an error: ', error);
   }
 }
 

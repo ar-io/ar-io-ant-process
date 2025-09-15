@@ -292,9 +292,11 @@ function utils.createHandler(tagName, tagValue, handler, position)
 		position == nil or position == "add" or position == "prepend" or position == "append",
 		"Position must be one of 'add', 'prepend', 'append'"
 	)
+	local lowerTagName = string.lower(tagName)
+	local lowerTagValue = string.lower(tagValue)
 	return Handlers[position or "add"](
 		utils.camelCase(tagValue),
-		Handlers.utils.continue(Handlers.utils.hasMatchingTag(tagName, tagValue)),
+		Handlers.utils.continue(Handlers.utils.hasMatchingTag(lowerTagName, lowerTagValue)),
 		function(msg)
 			-- handling for eth EIP-55 format, returns address if is not eth address
 			msg.From = utils.formatAddress(msg.From)
@@ -364,7 +366,7 @@ end
 ---@param msgHandler function
 ---@param position "add" | "prepend" | "append" | nil
 function utils.createActionHandler(action, msgHandler, position)
-	return utils.createHandler("Action", action, msgHandler, position)
+	return utils.createHandler("action", action, msgHandler, position)
 end
 
 ---@param keywords string[]

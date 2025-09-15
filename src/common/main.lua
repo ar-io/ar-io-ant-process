@@ -51,7 +51,7 @@ function ant.init()
 	Initialized = Initialized or false
 	---@alias AntRegistryId string
 	---@description The Arweave ID of the ANT Registry contract that this ANT is registered with
-	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ANT-Registry-Id"] or nil
+	AntRegistryId = AntRegistryId or ao.env.Process.Tags["ant-registry-id"] or nil
 
 	local ActionMap = {
 		-- write

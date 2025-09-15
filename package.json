@@ -20,9 +20,10 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@ar.io/sdk": "^3.19.0",
     "@ardrive/turbo-sdk": "^1.19.0",
     "@permaweb/ao-loader": "^0.0.44",
-    "@permaweb/aoconnect": "^0.0.55",
+    "@permaweb/aoconnect": "^0.0.90",
     "arweave": "^1.15.1",
     "husky": "^9.1.6",
     "js-yaml": "^4.1.0",

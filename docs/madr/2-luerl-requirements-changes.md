@@ -18,8 +18,7 @@ Luerl has several limitations compared to standard Lua 5.3+ implementations:
    functions
 3. **No debug library** - Missing `debug.sethook`, `debug.getinfo`,
    `debug.traceback`
-4. **Math library limitations** - `math.huge` may not be available
-5. **Potential module loading differences** - Different handling of require
+4. **Potential module loading differences** - Different handling of require
    paths
 
 The ANT Process heavily relies on cryptographic functions (SHA3) that use
@@ -126,22 +125,7 @@ local function debug_log(message)
 end
 ```
 
-### 4. Math.huge Replacement (`src/common/json.lua`)
-
-**Problem**: `math.huge` used for infinity checks may not be available in Luerl.
-
-**Solution**: Replaced with large number constant:
-
-```lua
--- Before
-if val ~= val or val <= -math.huge or val >= math.huge then
-
--- After
-local HUGE_NUMBER = 1e308
-if val ~= val or val <= -HUGE_NUMBER or val >= HUGE_NUMBER then
-```
-
-### 5. Crypto Function Updates
+### 4. Crypto Function Updates
 
 **Files Modified**: `src/common/crypto/digest/sha3.lua`, `src/common/crypto.lua`
 
@@ -164,10 +148,9 @@ words[totalWords] = bor(words[totalWords], 0x8000000000000000)
 ## Files Modified
 
 1. **`src/aos.lua`** - Added all compatibility shims and bitwise operations
-2. **`src/common/json.lua`** - Replaced `math.huge` with constant
-3. **`src/common/crypto/digest/sha3.lua`** - Converted all bitwise operations to
+2. **`src/common/crypto/digest/sha3.lua`** - Converted all bitwise operations to
    function calls
-4. **`src/common/crypto.lua`** - Converted all bitwise operations to function
+3. **`src/common/crypto.lua`** - Converted all bitwise operations to function
    calls
 
 ## Implementation Details

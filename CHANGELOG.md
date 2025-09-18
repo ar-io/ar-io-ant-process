@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [24] - (2025-9-18)
+
+### Added
+
+- Undername ownership support
+
 ## [23] - (2025-8-11)
 
 ### Changed

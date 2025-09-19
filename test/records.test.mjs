@@ -73,6 +73,26 @@ describe('aos Records', async () => {
     return JSON.parse(res.Messages[0].Data);
   }
 
+  async function getRecord(name, mem) {
+    const res = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Record' },
+          { name: 'Sub-Domain', value: name },
+        ],
+      },
+      mem,
+    );
+
+    // Check if it's an error message
+    const message = res.Messages[0];
+    if (message.Tags.find((tag) => tag.name === 'Error')) {
+      throw new Error(`Failed to get record: ${message.Data}`);
+    }
+
+    return JSON.parse(message.Data);
+  }
+
   it('should get the records of the ant', async () => {
     const setRecordRes = await setRecord({ name: 'test-1' });
 
@@ -95,17 +115,28 @@ describe('aos Records', async () => {
   });
 
   it('should set the record of an ANT', async () => {
-    const setRecordResult = await handle({
-      Tags: [
-        { name: 'Action', value: 'Set-Record' },
-        { name: 'Sub-Domain', value: '@' },
-        { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
-        { name: 'TTL-Seconds', value: 900 },
-      ],
+    // Get initial state of @ record
+    const initialRecordsResult = await handle({
+      Tags: [{ name: 'Action', value: 'Records' }],
     });
+    const initialRecords = JSON.parse(initialRecordsResult.Messages[0].Data);
+    const initialRecord = initialRecords['@'];
+
+    const setRecordResult = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: '@' },
+          { name: 'Transaction-Id', value: ''.padEnd(43, '3') },
+          { name: 'TTL-Seconds', value: 900 },
+        ],
+      },
+      initialRecordsResult.Memory,
+    );
 
     assertPatchMessage(setRecordResult);
 
+    // Verify the record was updated correctly
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
@@ -115,8 +146,24 @@ describe('aos Records', async () => {
 
     const records = JSON.parse(recordsResult.Messages[0].Data);
     const record = records['@'];
-    assert(record.transactionId === ''.padEnd(43, '3'));
-    assert(record.ttlSeconds === 900);
+
+    // Verify the changes
+    assert.strictEqual(
+      record.transactionId,
+      ''.padEnd(43, '3'),
+      'Transaction ID should be updated',
+    );
+    assert.strictEqual(record.ttlSeconds, 900, 'TTL should be updated');
+    assert.strictEqual(record.priority, 0, '@ record priority should remain 0');
+
+    // Verify other fields remain unchanged if they existed
+    if (initialRecord.owner !== undefined) {
+      assert.strictEqual(
+        record.owner,
+        initialRecord.owner,
+        'Owner should remain unchanged',
+      );
+    }
   });
 
   it('should remove the record of an ANT', async () => {
@@ -206,7 +253,7 @@ describe('aos Records', async () => {
     assert(record.priority === 1);
   });
 
-  it('should force priority to 0 for @ record', async () => {
+  it('should fail when trying to set non-zero priority for @ record', async () => {
     const setRecordResult = await handle({
       Tags: [
         { name: 'Action', value: 'Set-Record' },
@@ -217,18 +264,72 @@ describe('aos Records', async () => {
       ],
     });
 
+    assert.equal(
+      setRecordResult.Messages.length,
+      2,
+      'Expected patch and error message',
+    );
     assertPatchMessage(setRecordResult);
 
+    const errorMessage = setRecordResult.Messages[0];
+    assert.strictEqual(
+      errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+      'Set-Record-Error',
+      'Expected error tag in response',
+    );
+
+    assert(
+      errorMessage.Data.includes('Cannot assign non-zero priority to @ record'),
+      `Error message should mention @ record priority restriction. Actual: ${errorMessage.Data}`,
+    );
+  });
+
+  it('should allow @ record with priority 0 or nil', async () => {
+    // Test with explicit priority 0
+    const setRecordResult1 = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        { name: 'Sub-Domain', value: '@' },
+        { name: 'Transaction-Id', value: ''.padEnd(43, '4') },
+        { name: 'TTL-Seconds', value: 900 },
+        { name: 'Priority', value: 0 },
+      ],
+    });
+
+    assertPatchMessage(setRecordResult1);
+
+    // Test with no priority (nil)
+    const setRecordResult2 = await handle(
+      {
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: '@' },
+          { name: 'Transaction-Id', value: ''.padEnd(43, '5') },
+          { name: 'TTL-Seconds', value: 1800 },
+          // No Priority tag
+        ],
+      },
+      setRecordResult1.Memory,
+    );
+
+    assertPatchMessage(setRecordResult2);
+
+    // Verify the record was created correctly
     const recordsResult = await handle(
       {
         Tags: [{ name: 'Action', value: 'Records' }],
       },
-      setRecordResult.Memory,
+      setRecordResult2.Memory,
     );
     const records = JSON.parse(recordsResult.Messages[0].Data);
-
     const record = records['@'];
-    assert(record.priority === 0);
+
+    assert.strictEqual(record.priority, 0, '@ record priority should be 0');
+    assert.strictEqual(
+      record.ttlSeconds,
+      1800,
+      '@ record should have updated TTL',
+    );
   });
 
   it('should fail when setting priority for @ record', async () => {
@@ -256,6 +357,48 @@ describe('aos Records', async () => {
     assertPatchMessage(recordsResult);
   });
 
+  it('should fail when Sub-Domain is missing', async () => {
+    const setRecordResult = await handle({
+      Tags: [
+        { name: 'Action', value: 'Set-Record' },
+        // Missing Sub-Domain tag
+        { name: 'TTL-Seconds', value: '900' },
+        { name: 'Transaction-Id', value: STUB_ADDRESS },
+      ],
+    });
+
+    assert.equal(
+      setRecordResult.Messages.length,
+      2,
+      'Expected patch and error message',
+    );
+    assertPatchMessage(setRecordResult);
+
+    const errorMessage = setRecordResult.Messages[0];
+    assert.strictEqual(
+      errorMessage.Tags.find((tag) => tag.name === 'Error').value,
+      'Set-Record-Error',
+      'Expected error tag in response',
+    );
+
+    assert(
+      errorMessage.Data.includes('Sub-Domain is required'),
+      `Error message should indicate Sub-Domain is missing. Actual: ${errorMessage.Data}`,
+    );
+
+    // Verify that no record was created by checking the records state
+    const recordsAfterError = await getRecords(setRecordResult.Memory);
+
+    // Should not have any records with undefined/null names
+    const recordNames = Object.keys(recordsAfterError);
+    assert(
+      !recordNames.some(
+        (name) => name === 'undefined' || name === 'null' || name === '',
+      ),
+      'No invalid records should be created when Sub-Domain is missing',
+    );
+  });
+
   describe('Authorization Tests', () => {
     const UNAUTHORIZED_ADDRESS = 'unauthorized-address-'.padEnd(43, '9');
 
@@ -266,6 +409,14 @@ describe('aos Records', async () => {
         infoBefore.Owner,
         'Non-owner parameter should not be the current owner',
       );
+
+      // Get initial records state before unauthorized attempt
+      const recordsBeforeAttempt = await getRecords(startMemory);
+      assert(
+        !recordsBeforeAttempt['unauthorized-test'],
+        'Record should not exist initially',
+      );
+
       const setRecordResult = await handle({
         From: UNAUTHORIZED_ADDRESS,
         Owner: UNAUTHORIZED_ADDRESS,
@@ -290,18 +441,24 @@ describe('aos Records', async () => {
       );
       assertPatchMessage(setRecordResult);
 
-      // Verify the record was not actually set
-      const recordsResult = await handle(
-        {
-          Tags: [{ name: 'Action', value: 'Records' }],
-        },
+      // Verify the record was not actually set and state remains unchanged
+      const recordsAfterFailedAttempt = await getRecords(
         setRecordResult.Memory,
       );
-      const records = JSON.parse(recordsResult.Messages[0].Data);
       assert(
-        !records['unauthorized-test'],
+        !recordsAfterFailedAttempt['unauthorized-test'],
         'Record should not be set by unauthorized user',
       );
+
+      // Verify existing records remain unchanged
+      const existingRecordNames = Object.keys(recordsBeforeAttempt);
+      existingRecordNames.forEach((recordName) => {
+        assert.deepStrictEqual(
+          recordsAfterFailedAttempt[recordName],
+          recordsBeforeAttempt[recordName],
+          `Existing record '${recordName}' should remain unchanged`,
+        );
+      });
     });
 
     it('should fail to remove record when called by non-owner/non-controller', async () => {

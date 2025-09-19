@@ -135,4 +135,74 @@ describe('Primary Names', async () => {
     assert.strictEqual(actionTag.value, 'Invalid-Remove-Primary-Names-Notice');
     assertPatchMessage(res);
   });
+
+  it('should allow undername owners to approve primary names for themselves', async () => {
+    const primaryNames = [
+      'test_alice',
+      'test_bob',
+      'test_charlie',
+      'test_undername',
+      'test_undername-with-base-dashes',
+      'test-undername_with-base-dashes',
+      'test-mirror_test-mirror',
+      'test_multiple_underscores_boop-test',
+      'test_1234',
+      '1234_test',
+    ];
+    const ioProcessId = ''.padEnd(43, '5');
+
+    // Test each primary name with an undername owner
+    for (const [index, primaryName] of primaryNames.entries()) {
+      const recordOwner = `record-owner-${index}-`.padEnd(43, '7');
+      const undername = primaryName.split('_').slice(0, -1).join('_');
+
+      // First, create a record with the undername owner
+      const createRecordRes = await handle({
+        Tags: [
+          { name: 'Action', value: 'Set-Record' },
+          { name: 'Sub-Domain', value: undername },
+          { name: 'Transaction-Id', value: STUB_RECIPIENT },
+          { name: 'TTL-Seconds', value: '900' },
+          { name: 'Record-Owner', value: recordOwner },
+        ],
+      });
+
+      assertPatchMessage(createRecordRes);
+
+      // Now the record owner approves the primary name for themselves
+      const approveRes = await handle(
+        {
+          From: recordOwner,
+          Owner: recordOwner,
+          Tags: [
+            { name: 'Action', value: 'Approve-Primary-Name' },
+            { name: 'Name', value: primaryName },
+            { name: 'Recipient', value: recordOwner },
+            { name: 'IO-Process-Id', value: ioProcessId },
+          ],
+        },
+        createRecordRes.Memory,
+      );
+
+      // Assert that approval was sent
+      const approvalMessage = approveRes.Messages.find(
+        (m) =>
+          m.Target === ioProcessId &&
+          m.Tags.find(
+            (t) =>
+              t.name === 'Action' && t.value === 'Approve-Primary-Name-Request',
+          ),
+      );
+
+      assert(approvalMessage, `Should send approval for ${primaryName}`);
+      assert.strictEqual(
+        approvalMessage.Tags.find((t) => t.name === 'Name').value,
+        primaryName,
+      );
+      assert.strictEqual(
+        approvalMessage.Tags.find((t) => t.name === 'Recipient').value,
+        recordOwner,
+      );
+    }
+  });
 });

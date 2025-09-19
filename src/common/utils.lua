@@ -98,7 +98,7 @@ end
 
 --- Checks if an address is a valid AO address
 --- @param address string|nil The address to check
---- @param allowUnsafe boolean Whether to allow unsafe addresses, defaults to false
+--- @param allowUnsafe boolean|nil Whether to allow unsafe addresses, defaults to false
 --- @return boolean isValidAddress - whether the address is valid, depending on the allowUnsafe flag
 function utils.isValidAOAddress(address, allowUnsafe)
 	allowUnsafe = allowUnsafe or false -- default to false, only allow unsafe addresses if explicitly set
@@ -166,7 +166,7 @@ end
 ---```
 function utils.validateOwner(caller)
 	local isOwner = false
-	if Owner == caller or Balances[caller] or ao.env.Process.Id == caller then
+	if Owner == caller or Balances[caller] == 1 or ao.env.Process.Id == caller then
 		isOwner = true
 	end
 	assert(isOwner, "Sender is not the owner.")
@@ -192,6 +192,33 @@ function utils.assertHasPermission(from)
 		return
 	end
 	assert(false, "Only controllers and owners can set controllers, records, and change metadata.")
+end
+
+--- @param from string
+--- @param subdomain string
+--- @description Asserts that the caller has permission to modify a specific record
+--- @example
+--- ```lua
+--- utils.assertHasRecordPermission(msg.From, "subdomain")
+--- ```
+function utils.assertHasRecordPermission(from, subdomain)
+	-- Check if has ANT-level permission first (owner or controller)
+	for _, c in ipairs(Controllers) do
+		if c == from then
+			return
+		end
+	end
+	if Owner == from or Balances[from] == 1 or ao.env.Process.Id == from then
+		return
+	end
+
+	-- Check record-specific ownership
+	local record = Records[subdomain]
+	if record and record.owner and record.owner == from then
+		return
+	end
+
+	assert(false, "Sender does not have permission for this record.")
 end
 
 function utils.camelCase(str)
@@ -377,13 +404,16 @@ end
 ---```
 function utils.validateKeywords(keywords)
 	assert(type(keywords) == "table", "Keywords must be an array")
-	assert(#keywords <= 16, "There must not be more than 16 keywords")
+	assert(#keywords <= constants.MAX_KEYWORDS, "There must not be more than " .. constants.MAX_KEYWORDS .. " keywords")
 
 	local seenKeywords = {} -- Table to track seen keywords
 
 	for _, keyword in ipairs(keywords) do
 		assert(type(keyword) == "string", "Each keyword must be a string")
-		assert(#keyword <= 32, "Each keyword must not be longer than 32 characters")
+		assert(
+			#keyword <= constants.MAX_KEYWORD_LENGTH,
+			"Each keyword must not be longer than " .. constants.MAX_KEYWORD_LENGTH .. " characters"
+		)
 		assert(not keyword:find("%s"), "Keywords must not contain spaces")
 		assert(
 			keyword:match("^[%w-_#@]+$"),
@@ -406,6 +436,22 @@ function utils.Send(msg, response)
 	else
 		ao.send(response)
 	end
+end
+
+function utils.baseNameForName(name)
+	return (name or ""):match("[^_]+$") or name
+end
+
+--- @param name string An ArNS name with or without an undername
+--- @return string|nil # The undername, if present, or nil
+function utils.undernameForName(name)
+	local reversedName = name:reverse()
+
+	local startIndex = reversedName:find("_", nil, true)
+	if not startIndex then
+		return nil
+	end
+	return reversedName:sub(startIndex + 1):reverse()
 end
 
 return utils

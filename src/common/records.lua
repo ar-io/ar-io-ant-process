@@ -1,4 +1,5 @@
 local utils = require(".common.utils")
+local constants = require(".common.constants")
 
 local records = {}
 -- defaults to landing page txid
@@ -12,39 +13,79 @@ Records = Records
 	}
 
 --- Set a record in the Records of the ANT.
----@param name string The name of the record.
----@param transactionId string The transaction ID of the record.
----@param ttlSeconds number The time-to-live in seconds for the record.
----@param priority integer|nil The sort order of the record - must be nil or 1 or greater
+---@param name string The name of the record to set
+---@param transactionId string The transaction ID of the record
+---@param ttlSeconds integer|nil The TTL seconds of the record
+---@param priority integer|nil The priority of the record
+---@param owner string|nil The owner of the record
+---@param displayName string|nil The display name of the record
+---@param logo string|nil The logo of the record
+---@param description string|nil The description of the record
+---@param keywords table<string>|nil The keywords of the record
+---@param caller string The caller of the record
+---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
 ---@return Record
-function records.setRecord(name, transactionId, ttlSeconds, priority)
+function records.setRecord(
+	name,
+	transactionId,
+	ttlSeconds,
+	priority,
+	owner,
+	displayName,
+	logo,
+	description,
+	keywords,
+	caller,
+	allowUnsafeAddresses
+)
 	utils.validateUndername(name)
-	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
-	utils.validateTTLSeconds(ttlSeconds)
-	if priority then
-		if name == "@" then
-			assert(priority == 0, "Priority for '@' must be 0, but received " .. tostring(priority))
-		else
-			assert(
-				math.type(priority) == "integer" and priority > 0,
-				"Priority must be an integer greater than 0, but received " .. tostring(priority)
-			)
-		end
+
+	-- Check permissions based on whether record exists
+	local recordDoesExist = Records[name] ~= nil
+
+	-- only ANT owner/controllers can set priority for existing records - this is to prevent  undername owners from setting priority
+	if recordDoesExist and priority == nil then
+		-- For existing records, check record-specific permission
+		utils.assertHasRecordPermission(caller, name)
+	else
+		-- For new records, only ANT owner/controllers can create
+		utils.assertHasPermission(caller)
 	end
 
-	collectgarbage("stop")
-	Records[name] = {
+	-- Validate @ record priority - users cannot set non-zero priority for @ record
+	if name == "@" then
+		assert(
+			priority == nil or priority == 0,
+			"Cannot assign non-zero priority to @ record. @ record priority must be 0."
+		)
+	end
+	utils.validateKeywords(keywords or {})
+	assert(utils.isValidArweaveAddress(transactionId), "Invalid Arweave ID")
+	assert(ttlSeconds ~= nil, "TTL-Seconds is required")
+	utils.validateTTLSeconds(ttlSeconds)
+	assert(
+		(priority == nil or ((priority == 0 or priority > 0) and math.type(priority) == "integer")),
+		"Priority must be an integer greater than or equal to 0"
+	)
+	assert(owner == nil or utils.isValidAOAddress(owner, allowUnsafeAddresses), "Invalid owner address")
+	assert(displayName == nil or #displayName <= constants.MAX_NAME_LENGTH, "Invalid display name")
+	assert(logo == nil or utils.isValidArweaveAddress(logo), "Invalid logo")
+	assert(description == nil or #description <= constants.MAX_DESCRIPTION_LENGTH, "Invalid description")
+
+	local newRecord = {
 		transactionId = transactionId,
 		ttlSeconds = ttlSeconds,
 		priority = name == "@" and 0 or priority,
+		owner = owner,
+		displayName = displayName,
+		logo = logo,
+		description = description,
+		keywords = keywords,
 	}
-	collectgarbage("restart")
 
-	return {
-		transactionId = transactionId,
-		ttlSeconds = ttlSeconds,
-		priority = priority,
-	}
+	Records[name] = newRecord
+
+	return Records[name]
 end
 
 --- Remove a record from the ANT.
@@ -70,13 +111,42 @@ end
 ---@alias RecordEntry {
 --- transactionId: string,
 --- ttlSeconds: integer,
+--- priority: integer|nil,
+--- owner: string|nil,
+--- displayName: string|nil,
+--- logo: string|nil,
+--- description: string|nil,
+--- keywords: table<string>|nil
 ---}
----@return table<string, RecordEntry> The sorted records of the ANT
+---@return table<string, RecordEntry> antRecords The complete records of the ANT
 function records.getRecords()
 	local antRecords = utils.deepCopy(Records)
 	assert(antRecords, "Failed to copy Records")
 
 	return antRecords
+end
+
+--- Transfer ownership of a record to a new owner
+---@param name string The name of the record
+---@param recipient string The new owner address
+---@param allowUnsafeAddresses boolean|nil Whether to allow unsafe addresses
+---@return table Transfer details
+function records.transferRecord(name, recipient, allowUnsafeAddresses)
+	utils.validateUndername(name)
+	assert(Records[name] ~= nil, "Record does not exist")
+	assert(Records[name].owner ~= nil, "Record has no owner")
+	assert(utils.isValidAOAddress(recipient, allowUnsafeAddresses), "Invalid new owner address")
+	assert(recipient ~= Records[name].owner, "New owner same as current owner")
+
+	local previousOwner = Records[name].owner
+	Records[name].owner = recipient
+
+	return {
+		subDomain = name,
+		previousOwner = previousOwner,
+		newOwner = recipient,
+		record = Records[name],
+	}
 end
 
 return records

@@ -1,0 +1,202 @@
+name: Publish ANT
+
+on:
+  workflow_dispatch:
+    inputs:
+      propose:
+        description: 'Create a VAOT proposal after publishing'
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      propose:
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      published_lua_code_id:
+        description: 'The transaction ID of the published Lua code'
+        value: ${{ jobs.publish.outputs.published_lua_code_id }}
+      published_module_id:
+        description: 'The transaction ID of the published WASM module'
+        value: ${{ jobs.publish.outputs.published_module_id }}
+
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out repository code
+
+      - name: Setup Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: '5.3' # Specify the Lua version you need
+
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4.3.0
+
+      - name: Install Busted
+        run: luarocks install ar-io-ao-0.1-1.rockspec
+
+      - name: Run Busted Tests
+        run: busted .
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: '5.3'
+
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4.3.0
+
+      - name: Install Luacheck
+        run: luarocks install luacheck
+
+      - run: luacheck src spec
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+
+      - run: yarn --frozen-lockfile
+      - name: Install AO Tool
+        run: |
+          curl -L https://install_ao.arweave.net | sh
+          export AO_INSTALL=/home/runner/.ao
+          export PATH="$AO_INSTALL/bin:$PATH"
+          echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Verify AO Installation
+        run: ao -V
+      - run: yarn copy-aos-process
+      - run: yarn module:build
+      - run: yarn test
+
+  publish:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    needs: [lint, unit, integration]
+    permissions:
+      contents: write # to be able to publish a GitHub release
+    outputs:
+      published_lua_code_id: ${{ steps.publish-lua-code.outputs.srcTxId }}
+      published_module_id: ${{ steps.publish-module.outputs.moduleTxId }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4.0.2
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+      - run: yarn --frozen-lockfile
+      - run: curl -L https://install_ao.arweave.net | sh
+      - name: Publish Lua Code
+        id: publish-lua-code
+        env:
+          WALLET: ${{ secrets.WALLET }}
+          GITHUB_SHA: ${{ github.sha }}
+          DRY_RUN:
+            ${{github.ref_name != 'main' && github.ref_name != 'develop'}}
+        run: |
+          PUBLISH_OUTPUT=$(yarn aos:publish 2>&1)
+          # This line extracts the transaction ID of the published Lua source code from the output
+          # It uses grep to find the line containing "Generated source code data item with id:"
+          # Then it uses sed to extract the 43-character transaction ID
+          LUA_SOURCE_CODE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated source code data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
+          echo "::set-output name=srcTxId::$LUA_SOURCE_CODE_TX_ID"
+
+      - name: Create Tag for Lua ID
+        if: ${{github.ref_name == 'main'}}
+        run: |
+          git tag "${{ steps.publish-lua-code.outputs.srcTxId }}"
+          git push origin "${{ steps.publish-lua-code.outputs.srcTxId }}"
+
+      - name: Install AO Tool
+        run: |
+          curl -L https://install_ao.arweave.net | sh
+          export AO_INSTALL=/home/runner/.ao
+          export PATH="$AO_INSTALL/bin:$PATH"
+          echo "AO_INSTALL=$AO_INSTALL" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Verify AO Installation
+        run: ao -V
+      - name: Build WASM Module
+        run: yarn copy-aos-process && yarn module:build
+      - name: Publish WASM Module
+        id: publish-module
+        env:
+          WALLET: ${{ secrets.WALLET }}
+          GITHUB_SHA: ${{ github.sha }}
+          DRY_RUN:
+            ${{github.ref_name != 'main' && github.ref_name != 'develop'}}
+        run: |
+          PUBLISH_OUTPUT=$(yarn module:publish 2>&1)
+          # This line extracts the transaction ID of the published Module ID from the output
+          # It uses grep to find the line containing "Generated WASM Binary data item with id:"
+          # Then it uses sed to extract the 43-character transaction ID
+          MODULE_TX_ID=$(echo "$PUBLISH_OUTPUT" | grep -oE "Generated WASM Binary data item with id:\s[a-zA-Z0-9_-]{43}" | sed -E 's/.*([a-zA-Z0-9_-]{43})/\1/')
+          echo "::set-output name=moduleTxId::$MODULE_TX_ID"
+
+      - name: Create Tag for Module ID
+        if: ${{github.ref_name == 'main'}}
+        run: |
+          git tag "${{ steps.publish-module.outputs.moduleTxId }}"
+          git push origin "${{ steps.publish-module.outputs.moduleTxId }}"
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [unit, integration, publish]
+    if: always()
+    steps:
+      - name: Notify Slack on Success
+        if:
+          needs.unit.result == 'success' && needs.integration.result ==
+          'success' && needs.publish.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Unit Tests: ${{ needs.unit.result }}
+            Integration Tests: ${{ needs.integration.result }}
+            Publish: ${{ needs.publish.result }}
+            Published Lua Id: ${{ needs.publish.outputs.published_lua_code_id || 'N/A' }}
+            Published Module Id: ${{ needs.publish.outputs.published_module_id || 'N/A' }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Unit Tests: ${{ needs.unit.result }}
+            Integration Tests: ${{ needs.integration.result }}
+            Publish: ${{ needs.publish.result }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  propose:
+    needs: [publish]
+    if: needs.publish.result == 'success' && inputs.propose == true
+    uses: ./.github/workflows/vaot-proposal.yaml
+    secrets: inherit
+    with:
+      published_module_id: ${{ needs.publish.outputs.published_module_id }}
+      published_lua_code_id: ${{ needs.publish.outputs.published_lua_code_id }}

@@ -21,8 +21,6 @@ describe('aos Evolve', async () => {
       Data: BUNDLED_AOS_ANT_LUA,
     });
 
-    console.dir(evolveResult, { depth: null });
-
     const result = await handle(
       {
         Tags: [{ name: 'Action', value: 'Info' }],
@@ -39,8 +37,6 @@ describe('aos Evolve', async () => {
       },
       evolveResult.Memory,
     );
-
-    console.dir(evalResult, { depth: null });
 
     assert(evalResult.Output.data);
     assert(evalResult.Output.data.includes('info'));

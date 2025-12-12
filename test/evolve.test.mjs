@@ -14,11 +14,14 @@ describe('aos Evolve', async () => {
 
   const handle = createHandleWrapper(originalHandle, startMemory);
 
-  it('should evolve the ant and retain eval ability', async () => {
+  // No longer needed, we have removed the eval handler for security purposes to be compatible with the ArNS Marketplace
+  it.skip('should evolve the ant and retain eval ability', async () => {
     const evolveResult = await handle({
       Tags: [{ name: 'Action', value: 'Eval' }],
       Data: BUNDLED_AOS_ANT_LUA,
     });
+
+    console.dir(evolveResult, { depth: null });
 
     const result = await handle(
       {
@@ -37,11 +40,14 @@ describe('aos Evolve', async () => {
       evolveResult.Memory,
     );
 
+    console.dir(evalResult, { depth: null });
+
     assert(evalResult.Output.data);
     assert(evalResult.Output.data.includes('info'));
   });
 
-  it('should not evolve the ant', async () => {
+  it('should error if eval is called', async () => {
+    // The removal/override of the handler is baked into the module, so we should expect an error if eval is called
     const evolveResult = await handle({
       Tags: [
         { name: 'Action', value: 'Eval' },
@@ -50,30 +56,10 @@ describe('aos Evolve', async () => {
       Data: "Foo = 'bar'",
     });
 
-    const result = await handle(
-      {
-        Tags: [{ name: 'Action', value: 'Info' }],
-      },
-      evolveResult.Memory,
+    assert(
+      evolveResult.Error.includes('Eval is disabled for this process'),
+      'Expected Eval is disabled for this process error',
     );
-
-    const state = JSON.parse(result.Messages[0].Data);
-    assert(state);
-
-    const fooRes = await handle(
-      {
-        Tags: [
-          {
-            name: 'Action',
-            value: 'Eval',
-          },
-        ],
-        Data: 'print(Foo)',
-      },
-      result.Memory,
-    );
-
-    assert(!fooRes.Output.output?.includes('bar'));
   });
 
   it('should not evolve the ant with correct tags called by a non owner', async () => {

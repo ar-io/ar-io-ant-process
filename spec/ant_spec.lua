@@ -46,7 +46,7 @@ describe("Arweave Name Token", function()
 
 	it("Transfers tokens between accounts", function()
 		local to = "1111111111111111111111111111111111111111112"
-		balances.transfer(to, false) -- happy path
+		balances.transfer(to, false, false) -- happy path
 
 		assert.are.same(_G.Balances[fake_address], nil)
 		assert.are.same(_G.Balances[to], 1)

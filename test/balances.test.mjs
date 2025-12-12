@@ -230,4 +230,314 @@ describe('aos Balances', async () => {
     const res = await getTotalSupply();
     assert.strictEqual(res, '1', 'total supply should be equal to 1');
   });
+
+  describe('Transfer with Remove-Controllers', () => {
+    const STUB_NEW_OWNER = 'new-owner-'.padEnd(43, '1');
+    const STUB_CONTROLLER = 'controller-'.padEnd(43, '1');
+
+    async function getControllers(mem) {
+      const result = await handle(
+        {
+          Tags: [{ name: 'Action', value: 'Controllers' }],
+        },
+        mem,
+      );
+      return JSON.parse(result.Messages[0].Data);
+    }
+
+    it('should remove all controllers when transferring with Remove-Controllers tag', async () => {
+      // Add a controller first
+      const addControllerResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Add-Controller' },
+          { name: 'Controller', value: STUB_CONTROLLER },
+        ],
+      });
+
+      // Verify controller was added
+      const controllersBeforeTransfer = await getControllers(
+        addControllerResult.Memory,
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER),
+        'Controller should be added before transfer',
+      );
+      assert(
+        controllersBeforeTransfer.length > 0,
+        'Should have at least one controller',
+      );
+
+      // Transfer with Remove-Controllers tag
+      const transferResult = await handle(
+        {
+          Tags: [
+            { name: 'Action', value: 'Transfer' },
+            { name: 'Recipient', value: STUB_NEW_OWNER },
+            { name: 'Remove-Controllers', value: 'true' },
+          ],
+        },
+        addControllerResult.Memory,
+      );
+
+      // Verify transfer was successful
+      assert(
+        !transferResult.Messages[0].Tags.find((t) => t.name === 'Error'),
+        'Transfer should succeed',
+      );
+
+      // Verify controllers were removed
+      const controllersAfterTransfer = await getControllers(
+        transferResult.Memory,
+      );
+      assert.strictEqual(
+        controllersAfterTransfer.length,
+        0,
+        'All controllers should be removed after transfer with Remove-Controllers tag',
+      );
+
+      // Verify owner changed
+      const infoAfter = await getInfo(transferResult.Memory);
+      assert.strictEqual(
+        infoAfter.Owner,
+        STUB_NEW_OWNER,
+        'Owner should be updated to new owner',
+      );
+    });
+
+    it('should remove controllers by default when transferring WITHOUT Remove-Controllers tag', async () => {
+      // Add a controller first
+      const addControllerResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Add-Controller' },
+          { name: 'Controller', value: STUB_CONTROLLER },
+        ],
+      });
+
+      // Verify controller was added
+      const controllersBeforeTransfer = await getControllers(
+        addControllerResult.Memory,
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER),
+        'Controller should be added before transfer',
+      );
+      assert(
+        controllersBeforeTransfer.length > 0,
+        'Should have at least one controller',
+      );
+
+      // Transfer WITHOUT Remove-Controllers tag (defaults to true)
+      const transferResult = await handle(
+        {
+          Tags: [
+            { name: 'Action', value: 'Transfer' },
+            { name: 'Recipient', value: STUB_NEW_OWNER },
+          ],
+        },
+        addControllerResult.Memory,
+      );
+
+      // Verify transfer was successful
+      assert(
+        !transferResult.Messages[0].Tags.find((t) => t.name === 'Error'),
+        'Transfer should succeed',
+      );
+
+      // Verify controllers were removed (default behavior)
+      const controllersAfterTransfer = await getControllers(
+        transferResult.Memory,
+      );
+      assert.strictEqual(
+        controllersAfterTransfer.length,
+        0,
+        'Controllers should be removed by default when Remove-Controllers tag is not present',
+      );
+
+      // Verify owner changed
+      const infoAfter = await getInfo(transferResult.Memory);
+      assert.strictEqual(
+        infoAfter.Owner,
+        STUB_NEW_OWNER,
+        'Owner should be updated to new owner',
+      );
+    });
+
+    it('should remove controllers when Remove-Controllers value is empty string (defaults to true)', async () => {
+      // Add a controller first
+      const addControllerResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Add-Controller' },
+          { name: 'Controller', value: STUB_CONTROLLER },
+        ],
+      });
+
+      // Verify controller was added
+      const controllersBeforeTransfer = await getControllers(
+        addControllerResult.Memory,
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER),
+        'Controller should be added before transfer',
+      );
+
+      // Transfer with Remove-Controllers tag (empty string value)
+      // When tag is present, it defaults to true unless explicitly "false"
+      const transferResult = await handle(
+        {
+          Tags: [
+            { name: 'Action', value: 'Transfer' },
+            { name: 'Recipient', value: STUB_NEW_OWNER },
+            { name: 'Remove-Controllers', value: '' },
+          ],
+        },
+        addControllerResult.Memory,
+      );
+
+      // Verify transfer was successful
+      assert(
+        !transferResult.Messages[0].Tags.find((t) => t.name === 'Error'),
+        'Transfer should succeed',
+      );
+
+      // Verify controllers were removed (defaults to true when tag is present)
+      const controllersAfterTransfer = await getControllers(
+        transferResult.Memory,
+      );
+      assert.strictEqual(
+        controllersAfterTransfer.length,
+        0,
+        'All controllers should be removed when Remove-Controllers tag is present (defaults to true)',
+      );
+    });
+
+    it('should NOT remove controllers when Remove-Controllers is explicitly set to "false"', async () => {
+      // Add a controller first
+      const addControllerResult = await handle({
+        Tags: [
+          { name: 'Action', value: 'Add-Controller' },
+          { name: 'Controller', value: STUB_CONTROLLER },
+        ],
+      });
+
+      // Verify controller was added
+      const controllersBeforeTransfer = await getControllers(
+        addControllerResult.Memory,
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER),
+        'Controller should be added before transfer',
+      );
+      const controllerCountBefore = controllersBeforeTransfer.length;
+
+      // Transfer with Remove-Controllers tag explicitly set to "false"
+      const transferResult = await handle(
+        {
+          Tags: [
+            { name: 'Action', value: 'Transfer' },
+            { name: 'Recipient', value: STUB_NEW_OWNER },
+            { name: 'Remove-Controllers', value: 'false' },
+          ],
+        },
+        addControllerResult.Memory,
+      );
+
+      // Verify transfer was successful
+      assert(
+        !transferResult.Messages[0].Tags.find((t) => t.name === 'Error'),
+        'Transfer should succeed',
+      );
+
+      // Verify controllers were NOT removed
+      const controllersAfterTransfer = await getControllers(
+        transferResult.Memory,
+      );
+      assert.strictEqual(
+        controllersAfterTransfer.length,
+        controllerCountBefore,
+        'Controllers should NOT be removed when Remove-Controllers is explicitly "false"',
+      );
+      assert(
+        controllersAfterTransfer.includes(STUB_CONTROLLER),
+        'Original controller should still be present',
+      );
+
+      // Verify owner changed
+      const infoAfter = await getInfo(transferResult.Memory);
+      assert.strictEqual(
+        infoAfter.Owner,
+        STUB_NEW_OWNER,
+        'Owner should be updated to new owner',
+      );
+    });
+
+    it('should remove multiple controllers when transferring with Remove-Controllers tag', async () => {
+      const STUB_CONTROLLER_2 = 'controller2-'.padEnd(43, '2');
+      const STUB_CONTROLLER_3 = 'controller3-'.padEnd(43, '3');
+
+      // Get initial controller count
+      const initialControllers = await getControllers(startMemory);
+      const initialCount = initialControllers.length;
+
+      // Add multiple controllers
+      let currentMemory = startMemory;
+      for (const controller of [
+        STUB_CONTROLLER,
+        STUB_CONTROLLER_2,
+        STUB_CONTROLLER_3,
+      ]) {
+        const addResult = await handle(
+          {
+            Tags: [
+              { name: 'Action', value: 'Add-Controller' },
+              { name: 'Controller', value: controller },
+            ],
+          },
+          currentMemory,
+        );
+        currentMemory = addResult.Memory;
+      }
+
+      // Verify all controllers were added
+      const controllersBeforeTransfer = await getControllers(currentMemory);
+      assert.strictEqual(
+        controllersBeforeTransfer.length,
+        initialCount + 3,
+        `Should have ${initialCount + 3} controllers (${initialCount} initial + 3 added)`,
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER),
+        'Controller 1 should be present',
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER_2),
+        'Controller 2 should be present',
+      );
+      assert(
+        controllersBeforeTransfer.includes(STUB_CONTROLLER_3),
+        'Controller 3 should be present',
+      );
+
+      // Transfer with Remove-Controllers tag
+      const transferResult = await handle(
+        {
+          Tags: [
+            { name: 'Action', value: 'Transfer' },
+            { name: 'Recipient', value: STUB_NEW_OWNER },
+            { name: 'Remove-Controllers', value: 'true' },
+          ],
+        },
+        currentMemory,
+      );
+
+      // Verify all controllers were removed
+      const controllersAfterTransfer = await getControllers(
+        transferResult.Memory,
+      );
+      assert.strictEqual(
+        controllersAfterTransfer.length,
+        0,
+        'All controllers should be removed after transfer with Remove-Controllers tag',
+      );
+    });
+  });
 });

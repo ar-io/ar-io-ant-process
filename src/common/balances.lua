@@ -10,14 +10,17 @@ local balances = {}
 
 --- Transfers the ANT to a specified wallet.
 ---@param to string - The wallet address to transfer the balance to.
+---@param removeControllers boolean - Whether to remove all controllers.
 ---@param allowUnsafeAddresses AllowUnsafeAddresses
 ---@return table<string, integer>
-function balances.transfer(to, allowUnsafeAddresses)
+function balances.transfer(to, removeControllers, allowUnsafeAddresses)
 	assert(utils.isValidAOAddress(to, allowUnsafeAddresses), "Invalid AO Address")
 	Balances = { [to] = 1 }
 	--luacheck: ignore Owner Controllers
 	Owner = to
-	Controllers = {}
+	if removeControllers == true then
+		Controllers = {}
+	end
 
 	return { [to] = 1 }
 end
@@ -43,7 +46,10 @@ end
 ---@return table<string, string>
 function balances.setName(name)
 	assert(type(name) == "string", "Name must be a string")
-	assert(#name <= constants.MAX_NAME_LENGTH, "Name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters")
+	assert(
+		#name <= constants.MAX_NAME_LENGTH,
+		"Name must not be longer than " .. constants.MAX_NAME_LENGTH .. " characters"
+	)
 	Name = name
 	return { Name = Name }
 end
@@ -62,7 +68,10 @@ end
 ---@return table<string, string>
 function balances.setDescription(description)
 	assert(type(description) == "string", "Description must be a string")
-	assert(#description <= constants.MAX_DESCRIPTION_LENGTH, "Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters")
+	assert(
+		#description <= constants.MAX_DESCRIPTION_LENGTH,
+		"Description must not be longer than " .. constants.MAX_DESCRIPTION_LENGTH .. " characters"
+	)
 	Description = description
 	return { Description = Description }
 end

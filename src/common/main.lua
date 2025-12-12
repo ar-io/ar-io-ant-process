@@ -88,6 +88,8 @@ function ant.init()
 
 	createActionHandler(TokenSpecActionMap.Transfer, function(msg)
 		local recipient = msg.Tags.Recipient
+		-- Default to true (remove controllers), only false if explicitly set to "false"
+		local shouldRemoveControllers = msg.Tags["Remove-Controllers"] ~= "false"
 
 		-- For token spec compliance, we need to return an error message if the caller is not the owner
 		-- action must be Transfer-Error, Error must be Insufficient Balance!
@@ -101,7 +103,7 @@ function ant.init()
 			return
 		end
 
-		balances.transfer(recipient, msg.Tags["Allow-Unsafe-Addresses"])
+		balances.transfer(recipient, shouldRemoveControllers, msg.Tags["Allow-Unsafe-Addresses"])
 
 		if not msg.Cast then
 			utils.Send(msg, notices.debit(msg))
@@ -480,7 +482,18 @@ function ant.init()
 
 		-- send self state notice to enable hyperbeam to cache the state. The SU will not process the boot result otherwise.
 		notices.notifyState(msg, ao.id)
-	end, 1)
+	end)
+
+	-- Override the eval module so it can't be used even if re-registered
+	package.loaded[".eval"] = function()
+		return function()
+			error("Eval is disabled for this process")
+		end
+	end
+	-- Override the eval handler to error if it is called
+	Handlers.add("_eval", function(msg)
+		return msg.Action == "Eval" and Owner == msg.From
+	end, require(".eval")(ao))
 end
 
 return ant

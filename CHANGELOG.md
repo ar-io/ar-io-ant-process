@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [25] - (2025-12-12)
+
+### Added
+
+- Remove-Controllers flag on Transfer handler
+
+### Changed
+
+- Removed Eval support
+
 ## [24] - (2025-9-18)
 
 ### Added

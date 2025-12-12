@@ -291,12 +291,13 @@ will only contain the Owner of the ant with a balance of 1.
 
 #### `Transfer`
 
-Transfers the ownership of the ANT.
+Transfers the ownership of the ANT. By default, all controllers are removed during the transfer unless explicitly set to preserve them.
 
-| Tag Name  | Type   | Pattern               | Required | Description                       |
-| --------- | ------ | --------------------- | -------- | --------------------------------- |
-| Action    | string | "Transfer"            | true     | Action tag for triggering handler |
-| Recipient | string | "^[a-zA-Z0-9_-]{43}$" | true     | Address to transfer ANT to.       |
+| Tag Name           | Type   | Pattern               | Required | Description                                                                                      |
+| ------------------ | ------ | --------------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| Action             | string | "Transfer"            | true     | Action tag for triggering handler                                                                |
+| Recipient          | string | "^[a-zA-Z0-9_-]{43}$" | true     | Address to transfer ANT to.                                                                      |
+| Remove-Controllers | string | "false"               | false    | Set to "false" to preserve controllers during transfer. Any other value or omission removes all controllers. |
 
 #### `Set-Record`
 

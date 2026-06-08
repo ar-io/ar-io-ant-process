@@ -1,5 +1,8 @@
 # Arweave Name Token process on AO
 
+> [!CAUTION]
+> **This repository has been archived.** The AR.IO smart contracts have migrated from AO to Solana. All smart contract code now lives at [ar-io/ar-io-solana-contracts](https://github.com/ar-io/ar-io-solana-contracts).
+
 This repository contains the source code used for Arweave Name Tokens used to
 resolve ArNS names on [AR.IO Gateways]. For official documentation on ANT's refer
 to the [ArNS ANT Docs]. For official documentation on ArNS refer to the [ArNS
